@@ -78,7 +78,7 @@ Prints precision (P), recall (R), and F1 score (F1) to the command line.
 ## MARS_ts_util.py
 A handful of functions for cleaning up or transforming pose features. Most of these are for a step in existing MARS classifiers where annotations are cleaned up using forward/backward smoothing and/or an HMM. However this file also contains the following:
 
-###`clean_data(data)`
+### `clean_data(data)`
 Used to eliminate NaN/Inf values in features extracted from mouse pose.
 
 ##### Input:
