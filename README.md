@@ -7,6 +7,39 @@ This is a suite of scripts for training new classifiers in MARS. Contents:
 - [MARS_ts_util.py](##MARS_ts_util.py)
 
 
+## MARS_train_test.py
+The core set of functions for creating, training, and testing behavior classifiers.
+
+### `choose_classifier(clf_type='xgb', clf_params=dict())`
+Initializes a classifier of type `clf_type` with additional parameter values set by `clf_params`. You can extend this code to include support for other kinds of classifiers, so long as they have the usual `scikit-learn` structure.
+
+##### Inputs:
+* `clf_type` **(string)**: current options are 'xgb' (XGBoost) or 'mlp' (multi-layer Perceptron)
+* `clf_params` **(dict)**: optional, allows user specification of classifier parameters, otherwise a set of default values are provided by the function.
+
+##### Output:
+* `clf` **(Classifier)** an initialized classifier, currently either `XGBClassifier` or `BaggingClassifier` (bag of multi-layer Perceptrons).
+
+### `load_data(video_path, video_list, keepLabels)`
+
+##### Inputs:
+* `video_path` **(string)**: Path to directory containing all videos.
+* `video_list` **(string array)**: Which folders in that directory to load.
+* `keepLabels` **(string array)**: Which behaviors to load annotations of.
+* `do_wnd = (False)|True` **(bool)**: Apply temporal windowing to features before returning.
+* `do_cwt = (False)|True` **(bool)**: Apply wavelet transform to features before returning.
+<!-- * `ver = ([7, 8])` **(list)**: Version of MARS pose estimate to use
+* `feat_type = ('top')|'top_pcf'|'front'` **(string)**: Version of MARS features to use (keep this set to 'top')
+* `verbose = (0)|1` **(int)** -->
+
+##### Outputs:
+* `data` **(2D numpy array)**: a (time x features) array concatenated over all loaded videos.
+* `y` **(dict of 1D numpy arrays)**: keys are the behaviors in `keepLabels`; for each key, contains a binary array of length (time) indicating the presence or absence of that behavior on each frame, concatenated over all loaded videos.
+* `scaler` **(StandardScaler)**: operator that whitens data (based on statistics of the training set) prior to classification.
+* `names` **(string array)**: names of the loaded features.
+
+
+
 ## MARS_annotation_parsers.py
 Contains scripts for reading and writing behavior annotations. The relevant functions are:
 
@@ -25,40 +58,6 @@ Reads annotations from a `*.txt` or `*.annot` file and returns them in a diction
 * `behs_frame` **(string array)**: a string array of length `nFrames`. Each entry is a single behavior from `behs`, or "other" if no actions were annotated on that frame. 
 * (Plus a few other keys that you can ignore)
 
-
-## MARS_train_test.py
-The core set of functions for creating, training, and testing behavior classifiers.
-
-### `choose_classifier(clf_type='xgb', clf_params=dict())`
-Initializes a classifier of type `clf_type` with additional parameter values set by `clf_params`. You can extend this code to include support for other kinds of classifiers, so long as they have the usual `scikit-learn` structure.
-
-##### Inputs:
-* `clf_type` **(string)**: current options are 'xgb' (XGBoost) or 'mlp' (multi-layer Perceptron)
-* `clf_params` **(dict)**: optional, allows user specification of classifier parameters, otherwise a set of default values are provided by the function.
-
-##### Output:
-* `clf` **(Classifier)** an initialized classifier, currently either `XGBClassifier` or `BaggingClassifier` (bag of multi-layer Perceptrons).
-
-
-
-### `load_data(video_path, video_list, keepLabels)`
-
-##### Inputs:
-* `video_path` **(string)**: Path to directory containing all videos.
-* `video_list` **(string array)**: Which folders in that directory to load.
-* `keepLabels` **(string array)**: Which behaviors to load annotations of.
-* `do_wnd = (False)|True` **(bool)**: Apply temporal windowing to features before returning.
-* `do_cwt = (False)|True` **(bool)**: Apply wavelet transform to features before returning.
-<!-- * `ver = ([7, 8])` **(list)**: Version of MARS pose estimate to use
-* `feat_type = ('top')|'top_pcf'|'front'` **(string)**: Version of MARS features to use (keep this set to 'top')
-* `verbose = (0)|1` **(int)** -->
-
-
-##### Outputs:
-* `data` **(2D numpy array)**: a (time x features) array concatenated over all loaded videos.
-* `y` **(dict of 1D numpy arrays)**: keys are the behaviors in `keepLabels`; for each key, contains a binary array of length (time) indicating the presence or absence of that behavior on each frame, concatenated over all loaded videos.
-* `scaler` **(StandardScaler)**: operator that whitens data (based on statistics of the training set) prior to classification.
-* `names` **(string array)**: names of the loaded features.
 
 
 ## MARS_clf_helpers.py
