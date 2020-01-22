@@ -65,6 +65,7 @@ def load_data(video_path, video_list, keepLabels,
     for v in video_list:
         vbase = os.path.basename(v)
         vid = []
+        seq = []
 
         for file in os.listdir(v):
             if fnmatch.fnmatch(file, '*.txt') or fnmatch.fnmatch(file, '*.annot'):
@@ -73,7 +74,7 @@ def load_data(video_path, video_list, keepLabels,
                 seq = file
 
         # we load exact frame timestamps for *.annot files to make sure we get the time->frame conversion correct
-        if fnmatch.fnmatch(ann, '*.annot'):
+        if fnmatch.fnmatch(ann, '*.annot') and seq:
             sr = seqIo_reader(seq)
             timestamps = sr.getTs()
         else:
