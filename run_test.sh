@@ -7,4 +7,7 @@
 #SBATCH -J "run_training"   # job name
 #SBATCH --mail-user=mlevine@caltech.edu   # email address
 
+module purge
+module load python/2.7.15-tf
+
 python run_training.py sniff_face doboth > test_output/mars_log_sniffface.txt
