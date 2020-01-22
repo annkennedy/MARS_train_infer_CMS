@@ -40,7 +40,7 @@ train_videos = os.listdir(video_path+'TRAIN')
 test_videos = os.listdir(video_path+'TEST')
 
 
-save_path = '/home/kennedya/output_annot/'
+save_path = 'test_output/'
 clf_params = dict(clf_type='xgb', n_trees=1500, feat_type='top', do_cwt=True, do_wnd=False)
 ver = [7,8]
 
