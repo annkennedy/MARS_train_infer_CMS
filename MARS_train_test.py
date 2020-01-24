@@ -117,7 +117,7 @@ def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', v
                 print('Length mismatch: %s %d %d' % (v, len(beh['behs_frame']), d.shape[0]))
     if not data:
         print('No feature files found')
-        return [], []
+        return [], [], [], []
     if (verbose):
         print('all test files loaded')
 
@@ -138,7 +138,7 @@ def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', v
     data = scaler.transform(data)
     print('done!\n')
 
-    return (data, y, scaler, names)
+    return data, y, scaler, names
 
 
 def assign_labels(all_predicted_probabilities, behaviors_used):
