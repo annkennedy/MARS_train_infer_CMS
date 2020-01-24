@@ -36,22 +36,19 @@ def apply_wavelet_transform(starter_features):
     wave2 = pywt.ContinuousWavelet('gaus7')
     scales = [1, 3, 10, 30, 90, 270, 600]
     dims = np.shape(starter_features)
-    nfeat = dims[2]
+    nfeat = dims[1]
 
-    wdata = np.zeros((2,dims[1], nfeat + nfeat * len(scales)*2))
-    wdata[:, :, range(0, nfeat)] = starter_features
+    transformed_features = np.zeros((dims[0], nfeat + nfeat * len(scales)*2))
+    transformed_features[:, range(0, nfeat)] = starter_features
 
-    for m, mouse in enumerate(starter_features):
-        for f, feat in enumerate(mouse.swapaxes(0, 1)):
-            for w, wavelet in enumerate([wave1, wave2]):
-                for i, s in enumerate(scales):
-                    a, _ = pywt.cwt(medfilt(feat), s, wavelet)
-                    a[0][:s] = 0
-                    a[0][-s:] = 0
-                    inds = nfeat + f + nfeat*i + w*nfeat*len(scales)
-                    wdata[m, :, inds] = a
-
-    transformed_features = np.concatenate((np.squeeze(wdata[0, :, :]), np.squeeze(wdata[1, :, :])), 1)
+    for f, feat in enumerate(starter_features):
+        for w, wavelet in enumerate([wave1, wave2]):
+            for i, s in enumerate(scales):
+                a, _ = pywt.cwt(medfilt(feat), s, wavelet)
+                a[0][:s] = 0
+                a[0][-s:] = 0
+                inds = nfeat + f + nfeat*i + w*nfeat*len(scales)
+                transformed_features[:, inds] = a
 
     return transformed_features
 
