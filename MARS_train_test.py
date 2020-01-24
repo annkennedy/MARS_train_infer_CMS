@@ -81,7 +81,6 @@ def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', v
 
         for version in ver:
             fstr = os.path.join(video_path, v, vbase + '_raw_feat_%s_v1_%d.npz' % (feat_type, version))
-            print(fstr)
             if os.path.isfile(fstr):
                 if verbose:
                     print('loaded file: ' + os.path.basename(fstr))
@@ -90,17 +89,20 @@ def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', v
         if not vid:
             print('Feature file not found for %s' % vbase)
         else:
-            d = vid['data_smooth']
             names = vid['features']
-            d = mts.clean_data(d)
-            n_feat = d.shape[2]
+            if 'data_smooth' in vid.keys():
+                d = vid['data_smooth']
+                d = mts.clean_data(d)
+                n_feat = d.shape[2]
 
-            # we remove some features that have the same value for both mice (hardcoded for now, shaaame)
-            featToKeep = list(flatten([range(39), range(49, 58), 59, 61, 62, 63, range(113, n_feat)]))
-            d = np.hstack((d[0, :, :], d[1, :, featToKeep].transpose()))
+                # we remove some features that have the same value for both mice (hardcoded for now, shaaame)
+                featToKeep = list(flatten([range(39), range(49, 58), 59, 61, 62, 63, range(113, n_feat)]))
+                d = np.hstack((d[0, :, :], d[1, :, featToKeep].transpose()))
 
-            # for this project, we also remove raw pixel-based features to keep things simple
-            d = mts.remove_pixel_data(d, 'top')
+                # for this project, we also remove raw pixel-based features to keep things simple
+                d = mts.remove_pixel_data(d, 'top')
+            else: # this is for features created with MARS_feature_extractor (which currently doesn't build data_smooth)
+                d = vid['data']
             d = mts.clean_data(d)
 
             if do_wnd:
@@ -118,7 +120,7 @@ def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', v
         print('No feature files found')
         return [], [], [], []
     if (verbose):
-        print('all test files loaded')
+        print('all files loaded')
 
     y = {}
     for label_name in keepLabels.keys():
