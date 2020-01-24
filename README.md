@@ -21,7 +21,7 @@ Initializes a classifier of type `clf_type` with additional parameter values set
 ##### Output:
 * `clf` **(Classifier)** an initialized classifier, currently either `XGBClassifier` or `BaggingClassifier` (bag of multi-layer Perceptrons).
 
-### `load_data(video_path, video_list, keepLabels)`
+### `load_data(video_path, video_list, keepLabels, do_wnd=False, do_cwt=False)`
 
 ##### Inputs:
 * `video_path` **(string)**: Path to directory containing all videos.
