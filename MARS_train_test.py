@@ -329,7 +329,7 @@ def run_test(name_classifier,X_te,y_te,verbose=0):
     return gt, proba, preds, preds_hmm, proba_hmm, preds_fbs_hmm, proba_fbs_hmm
 
 
-def train_classifier(behs, video_path, train_videos, train_annot, clf_params={}, ver=8, verbose=0):
+def train_classifier(behs, video_path, train_videos, train_annot, clf_params={}, ver=[7,8], verbose=0):
 
     clfDefault = {'clf_type': 'xgb',
                   'feat_type': 'top',
@@ -383,7 +383,7 @@ def train_classifier(behs, video_path, train_videos, train_annot, clf_params={},
     print('done training!')
 
 
-def test_classifier(behs, video_path, test_videos, test_annot, clf_params={}, ver=8, verbose=0):
+def test_classifier(behs, video_path, test_videos, test_annot, clf_params={}, ver=[7,8], verbose=0):
 
     clf_type = clf_params['clf_type'] if 'clf_type' in clf_params.keys() else 'xgb'
     feat_type = clf_params['feat_type'] if 'feat_type' in clf_params.keys() else 'top'
@@ -448,7 +448,7 @@ def test_classifier(behs, video_path, test_videos, test_annot, clf_params={}, ve
     dill.dump(P, open(savedir + 'results.dill', 'wb'))
 
 
-def run_classifier(behs, video_path, test_videos, test_annot, save_path=[], clf_params={}, ver=8, verbose=0):
+def run_classifier(behs, video_path, test_videos, test_annot, save_path=[], clf_params={}, ver=[7,8], verbose=0):
     # hijacking the code of test_classifier to output predictions on the test set
 
     clf_type = clf_params['clf_type'] if 'clf_type' in clf_params.keys() else 'xgb'
