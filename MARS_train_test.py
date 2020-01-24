@@ -53,12 +53,11 @@ def choose_classifier(clf_type='xgb', clf_params=dict()):
 
 def check_smoothing_type(clf_params):
     do_wnd = clf_params['do_wnd'] if 'do_wnd' in clf_params.keys() else False
-    do_cwt = clf_params['do_cwt'] if 'do_cwt' in clf_params.keys() else True
+    do_cwt = clf_params['do_cwt'] if 'do_cwt' in clf_params.keys() else False
     return do_wnd, do_cwt
 
 
-def load_data(video_path, video_list, keepLabels,
-              ver=[7, 8], feat_type='top', verbose=0, do_wnd=False, do_cwt=False):
+def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', verbose=0, do_wnd=False, do_cwt=False):
     data = []
     labels = []
 
@@ -67,7 +66,7 @@ def load_data(video_path, video_list, keepLabels,
         vid = []
         seq = []
 
-        for file in os.listdir(v):
+        for file in os.listdir(os.path.join(video_path, v)):
             if fnmatch.fnmatch(file, '*.txt') or fnmatch.fnmatch(file, '*.annot'):
                 ann = file
             elif fnmatch.fnmatch(file, '*.seq'):
@@ -81,8 +80,7 @@ def load_data(video_path, video_list, keepLabels,
             timestamps = []
 
         for version in ver:
-            fstr = os.path.join(video_path, v, 'output_v1_%d' % version, vbase,
-                                vbase + '_raw_feat_%s_v1_%d.npz' % (feat_type, version))
+            fstr = os.path.join(video_path, v, vbase + '_raw_feat_%s_v1_%d.npz' % (feat_type, version))
             if os.path.isfile(fstr):
                 if verbose:
                     print('loaded file: ' + os.path.basename(fstr))
@@ -91,17 +89,20 @@ def load_data(video_path, video_list, keepLabels,
         if not vid:
             print('Feature file not found for %s' % vbase)
         else:
-            d = vid['data_smooth']
             names = vid['features']
-            d = mts.clean_data(d)
-            n_feat = d.shape[2]
+            if 'data_smooth' in vid.keys():
+                d = vid['data_smooth']
+                d = mts.clean_data(d)
+                n_feat = d.shape[2]
 
-            # we remove some features that have the same value for both mice (hardcoded for now, shaaame)
-            featToKeep = list(flatten([range(39), range(42, 58), 59, 61, 62, 63, range(113, n_feat)]))
-            d = np.hstack((d[0, :, :], d[1, :, featToKeep].transpose()))
+                # we remove some features that have the same value for both mice (hardcoded for now, shaaame)
+                featToKeep = list(flatten([range(39), range(49, 58), 59, 61, 62, 63, range(113, n_feat)]))
+                d = np.hstack((d[0, :, :], d[1, :, featToKeep].transpose()))
 
-            # for this project, we also remove raw pixel-based features to keep things simple
-            d = mts.remove_pixel_data(d, 'top')
+                # for this project, we also remove raw pixel-based features to keep things simple
+                d = mts.remove_pixel_data(d, 'top')
+            else: # this is for features created with MARS_feature_extractor (which currently doesn't build data_smooth)
+                d = vid['data']
             d = mts.clean_data(d)
 
             if do_wnd:
@@ -117,9 +118,9 @@ def load_data(video_path, video_list, keepLabels,
                 print('Length mismatch: %s %d %d' % (v, len(beh['behs_frame']), d.shape[0]))
     if not data:
         print('No feature files found')
-        return [], []
+        return [], [], [], []
     if (verbose):
-        print('all test files loaded')
+        print('all files loaded')
 
     y = {}
     for label_name in keepLabels.keys():
@@ -128,7 +129,7 @@ def load_data(video_path, video_list, keepLabels,
         y[label_name] = y_temp
 
     data = np.concatenate(data, axis=0)
-    data = clean_data(data)
+    data = mts.clean_data(data)
 
     # we only really need this for training the classifier, oh well
     if(verbose):
@@ -329,7 +330,7 @@ def run_test(name_classifier,X_te,y_te,verbose=0):
     return gt, proba, preds, preds_hmm, proba_hmm, preds_fbs_hmm, proba_fbs_hmm
 
 
-def train_classifier(behs, video_path, train_videos, train_annot, clf_params={}, ver=8, verbose=0):
+def train_classifier(behs, video_path, train_videos, clf_params={}, ver=[7, 8], verbose=0):
 
     clfDefault = {'clf_type': 'xgb',
                   'feat_type': 'top',
@@ -368,7 +369,7 @@ def train_classifier(behs, video_path, train_videos, train_annot, clf_params={},
     sys.stdout = Tee(sys.stdout, f)
 
     print('loading training data')
-    X_tr, y_tr, scaler, features = load_data(video_path, train_videos, train_annot, behs,
+    X_tr, y_tr, scaler, features = load_data(video_path, train_videos, behs,
                                              ver=ver, feat_type=feat_type, verbose=verbose, do_wnd=do_wnd, do_cwt=do_cwt)
     dill.dump(scaler, open(savedir + 'scaler.dill', 'wb'))
     print('loaded training data: %d X %d - %s ' % (X_tr.shape[0], X_tr.shape[1], list(y_tr.keys())))
@@ -383,7 +384,7 @@ def train_classifier(behs, video_path, train_videos, train_annot, clf_params={},
     print('done training!')
 
 
-def test_classifier(behs, video_path, test_videos, test_annot, clf_params={}, ver=8, verbose=0):
+def test_classifier(behs, video_path, test_videos, clf_params={}, ver=[7,8], verbose=0):
 
     clf_type = clf_params['clf_type'] if 'clf_type' in clf_params.keys() else 'xgb'
     feat_type = clf_params['feat_type'] if 'feat_type' in clf_params.keys() else 'top'
@@ -396,7 +397,7 @@ def test_classifier(behs, video_path, test_videos, test_annot, clf_params={}, ve
     savedir = os.path.join('trained_classifiers',folder, classifier_name)
 
     print('loading test data...')
-    X_te_0, y_te, _, _ = load_data(video_path, test_videos, test_annot, behs,
+    X_te_0, y_te, _, _ = load_data(video_path, test_videos, behs,
                                   ver=ver, feat_type=feat_type, verbose=verbose, do_wnd=do_wnd, do_cwt=do_cwt)
     print('loaded test data: %d X %d - %s ' % (X_te_0.shape[0], X_te_0.shape[1], list(set(y_te))))
 
@@ -448,7 +449,7 @@ def test_classifier(behs, video_path, test_videos, test_annot, clf_params={}, ve
     dill.dump(P, open(savedir + 'results.dill', 'wb'))
 
 
-def run_classifier(behs, video_path, test_videos, test_annot, save_path=[], clf_params={}, ver=8, verbose=0):
+def run_classifier(behs, video_path, test_videos, test_annot, save_path=[], clf_params={}, ver=[7,8], verbose=0):
     # hijacking the code of test_classifier to output predictions on the test set
 
     clf_type = clf_params['clf_type'] if 'clf_type' in clf_params.keys() else 'xgb'
@@ -463,7 +464,7 @@ def run_classifier(behs, video_path, test_videos, test_annot, save_path=[], clf_
 
     for vid,annot in zip(test_videos, test_annot):
         print('processing %s...' % vid)
-        X_te_0, y_te, _, _ = load_data(video_path, [vid], [annot], behs,
+        X_te_0, y_te, _, _ = load_data(video_path, [vid], behs,
                                        ver=ver, feat_type=feat_type, verbose=verbose, do_wnd=do_wnd, do_cwt=do_cwt)
 
         if not y_te:

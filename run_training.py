@@ -3,8 +3,12 @@ import MARS_train_test as mars
 import sys
 
 
-# sometimes people use different names or spellings when annotating for a behavior. This chunk of code makes sure we get
-# them all when we build our training/test sets.
+# The input to run_training is the name of the behavior we want to train a classifier for (right now I'm assuming
+# you're going to train one classifier at a time.) However, before we call the training code, we have to change this
+# string into a dictionary called "behs". This is because our annotators sometimes use different names or spellings
+# when labeling a behavior. The purpose of this dictionary is to define what labels we want to lump together as positive
+# examples for our classifier to learn from. (It could eventually be packaged into a function but oh well.)
+
 if sys.argv[1]=='sniff_face':
     behs = {'sniff_face':    ['sniffface', 'snifface', 'sniff-face', 'sniff_face', 'head-investigation','facesniffing']}
 
@@ -24,34 +28,30 @@ elif sys.argv[1]=='sniff':
 
 elif sys.argv[1]=='mount':
     behs = {'mount':         ['mount','aggressivemount','intromission','dom_mount']}
-    train_videos = train_videos + [os.path.join('old_cable_data','train_cable',i) for i in tr_cable.keys()]
-    train_annot = train_annot + [tr_cable[i] for i in tr_cable.keys()]
 
 elif sys.argv[1]=='attack':
     behs = {'attack':        ['attack']}
-    train_videos = train_videos + [os.path.join('old_cable_data', 'train_cable', i) for i in tr_cable.keys()]
-    train_annot = train_annot + [tr_cable[i] for i in tr_cable.keys()]
 else:
     print('I didn''t recognize that behavior, aborting')
 
 
+# this tells the script where our training and test sets are located- you shouldn't need to change anything here.
 video_path = '/groups/Andersonlab/CMS273/'
-train_videos = os.listdir(video_path+'TRAIN')
-test_videos = os.listdir(video_path+'TEST')
+train_videos = [os.path.join('TRAIN_lite',v) for v in os.listdir(video_path+'TRAIN_lite')]
+test_videos = [os.path.join('TEST_lite',v) for v in os.listdir(video_path+'TEST_lite')]
 
+# if you use run_classifier to run a trained classifier on some files, predictions will be dumped here
+save_path = '~/test_output/'
 
-save_path = 'test_output/'
-clf_params = dict(clf_type='xgb', n_trees=1500, feat_type='top', do_cwt=True, do_wnd=False)
-ver = [7,8]
+# these are the parameters that define our classifier.
+clf_params = dict(clf_type='xgb', n_trees=1500, feat_type='top', do_cwt=False, do_wnd=False)
 
 if (sys.argv[2]=='train') or (sys.argv[2]=='both'):
-    mars.train_classifier(behs, video_path, train_videos, clf_params, ver=ver, verbose=1)
+    mars.train_classifier(behs, video_path, train_videos, clf_params=clf_params, verbose=1)
 
 if (sys.argv[2]=='test') or (sys.argv[2]=='both'):
-    mars.test_classifier(behs, video_path, test_videos, clf_params, ver=ver, verbose=1)
-    mars.run_classifier(behs, video_path, test_videos, save_path=save_path, clf_params=clf_params,
-                            ver=ver, verbose=1)
+    mars.test_classifier(behs, video_path, test_videos, clf_params=clf_params, verbose=1)
+    mars.run_classifier(behs, video_path, test_videos, save_path=save_path, clf_params=clf_params, verbose=1)
 
 if (sys.argv[2]=='runontest'):
-    mars.run_classifier(behs, video_path, test_videos, save_path=save_path, clf_params=clf_params,
-                            ver=ver, verbose=1)
+    mars.run_classifier(behs, video_path, test_videos, save_path=save_path, clf_params=clf_params, verbose=1)
