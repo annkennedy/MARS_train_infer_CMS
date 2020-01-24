@@ -129,7 +129,7 @@ def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', v
         y[label_name] = y_temp
 
     data = np.concatenate(data, axis=0)
-    data = clean_data(data)
+    data = mts.clean_data(data)
 
     # we only really need this for training the classifier, oh well
     if(verbose):
