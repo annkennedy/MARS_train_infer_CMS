@@ -16,6 +16,9 @@ import progressbar
 import multiprocessing as mp
 
 
+flatten = lambda *n: (e for a in n for e in (flatten(*a) if isinstance(a, (tuple, list)) else (a,)))
+
+
 def clean_data(data):
     """Eliminate the NaN and Inf values by taking the last value that was neither."""
     idx = np.where(np.isnan(data) | np.isinf(data))
