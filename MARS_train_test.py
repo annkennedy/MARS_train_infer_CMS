@@ -53,7 +53,7 @@ def choose_classifier(clf_type='xgb', clf_params=dict()):
 
 def check_smoothing_type(clf_params):
     do_wnd = clf_params['do_wnd'] if 'do_wnd' in clf_params.keys() else False
-    do_cwt = clf_params['do_cwt'] if 'do_cwt' in clf_params.keys() else True
+    do_cwt = clf_params['do_cwt'] if 'do_cwt' in clf_params.keys() else False
     return do_wnd, do_cwt
 
 
@@ -328,7 +328,7 @@ def run_test(name_classifier,X_te,y_te,verbose=0):
     return gt, proba, preds, preds_hmm, proba_hmm, preds_fbs_hmm, proba_fbs_hmm
 
 
-def train_classifier(behs, video_path, train_videos, train_annot, clf_params={}, ver=[7, 8], verbose=0):
+def train_classifier(behs, video_path, train_videos, clf_params={}, ver=[7, 8], verbose=0):
 
     clfDefault = {'clf_type': 'xgb',
                   'feat_type': 'top',
@@ -382,7 +382,7 @@ def train_classifier(behs, video_path, train_videos, train_annot, clf_params={},
     print('done training!')
 
 
-def test_classifier(behs, video_path, test_videos, test_annot, clf_params={}, ver=[7,8], verbose=0):
+def test_classifier(behs, video_path, test_videos, clf_params={}, ver=[7,8], verbose=0):
 
     clf_type = clf_params['clf_type'] if 'clf_type' in clf_params.keys() else 'xgb'
     feat_type = clf_params['feat_type'] if 'feat_type' in clf_params.keys() else 'top'
