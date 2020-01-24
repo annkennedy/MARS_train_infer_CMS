@@ -39,6 +39,14 @@ Initializes a classifier of type `clf_type` with additional parameter values set
 * `scaler` **(StandardScaler)**: operator that whitens data (based on statistics of the training set) prior to classification.
 * `names` **(string array)**: names of the loaded features.
 
+### `train_classifier(behs, video_path, train_videos, clf_params={})`
+
+Trains a classifier for the behavior(s) in `behs`, on the videos in `train_videos`. This function is just the shell that does the unwrapping-- `run_training` does the actual training. `clf_params` lets you pass in parameters like which classifier to use, whether to wavelet-transform features, etc.
+
+### `run_training`
+
+Called by `train_classifier`, performs training: shuffles/downsamples training data, runs `clf.fit` on the passed classifier, then does HMM-based and forward-backward smoothing to help smooth behavior labels. Trained classifier gets dumped as a `*.dill` file.
+
 
 ## MARS_feature_extractor.py
 Scripts for extracting features from mouse poses, to experiment with feature engineering for improved classification.
