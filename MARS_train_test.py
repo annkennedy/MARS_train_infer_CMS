@@ -96,7 +96,7 @@ def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', v
             n_feat = d.shape[2]
 
             # we remove some features that have the same value for both mice (hardcoded for now, shaaame)
-            featToKeep = list(flatten([range(39), range(42, 58), 59, 61, 62, 63, range(113, n_feat)]))
+            featToKeep = list(flatten([range(39), range(49, 58), 59, 61, 62, 63, range(113, n_feat)]))
             d = np.hstack((d[0, :, :], d[1, :, featToKeep].transpose()))
 
             # for this project, we also remove raw pixel-based features to keep things simple

@@ -164,7 +164,7 @@ def remove_pixel_data(data, view):
     elif view == 'front': fd=[range(47,67)]
     elif view == 'top_pcf':fd=[range(40,57)]
     fd = list(flatten(fd))
-    data = np.delete(data, fd, 2)
+    data = np.delete(data, fd, 1)
     return data
 
 
