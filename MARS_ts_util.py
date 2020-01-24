@@ -160,7 +160,7 @@ def normalize_pixel_data(data,view):
     return data
 
 def remove_pixel_data(data, view):
-    if view ==' top':fd = [range(40, 49)]
+    if view =='top': fd = [range(40, 49)]
     elif view == 'front': fd=[range(47,67)]
     elif view == 'top_pcf':fd=[range(40,57)]
     fd = list(flatten(fd))
