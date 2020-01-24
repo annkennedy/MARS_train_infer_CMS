@@ -66,7 +66,7 @@ def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', v
         vid = []
         seq = []
 
-        for file in os.listdir(v):
+        for file in os.listdir(os.path.join(video_path, v)):
             if fnmatch.fnmatch(file, '*.txt') or fnmatch.fnmatch(file, '*.annot'):
                 ann = file
             elif fnmatch.fnmatch(file, '*.seq'):
