@@ -7,7 +7,6 @@
 #SBATCH -J "run_training"   # job name
 #SBATCH --mail-user=mlevine@caltech.edu   # email address
 
-module purge
-module load python/2.7.15-tf
-
-python run_training.py sniff_face doboth > test_output/mars_log_sniffface.txt
+source activate mars_tf
+cd ~/MARS_train_infer_CMS/
+python run_training.py sniff_face both > test_output/mars_log.txt
