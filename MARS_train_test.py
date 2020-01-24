@@ -82,6 +82,7 @@ def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', v
         for version in ver:
             fstr = os.path.join(video_path, v, 'output_v1_%d' % version, vbase,
                                 vbase + '_raw_feat_%s_v1_%d.npz' % (feat_type, version))
+            print(fstr)
             if os.path.isfile(fstr):
                 if verbose:
                     print('loaded file: ' + os.path.basename(fstr))
@@ -137,7 +138,7 @@ def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', v
     data = scaler.transform(data)
     print('done!\n')
 
-    return data, y, scaler, names
+    return (data, y, scaler, names)
 
 
 def assign_labels(all_predicted_probabilities, behaviors_used):
