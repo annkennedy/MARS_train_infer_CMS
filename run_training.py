@@ -37,8 +37,8 @@ else:
 
 # this tells the script where our training and test sets are located- you shouldn't need to change anything here.
 video_path = '/groups/Andersonlab/CMS273/'
-train_videos = os.listdir(video_path+'TRAIN_lite')
-test_videos = os.listdir(video_path+'TEST_lite')
+train_videos = [os.path.join('TRAIN_lite',v) for v in os.listdir(video_path+'TRAIN_lite')]
+test_videos = [os.path.join('TEST_lite',v) for v in os.listdir(video_path+'TEST_lite')]
 
 # this is where the trained classifier will be dumped.
 save_path = '~/test_output/'
