@@ -57,8 +57,7 @@ def check_smoothing_type(clf_params):
     return do_wnd, do_cwt
 
 
-def load_data(video_path, video_list, keepLabels,
-              ver=[7, 8], feat_type='top', verbose=0, do_wnd=False, do_cwt=False):
+def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', verbose=0, do_wnd=False, do_cwt=False):
     data = []
     labels = []
 
@@ -329,7 +328,7 @@ def run_test(name_classifier,X_te,y_te,verbose=0):
     return gt, proba, preds, preds_hmm, proba_hmm, preds_fbs_hmm, proba_fbs_hmm
 
 
-def train_classifier(behs, video_path, train_videos, train_annot, clf_params={}, ver=[7,8], verbose=0):
+def train_classifier(behs, video_path, train_videos, train_annot, clf_params={}, ver=[7, 8], verbose=0):
 
     clfDefault = {'clf_type': 'xgb',
                   'feat_type': 'top',
@@ -368,7 +367,7 @@ def train_classifier(behs, video_path, train_videos, train_annot, clf_params={},
     sys.stdout = Tee(sys.stdout, f)
 
     print('loading training data')
-    X_tr, y_tr, scaler, features = load_data(video_path, train_videos, train_annot, behs,
+    X_tr, y_tr, scaler, features = load_data(video_path, train_videos, behs,
                                              ver=ver, feat_type=feat_type, verbose=verbose, do_wnd=do_wnd, do_cwt=do_cwt)
     dill.dump(scaler, open(savedir + 'scaler.dill', 'wb'))
     print('loaded training data: %d X %d - %s ' % (X_tr.shape[0], X_tr.shape[1], list(y_tr.keys())))
@@ -396,7 +395,7 @@ def test_classifier(behs, video_path, test_videos, test_annot, clf_params={}, ve
     savedir = os.path.join('trained_classifiers',folder, classifier_name)
 
     print('loading test data...')
-    X_te_0, y_te, _, _ = load_data(video_path, test_videos, test_annot, behs,
+    X_te_0, y_te, _, _ = load_data(video_path, test_videos, behs,
                                   ver=ver, feat_type=feat_type, verbose=verbose, do_wnd=do_wnd, do_cwt=do_cwt)
     print('loaded test data: %d X %d - %s ' % (X_te_0.shape[0], X_te_0.shape[1], list(set(y_te))))
 
@@ -463,7 +462,7 @@ def run_classifier(behs, video_path, test_videos, test_annot, save_path=[], clf_
 
     for vid,annot in zip(test_videos, test_annot):
         print('processing %s...' % vid)
-        X_te_0, y_te, _, _ = load_data(video_path, [vid], [annot], behs,
+        X_te_0, y_te, _, _ = load_data(video_path, [vid], behs,
                                        ver=ver, feat_type=feat_type, verbose=verbose, do_wnd=do_wnd, do_cwt=do_cwt)
 
         if not y_te:
