@@ -20,6 +20,23 @@ from seqIo import *
 # plt.ioff()
 
 
+def load_default_parameters():
+    default_params = {'clf_type': 'xgb',
+                      'feat_type': 'top',  # keep this to just top for now
+                      'downsample_rate': 5,  # temporal downsampling applied to training data
+                      'kn': np.array([0.5, 0.25, 0.5]),
+                      'blur': 4,
+                      'shift': 4,
+                      'do_wnd': False,
+                      'do_cwt': False
+                      }
+
+    # in addition to these parameters, you can also store classifier-specific parameters in clf_params.
+    # default values for those are defined below in choose_classifier.
+
+    return default_params
+
+
 def choose_classifier(clf_type='xgb', clf_params=dict()):
 
     MLPdefaults = {'hidden_layer_sizes': (256, 512),
@@ -30,12 +47,18 @@ def choose_classifier(clf_type='xgb', clf_params=dict()):
 
     XGBdefaults = {'n_estimators': 2000}
 
+    # insert defaults for other classifier types here!
+
     if clf_type.lower() == 'mlp':
-        hidden_layer_sizes = clf_params['hidden_layer_sizes'] if 'hidden_layer_sizes' in clf_params.keys() else MLPdefaults['hidden_layer_sizes']
-        learning_rate_init = clf_params['learning_rate_init'] if 'learning_rate_init' in clf_params.keys() else MLPdefaults['learning_rate_init']
-        learning_rate = clf_params['learning_rate'] if 'learning_rate' in clf_params.keys() else MLPdefaults['learning_rate']
-        max_iter = clf_params['max_iter'] if 'max_iter' in clf_params.keys() else MLPdefaults['max_iter']
-        alpha = clf_params['alpha'] if 'alpha' in clf_params.keys() else MLPdefaults['alpha']
+        for k in MLPdefaults.keys():
+            if not k in clf_params.keys():
+                clf_params[k] = MLPdefaults[k]
+
+        hidden_layer_sizes = clf_params['hidden_layer_sizes']
+        learning_rate_init = clf_params['learning_rate_init']
+        learning_rate = clf_params['learning_rate']
+        max_iter = clf_params['max_iter']
+        alpha = clf_params['alpha']
 
         mlp = MLPClassifier(solver='adam', alpha=alpha, hidden_layer_sizes=hidden_layer_sizes, random_state=1,
                             learning_rate=learning_rate, max_iter=max_iter,
@@ -45,16 +68,16 @@ def choose_classifier(clf_type='xgb', clf_params=dict()):
     else:
         if not clf_type.lower() == 'xgb':
             print('Unrecognized classifier type %s, defaulting to XGBoost!' % clf_type)
-        n_estimators = clf_params['n_estimators'] if 'n_estimators' in clf_params.keys() else XGBdefaults['n_estimators']
-        clf = XGBClassifier(n_estimators=n_estimators, random_state=1, n_jobs=-1)
+
+        for k in XGBdefaults.keys():
+            if not k in clf_params.keys():
+                clf_params[k] = XGBdefaults[k]
+
+        n_estimators = clf_params['n_estimators']
+        # there are other XGB parameters but we haven't explored them yet.
+        clf = XGBClassifier(n_estimators = n_estimators, random_state = 1, n_jobs = -1)
 
     return clf
-
-
-def check_smoothing_type(clf_params):
-    do_wnd = clf_params['do_wnd'] if 'do_wnd' in clf_params.keys() else False
-    do_cwt = clf_params['do_cwt'] if 'do_cwt' in clf_params.keys() else False
-    return do_wnd, do_cwt
 
 
 def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', verbose=0, do_wnd=False, do_cwt=False):
@@ -180,13 +203,16 @@ def assign_labels(all_predicted_probabilities, behaviors_used):
     return labels_num
 
 
-def run_training(beh_classifier, X_tr, y_tr, savedir, downsample_rate = 1, verbose=0):
+def do_train(beh_classifier, X_tr, y_tr, savedir, verbose=0):
 
-    beh_name   = beh_classifier['beh_name']
-    clf        = beh_classifier['clf']
-    kn         = beh_classifier['k']
-    blur_steps = beh_classifier['blur_steps']
-    shift      = beh_classifier['shift']
+    beh_name = beh_classifier['beh_name']
+    clf = beh_classifier['clf']
+    clf_params = beh_classifier['params']
+
+    # set some parameters for post-classification smoothing:
+    kn = clf_params['smk_kn']
+    blur_steps = clf_params['blur'] ** 2
+    shift = clf_params['shift']
 
     # get the labels for the current behavior
     t = time.time()
@@ -197,8 +223,8 @@ def run_training(beh_classifier, X_tr, y_tr, savedir, downsample_rate = 1, verbo
     y_tr_beh = y_tr_beh[idx_tr]
 
     #downsample for classifier fitting
-    X_tr_ds = X_tr[::downsample_rate, :]
-    y_tr_ds = y_tr_beh[::downsample_rate]
+    X_tr_ds = X_tr[::clf_params['downsample_rate'], :]
+    y_tr_ds = y_tr_beh[::clf_params['downsample_rate']]
 
     # fit the classifier!
     if (verbose):
@@ -255,27 +281,34 @@ def run_training(beh_classifier, X_tr, y_tr, savedir, downsample_rate = 1, verbo
     precision, recall, f_measure = prf_metrics(y_tr_beh, y_pred_fbs_hmm, beh_name)
 
     beh_classifier.update({'clf': clf,
-                      'precision': precision,
-                      'recall': recall,
-                      'f_measure': f_measure,
-                      'hmm_bin': hmm_bin,
-                      'hmm_fbs': hmm_fbs})
+                           'precision': precision,
+                           'recall': recall,
+                           'f_measure': f_measure,
+                           'hmm_bin': hmm_bin,
+                           'hmm_fbs': hmm_fbs})
 
     dill.dump(beh_classifier, open(savedir + 'classifier_' + beh_name, 'wb'))
 
 
-def run_test(name_classifier,X_te,y_te,verbose=0):
+def do_test(name_classifier, X_te, y_te, verbose=0):
 
     with open(name_classifier, 'rb') as fp:
         classifier = dill.load(fp)
-    beh_name   = classifier['beh_name']
-    scaler     = classifier['scaler']
-    clf        = classifier['clf']
-    hmm_bin    = classifier['hmm_bin']
-    hmm_fbs    = classifier['hmm_fbs']
-    kn         = classifier['k']
-    blur_steps = classifier['blur_steps']
-    shift      = classifier['shift']
+
+    # unpack the classifier
+    beh_name = classifier['beh_name']
+    scaler = classifier['scaler']
+    clf = classifier['clf']
+
+    # unpack the smoothers
+    hmm_bin = classifier['hmm_bin']
+    hmm_fbs = classifier['hmm_fbs']
+
+    # unpack the smoothing parameters
+    clf_params = classifier['params']
+    kn = clf_params['k']
+    blur_steps = clf_params['blur'] ** 2
+    shift = clf_params['shift']
 
     X_te = scaler.transform(X_te)
 
@@ -332,27 +365,21 @@ def run_test(name_classifier,X_te,y_te,verbose=0):
 
 def train_classifier(behs, video_path, train_videos, clf_params={}, ver=[7, 8], verbose=0):
 
-    clfDefault = {'clf_type': 'xgb',
-                  'feat_type': 'top',
-                  'training_ds': 5}
-    smkDefault = {'kn': np.array([0.5, 0.25, 0.5]),
-                  'blur': 4,
-                  'shift': 4}
+    # unpack user-provided classification parameters, and use default values for those not provided.
+    default_params = load_default_parameters()
+    for k in default_params.keys():
+        if k not in clf_params.keys():
+            clf_params[k] = default_params[k]
 
     # determine which classifier type we're training, which features we're using, and what windowing to use:
-    clf_type = clf_params['clf_type'] if 'clf_type' in clf_params.keys() else clfDefault['clf_type']
-    feat_type = clf_params['feat_type'] if 'feat_type' in clf_params.keys() else clfDefault['feat_type']
-    do_wnd, do_cwt = check_smoothing_type(clf_params)
-    downsample_rate = clf_params['training_ds'] if 'training_ds' in clf_params.keys() else clfDefault['training_ds']
-    if not (downsample_rate==int(downsample_rate)):
-        print('Training set downsampling rate must be an integer; reverting to default value.')
-        downsample_rate = clfDefault['training_ds']
+    clf_type = clf_params['clf_type']
+    feat_type = clf_params['feat_type']
+    do_wnd = clf_params['do_wnd']
+    do_cwt = clf_params['do_cwt']
 
-    # determine some parameters for post-classification smoothing:
-    kn = clf_params['smk_kn'] if 'smk_kn' in clf_params.keys() else smkDefault['kn']
-    blur = clf_params['blur'] if 'blur' in clf_params.keys() else smkDefault['blur']
-    shift = clf_params['shift'] if 'shift' in clf_params.keys() else smkDefault['shift']
-    blur_steps = blur ** 2
+    if not (clf_params['downsample_rate']==int(clf_params['downsample_rate'])):
+        print('Training set downsampling rate must be an integer; reverting to default value.')
+        clf_params['downsample_rate'] = default_params['downsample_rate']
 
     # now create the classifier and give it an informative name:
     classifier = choose_classifier(clf_type, clf_params)
@@ -377,24 +404,33 @@ def train_classifier(behs, video_path, train_videos, clf_params={}, ver=[7, 8], 
     # train each classifier in a loop:
     for b,beh_name in enumerate(behs.keys()):
         print('######################### %s #########################' % beh_name)
-        beh_classifier = {'beh_name': beh_name, 'beh_id': b + 1, 'clf': classifier, 'scaler': scaler,
-                           'k': kn, 'blur': blur, 'blur_steps': blur_steps, 'shift': shift}
-        run_training(beh_classifier, X_tr, y_tr, savedir, downsample_rate, verbose)
+        beh_classifier = {'beh_name': beh_name,
+                          'beh_id': b +1,
+                          'clf': classifier,
+                          'scaler': scaler,
+                          'params': clf_params}
+        do_train(beh_classifier, X_tr, y_tr, savedir, verbose)
 
     print('done training!')
 
 
 def test_classifier(behs, video_path, test_videos, clf_params={}, ver=[7,8], verbose=0):
 
-    clf_type = clf_params['clf_type'] if 'clf_type' in clf_params.keys() else 'xgb'
-    feat_type = clf_params['feat_type'] if 'feat_type' in clf_params.keys() else 'top'
-    do_wnd, do_cwt = check_smoothing_type(clf_params)
+    default_params = load_default_parameters()
+    for k in default_params.keys():
+        if k not in clf_params.keys():
+            clf_params[k] = default_params[k]
+
+    clf_type = clf_params['clf_type']
+    feat_type = clf_params['feat_type']
+    do_wnd = clf_params['do_wnd']
+    do_cwt = clf_params['do_cwt']
+
     suff = str(clf_params['n_trees']) if 'n_trees' in clf_params.keys() else ''
     suff = suff + '_wnd/' if do_wnd else suff + '_cwt/' if do_cwt else suff + '/'
 
     classifier_name = feat_type + '_' + clf_type + suff
-    folder = 'mars_v1_' + str(ver[-1])
-    savedir = os.path.join('trained_classifiers',folder, classifier_name)
+    savedir = os.path.join('trained_classifiers',classifier_name)
 
     print('loading test data...')
     X_te_0, y_te, _, _ = load_data(video_path, test_videos, behs,
@@ -419,20 +455,17 @@ def test_classifier(behs, video_path, test_videos, clf_params={}, ver=[7,8], ver
 
         gt[:,b], proba[:, b, :], preds[:, b], preds_hmm[:, b], \
         proba_hmm[:, b, :], preds_fbs_hmm[:, b], proba_fbs_hmm[:, b, :] = \
-            run_test(name_classifier, X_te_0, y_te, verbose)
+            do_test(name_classifier, X_te_0, y_te, verbose)
 
     all_pred = assign_labels(proba, beh_list)
     all_pred_hmm = assign_labels(proba_hmm, beh_list)
     all_pred_fbs_hmm = assign_labels(proba_fbs_hmm, beh_list)
 
-    print('all pred')
-    print(len(gt))
-    print(len(all_pred))
-    print(' ')
+    print('Raw predictions:')
     score_info(gt, all_pred)
-    print('all pred hmm')
+    print('Predictions after HMM smoothing:')
     score_info(gt, all_pred_hmm)
-    print('all pred fbs hmm')
+    print('Predictions after HMM and forward-backward smoothing:')
     score_info(gt, all_pred_fbs_hmm)
     P = {'0_G': gt,
          '0_Gc': y_te,
@@ -449,20 +482,30 @@ def test_classifier(behs, video_path, test_videos, clf_params={}, ver=[7,8], ver
     dill.dump(P, open(savedir + 'results.dill', 'wb'))
 
 
-def run_classifier(behs, video_path, test_videos, test_annot, save_path=[], clf_params={}, ver=[7,8], verbose=0):
-    # hijacking the code of test_classifier to output predictions on the test set
+def run_classifier(behs, video_path, test_videos, test_annot, save_path=[], ver=[7,8], verbose=0):
+    # this code actually saves *.annot files containing the raw predictions of the trained classifier,
+    # instead of just giving you the precision and recall. You can load these *.annot files in Bento
+    # along with the *.seq movies to inspect behavior labels by eye.
+    #
+    # Unlike test_classifier, this function runs classification on each video separately.
 
-    clf_type = clf_params['clf_type'] if 'clf_type' in clf_params.keys() else 'xgb'
-    feat_type = clf_params['feat_type'] if 'feat_type' in clf_params.keys() else 'top'
-    do_wnd, do_cwt = check_smoothing_type(clf_params)
+    default_params = load_default_parameters()
+    for k in default_params.keys():
+        if k not in clf_params.keys():
+            clf_params[k] = default_params[k]
+
+    clf_type = clf_params['clf_type']
+    feat_type = clf_params['feat_type']
+    do_wnd = clf_params['do_wnd']
+    do_cwt = clf_params['do_cwt']
+
     suff = str(clf_params['n_trees']) if 'n_trees' in clf_params.keys() else ''
     suff = suff + '_wnd/' if do_wnd else suff + '_cwt/' if do_cwt else suff + '/'
 
     classifier_name = feat_type + '_' + clf_type + suff
-    folder = 'mars_v1_' + str(ver[-1])
-    savedir = os.path.join('trained_classifiers',folder, classifier_name)
+    savedir = os.path.join('trained_classifiers', classifier_name)
 
-    for vid,annot in zip(test_videos, test_annot):
+    for vid in test_videos:
         print('processing %s...' % vid)
         X_te_0, y_te, _, _ = load_data(video_path, [vid], behs,
                                        ver=ver, feat_type=feat_type, verbose=verbose, do_wnd=do_wnd, do_cwt=do_cwt)
@@ -489,7 +532,7 @@ def run_classifier(behs, video_path, test_videos, test_annot, save_path=[], clf_
 
             gt[:, b], proba[:, b, :], preds[:, b], preds_hmm[:, b], \
             proba_hmm[:, b, :], preds_fbs_hmm[:, b], proba_fbs_hmm[:, b, :] = \
-                run_test(name_classifier, X_te_0, y_te, verbose)
+                do_test(name_classifier, X_te_0, y_te, verbose)
 
         all_pred = assign_labels(proba, beh_list)
         all_pred_hmm = assign_labels(proba_hmm, beh_list)
