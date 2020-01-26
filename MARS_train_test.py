@@ -251,8 +251,8 @@ def do_train(beh_classifier, X_tr, y_tr, savedir, verbose=0):
         print('fitting HMM smoother...')
     hmm_bin = hmm.MultinomialHMM(n_components=2, algorithm="viterbi", random_state=42, params="", init_params="")
     hmm_bin.startprob_ = np.array([np.sum(y_tr_beh == i) / float(len(y_tr_beh)) for i in range(2)])
-    hmm_bin.transmat_ = get_transmat(y_tr_beh, 2)
-    hmm_bin.emissionprob_ = get_emissionmat(y_tr_beh, y_pred_class, 2)
+    hmm_bin.transmat_ = mts.ansmat(y_tr_beh, 2)
+    hmm_bin.emissionprob_ = mts.get_emissionmat(y_tr_beh, y_pred_class, 2)
     y_proba_hmm = hmm_bin.predict_proba(y_pred_class.reshape((-1, 1)))
     y_pred_hmm = np.argmax(y_proba_hmm, axis=1)
 
@@ -269,7 +269,7 @@ def do_train(beh_classifier, X_tr, y_tr, savedir, verbose=0):
     z_mean = np.mean(z, axis=0)
     y_pred_fbs = binarize(z_mean.reshape((-1, 1)), .5).astype(int).reshape((1, -1))[0]
     hmm_fbs = copy.deepcopy(hmm_bin)
-    hmm_fbs.emissionprob_ = get_emissionmat(y_tr_beh, y_pred_fbs, 2)
+    hmm_fbs.emissionprob_ = mts.get_emissionmat(y_tr_beh, y_pred_fbs, 2)
     y_proba_fbs_hmm = hmm_fbs.predict_proba(y_pred_fbs.reshape((-1, 1)))
     y_pred_fbs_hmm = np.argmax(y_proba_fbs_hmm, axis=1)
 
