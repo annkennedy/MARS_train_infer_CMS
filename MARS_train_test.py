@@ -306,7 +306,7 @@ def do_test(name_classifier, X_te, y_te, verbose=0):
 
     # unpack the smoothing parameters
     clf_params = classifier['params']
-    kn = clf_params['k']
+    kn = clf_params['smk_kn']
     blur_steps = clf_params['blur'] ** 2
     shift = clf_params['shift']
 
