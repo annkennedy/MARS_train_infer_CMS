@@ -24,7 +24,7 @@ def load_default_parameters():
     default_params = {'clf_type': 'xgb',
                       'feat_type': 'top',  # keep this to just top for now
                       'downsample_rate': 5,  # temporal downsampling applied to training data
-                      'kn': np.array([0.5, 0.25, 0.5]),
+                      'smk_kn': np.array([0.5, 0.25, 0.5]),
                       'blur': 4,
                       'shift': 4,
                       'do_wnd': False,
