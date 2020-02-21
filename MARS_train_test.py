@@ -83,6 +83,7 @@ def choose_classifier(clf_type='xgb', clf_params=dict()):
 def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', verbose=0, do_wnd=False, do_cwt=False):
     data = []
     labels = []
+    Ybig = []
 
     for v in video_list:
         vbase = os.path.basename(v)
@@ -132,37 +133,35 @@ def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', v
                 d = mts.apply_windowing(d)
             elif do_cwt:
                 d = mts.apply_wavelet_transform(d)
-            data.append(d)
+            data.append(np.array(d))
 
             beh = map.parse_annotations(os.path.join(video_path, v, ann), timestamps=timestamps)
-            labels += beh['behs_frame']
+            # labels += beh['behs_frame']
+            labels.append(np.array(beh['behs_frame']))
 
             if len(beh['behs_frame']) != d.shape[0]:
                 print('Length mismatch: %s %d %d' % (v, len(beh['behs_frame']), d.shape[0]))
+
+        y = {}
+        for label_name in keepLabels.keys():
+            y_temp = np.array([]).astype(int)
+            for i in beh['behs_frame']: y_temp = np.append(y_temp,1) if i in keepLabels[label_name] else np.append(y_temp,0)
+            y[label_name] = y_temp
+        Ybig.append(y)
+
     if not data:
         print('No feature files found')
         return [], [], [], []
     if (verbose):
         print('all files loaded')
 
-    y = {}
-    for label_name in keepLabels.keys():
-        y_temp = np.array([]).astype(int)
-        for i in labels: y_temp = np.append(y_temp,1) if i in keepLabels[label_name] else np.append(y_temp,0)
-        y[label_name] = y_temp
-
-    data = np.concatenate(data, axis=0)
-    data = mts.clean_data(data)
-
     # we only really need this for training the classifier, oh well
     if(verbose):
         print('fitting preprocessing parameters...')
-    scaler = StandardScaler()
-    scaler.fit(data)
-    data = scaler.transform(data)
+
     print('done!\n')
 
-    return data, y, scaler, names
+    return data, Ybig, names
 
 
 def assign_labels(all_predicted_probabilities, behaviors_used):
