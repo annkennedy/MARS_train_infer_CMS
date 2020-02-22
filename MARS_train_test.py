@@ -10,11 +10,11 @@ from hmmlearn import hmm
 from scipy import signal
 import copy
 from sklearn.preprocessing import StandardScaler
-from xgboost import XGBClassifier
+# from xgboost import XGBClassifier
 import MARS_annotation_parsers as map
 import MARS_ts_util as mts
 from MARS_clf_helpers import *
-from seqIo import *
+# from seqIo import *
 
 # warnings.filterwarnings("ignore")
 # plt.ioff()
@@ -83,7 +83,9 @@ def y_dict_to_array(y, key_order):
     new_y = []
     for key in key_order:
         new_y.append(y[key])
-    return np.array(new_y).T
+    z = np.array(new_y).T
+    x = 1 - np.sum(z,axis=1)
+    return np.hstack((z, x[:,None]))
 
 def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', verbose=0, do_wnd=False, do_cwt=False):
     data = []
@@ -165,12 +167,13 @@ def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', v
         print('fitting preprocessing parameters...')
 
     print('done!\n')
-    
+
     key_order = Ybig[0].keys()
     y_final = []
     for video in Ybig:
         y_final.append(y_dict_to_array(video, key_order))
 
+    key_order += 'None'
     return data, y_final, key_order, names
 
 
@@ -558,3 +561,4 @@ def run_classifier(behs, video_path, test_videos, test_annot, save_path=[], ver=
         map.dump_labels_bento(all_pred_fbs_hmm, os.path.join(save_path, 'predictions_fbs_hmm_' + vname + '.annot'),
                               moviename=vid, framerate=30, beh_list=beh_list, gt=all_gt)
         print('\n\n')
+
