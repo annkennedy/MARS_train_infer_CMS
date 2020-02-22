@@ -79,6 +79,11 @@ def choose_classifier(clf_type='xgb', clf_params=dict()):
 
     return clf
 
+def y_dict_to_array(y, key_order):
+    new_y = []
+    for key in key_order:
+        new_y.append(y[key])
+    return np.array(new_y).T
 
 def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', verbose=0, do_wnd=False, do_cwt=False):
     data = []
@@ -160,8 +165,13 @@ def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', v
         print('fitting preprocessing parameters...')
 
     print('done!\n')
+    
+    key_order = Ybig[0].keys()
+    y_final = []
+    for video in Ybig:
+        y_final.append(y_dict_to_array(video, key_order))
 
-    return data, Ybig, names
+    return data, y_final, key_order, names
 
 
 def assign_labels(all_predicted_probabilities, behaviors_used):
