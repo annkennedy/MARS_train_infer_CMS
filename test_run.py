@@ -76,7 +76,9 @@ model = LSTMTagger(input_dim, hidden_dim, num_classes)
 loss_function = nn.NLLLoss()
 optimizer = optim.SGD(model.parameters(), lr=0.1)
 
-
+## Normalize the data
+# Xtrain, norm_info_train = normalize(Xtrain)
+# Xtest, _ = normalize(Xtest, norm_info=norm_info_train)
 
 
 # See what the scores are before training
@@ -130,8 +132,8 @@ for epoch in range(num_epochs):  # again, normally you would NOT do 300 epochs, 
 
 	# Report Train losses after each epoch
 	train_loss = loss_function(all_scores, all_targets)
-	# train_recall = recall(all_scores, all_targets)
-	# train_precision = precision(all_scores, all_targets)
+	# train_recall = recall(all_scores.data.numpy(), all_targets.data.numpy())
+	# train_precision = precision(all_scores.data.numpy(), all_targets.data.numpy())
 	print('Epoch',epoch,' Train Loss=', train_loss)
 	# print('Epoch',epoch,' Train Recall=', train_recall)
 	# print('Epoch',epoch,' Train Precision=', train_precision)
@@ -155,8 +157,8 @@ for epoch in range(num_epochs):  # again, normally you would NOT do 300 epochs, 
 	all_scores = torch.cat(all_scores)
 	all_targets = torch.cat(all_targets)
 	test_loss = loss_function(all_scores, all_targets)
-	# test_recall = recall(all_scores, all_targets)
-	# test_precision = precision(all_scores, all_targets)
+	# test_recall = recall(all_scores.data.numpy(), all_targets.data.numpy())
+	# test_precision = precision(all_scores.data.numpy(), all_targets.data.numpy())
 	print('Epoch',epoch,' Test Loss=', test_loss)
 	# print('Epoch',epoch,' Test Recall=', test_recall)
 	# print('Epoch',epoch,' Test Precision=', test_precision)
