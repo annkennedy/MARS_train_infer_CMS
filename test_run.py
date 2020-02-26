@@ -95,7 +95,8 @@ num_frames = 1000
 num_epochs = 10
 for epoch in range(num_epochs):  # again, normally you would NOT do 300 epochs, it is toy data
 	# setence is our features, tags are INDICES of true label
-	all_predictions = []
+	all_predicted_classes = []
+	all_predicted_scores = []
 	all_targets = []
 	for v in range(len(Xtrain)):
 		big_input = Xtrain[v]
@@ -116,7 +117,7 @@ for epoch in range(num_epochs):  # again, normally you would NOT do 300 epochs, 
 
 		# Step 3. Run our forward pass.
 		predicted_class_scores = model(torch.FloatTensor(input_sequence))
-		predicted_class_index = torch.argmax(predicted_class_scores) # this is the model's class prediction i.e. the highest scoring element
+		predicted_class_index = torch.argmax(predicted_class_scores, axis=1) # this is the model's class prediction i.e. the highest scoring element
 
 		# Step 4. Compute the loss, gradients, and update the parameters by
 		#  calling optimizer.step()
@@ -124,22 +125,26 @@ for epoch in range(num_epochs):  # again, normally you would NOT do 300 epochs, 
 		loss.backward()
 		optimizer.step()
 
-		all_predictions.append(predicted_class_index)
+		all_predicted_classes.append(predicted_class_index)
+		all_predicted_scores.append(predicted_class_scores)
 		all_targets.append(target_inds)
 
-	all_predictions = torch.cat(all_predictions)
+
+	all_predicted_classes = torch.cat(all_predicted_classes)
+	all_predicted_scores = torch.cat(all_predicted_scores)
 	all_targets = torch.cat(all_targets)
 
 	# Report Train losses after each epoch
-	train_loss = loss_function(all_predictions, all_targets)
-	train_recall = recall(predicted=all_predictions.data.numpy(), actual=all_targets.data.numpy())
-	train_precision = precision(predicted=all_predictions.data.numpy(), actual=all_targets.data.numpy())
+	train_loss = loss_function(all_predicted_scores, all_targets)
+	# train_recall = recall(predicted=all_predicted_classes.data.numpy(), actual=all_targets.data.numpy())
+	# train_precision = precision(predicted=all_predicted_classes.data.numpy(), actual=all_targets.data.numpy())
 	print('Epoch',epoch,' Train Loss=', train_loss)
-	print('Epoch',epoch,' Train Recall=', train_recall)
-	print('Epoch',epoch,' Train Precision=', train_precision)
+	# print('Epoch',epoch,' Train Recall=', train_recall)
+	# print('Epoch',epoch,' Train Precision=', train_precision)
 
 	# Report TEST performance after each epoch
-	all_predictions = []
+	all_predicted_classes = []
+	all_predicted_scores = []
 	all_targets = []
 	for v in range(len(Xtest)):
 		big_input = Xtest[v]
@@ -150,19 +155,21 @@ for epoch in range(num_epochs):  # again, normally you would NOT do 300 epochs, 
 
 		# Step 3. Run our forward pass.
 		predicted_class_scores = model(torch.FloatTensor(input_sequence))
-		predicted_class_index = torch.argmax(predicted_class_scores) # this is the model's class prediction i.e. the highest scoring element
+		predicted_class_index = torch.argmax(predicted_class_scores, axis=1) # this is the model's class prediction i.e. the highest scoring element
 
-		all_predictions.append(predicted_class_index)
+		all_predicted_classes.append(predicted_class_index)
+		all_predicted_scores.append(predicted_class_scores)
 		all_targets.append(target_inds)
 	# Step 4. Compute the losses
-	all_predictions = torch.cat(all_predictions)
+	all_predicted_classes = torch.cat(all_predicted_classes)
+	all_predicted_scores = torch.cat(all_predicted_scores)
 	all_targets = torch.cat(all_targets)
-	test_loss = loss_function(all_predictions, all_targets)
-	test_recall = recall(predicted=all_predictions.data.numpy(), actual=all_targets.data.numpy())
-	test_precision = precision(predicted=all_predictions.data.numpy(), actual=all_targets.data.numpy())
+	test_loss = loss_function(all_predicted_scores, all_targets)
+	# test_recall = recall(predicted=all_predicted_classes.data.numpy(), actual=all_targets.data.numpy())
+	# test_precision = precision(predicted=all_predicted_classes.data.numpy(), actual=all_targets.data.numpy())
 	print('Epoch',epoch,' Test Loss=', test_loss)
-	print('Epoch',epoch,' Test Recall=', test_recall)
-	print('Epoch',epoch,' Test Precision=', test_precision)
+	# print('Epoch',epoch,' Test Recall=', test_recall)
+	# print('Epoch',epoch,' Test Precision=', test_precision)
 
 
 # See what the scores are after training
