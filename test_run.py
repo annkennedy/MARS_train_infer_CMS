@@ -58,34 +58,44 @@ behs['mount'] = ['mount','aggressivemount','intromission','dom_mount']
 behs ['attack'] = ['attack']
 
 
-X, y, key_order, names = mars.load_data(video_path, test_videos, behs,
+# Read in Train and Test sets
+Xtrain, ytrain, key_order_train, names_train = mars.load_data(video_path, train_videos, behs,
                                   ver=ver, feat_type=feat_type, verbose=verbose, do_wnd=do_wnd, do_cwt=do_cwt)
+
+Xtest, ytest, key_order_test, names_test = mars.load_data(video_path, test_videos, behs,
+                                  ver=ver, feat_type=feat_type, verbose=verbose, do_wnd=do_wnd, do_cwt=do_cwt)
+
 
 n_features = 22
 hidden_dim = 9
-X = [x[:,:n_features] for x in X]
-num_classes = y[0].shape[1]
-input_dim = X[0].shape[1]
+Xtrain = [x[:,:n_features] for x in Xtrain]
+Xtest = [x[:,:n_features] for x in Xtest]
+num_classes = ytrain[0].shape[1]
+input_dim = Xtrain[0].shape[1]
 model = LSTMTagger(input_dim, hidden_dim, num_classes)
 loss_function = nn.NLLLoss()
 optimizer = optim.SGD(model.parameters(), lr=0.1)
+
+
+
 
 # See what the scores are before training
 # Note that element i,j of the output is the score for tag j for word i.
 # Here we don't need to train, so the code is wrapped in torch.no_grad()
 with torch.no_grad():
-    inputs = torch.FloatTensor(X[0])
+    inputs = torch.FloatTensor(Xtest[0])
     tag_scores = model(inputs)
     print(tag_scores)
 
-num_videos = len(X)
 num_frames = 1000
-num_epochs = 3
+num_epochs = 10
 for epoch in range(num_epochs):  # again, normally you would NOT do 300 epochs, it is toy data
 	# setence is our features, tags are INDICES of true label
-	for v in range(num_videos):
-		big_input = X[v]
-		big_target = y[v]
+	all_scores = []
+	all_targets = []
+	for v in range(len(Xtrain)):
+		big_input = Xtrain[v]
+		big_target = ytrain[v]
 		# sample a random chunk of video
 		max_start_ind = big_input.shape[0] - num_frames + 1
 
@@ -112,10 +122,49 @@ for epoch in range(num_epochs):  # again, normally you would NOT do 300 epochs, 
 		loss.backward()
 		optimizer.step()
 
+		all_scores.append(tag_scores)
+		all_targets.append(target_inds)
+
+	all_scores = torch.cat(all_scores)
+	all_targets = torch.cat(all_targets)
+
+	# Report Train losses after each epoch
+	train_loss = loss_function(all_scores, all_targets)
+	# train_recall = recall(all_scores, all_targets)
+	# train_precision = precision(all_scores, all_targets)
+	print('Epoch',epoch,' Train Loss=', train_loss)
+	# print('Epoch',epoch,' Train Recall=', train_recall)
+	# print('Epoch',epoch,' Train Precision=', train_precision)
+
+	# Report TEST performance after each epoch
+	all_scores = []
+	all_targets = []
+	for v in range(len(Xtest)):
+		big_input = Xtest[v]
+		big_target = ytest[v]
+		input_sequence = big_input
+		target_sequence = big_target
+		target_inds = torch.tensor(np.argmax(target_sequence, axis=1))
+
+		# Step 3. Run our forward pass.
+		tag_scores = model(torch.FloatTensor(input_sequence))
+
+		all_scores.append(tag_scores)
+		all_targets.append(target_inds)
+	# Step 4. Compute the losses
+	all_scores = torch.cat(all_scores)
+	all_targets = torch.cat(all_targets)
+	test_loss = loss_function(all_scores, all_targets)
+	# test_recall = recall(all_scores, all_targets)
+	# test_precision = precision(all_scores, all_targets)
+	print('Epoch',epoch,' Test Loss=', test_loss)
+	# print('Epoch',epoch,' Test Recall=', test_recall)
+	# print('Epoch',epoch,' Test Precision=', test_precision)
+
 
 # See what the scores are after training
 with torch.no_grad():
-    inputs = torch.FloatTensor(X[0])
+    inputs = torch.FloatTensor(Xtest[0])
     tag_scores = model(inputs)
     print(tag_scores)
 
