@@ -7,6 +7,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 import numpy as np
 
+from utils import *
 import pdb
 
 
@@ -26,8 +27,8 @@ class LSTMTagger(nn.Module):
     def forward(self, input_sequence):
         lstm_out, _ = self.lstm(input_sequence.view(input_sequence.shape[0], 1, -1))
         tag_space = self.hidden2tag(lstm_out.view(input_sequence.shape[0], -1))
-        tag_scores = F.log_softmax(tag_space, dim=1)
-        return tag_scores
+        predicted_class_scores = F.log_softmax(tag_space, dim=1)
+        return predicted_class_scores
 
 
 video_path = '/Users/matthewlevine/Downloads/'
@@ -77,8 +78,9 @@ loss_function = nn.NLLLoss()
 optimizer = optim.SGD(model.parameters(), lr=0.1)
 
 ## Normalize the data
-# Xtrain, norm_info_train = normalize(Xtrain)
-# Xtest, _ = normalize(Xtest, norm_info=norm_info_train)
+Xtrain_stats = stats_of(Xtrain)
+Xtrain = normalize_maxmin(X=Xtrain, stats=Xtrain_stats)
+Xtest = normalize_maxmin(X=Xtest, stats=Xtrain_stats) # using Xtrain stats on purpose here...for now.
 
 
 # See what the scores are before training
@@ -86,14 +88,14 @@ optimizer = optim.SGD(model.parameters(), lr=0.1)
 # Here we don't need to train, so the code is wrapped in torch.no_grad()
 with torch.no_grad():
     inputs = torch.FloatTensor(Xtest[0])
-    tag_scores = model(inputs)
-    print(tag_scores)
+    predicted_class_scores = model(inputs)
+    print(predicted_class_scores)
 
 num_frames = 1000
 num_epochs = 10
 for epoch in range(num_epochs):  # again, normally you would NOT do 300 epochs, it is toy data
 	# setence is our features, tags are INDICES of true label
-	all_scores = []
+	all_predictions = []
 	all_targets = []
 	for v in range(len(Xtrain)):
 		big_input = Xtrain[v]
@@ -112,34 +114,32 @@ for epoch in range(num_epochs):  # again, normally you would NOT do 300 epochs, 
 		# We need to clear them out before each instance
 		model.zero_grad()
 
-		# Step 2. Get our inputs ready for the network, that is, turn them into
-		# Tensors of word indices.
-
 		# Step 3. Run our forward pass.
-		tag_scores = model(torch.FloatTensor(input_sequence))
+		predicted_class_scores = model(torch.FloatTensor(input_sequence))
+		predicted_class_index = torch.argmax(predicted_class_scores) # this is the model's class prediction i.e. the highest scoring element
 
 		# Step 4. Compute the loss, gradients, and update the parameters by
 		#  calling optimizer.step()
-		loss = loss_function(tag_scores, target_inds)
+		loss = loss_function(predicted_class_scores, target_inds)
 		loss.backward()
 		optimizer.step()
 
-		all_scores.append(tag_scores)
+		all_predictions.append(predicted_class_index)
 		all_targets.append(target_inds)
 
-	all_scores = torch.cat(all_scores)
+	all_predictions = torch.cat(all_predictions)
 	all_targets = torch.cat(all_targets)
 
 	# Report Train losses after each epoch
-	train_loss = loss_function(all_scores, all_targets)
-	# train_recall = recall(all_scores.data.numpy(), all_targets.data.numpy())
-	# train_precision = precision(all_scores.data.numpy(), all_targets.data.numpy())
+	train_loss = loss_function(all_predictions, all_targets)
+	train_recall = recall(predicted=all_predictions.data.numpy(), actual=all_targets.data.numpy())
+	train_precision = precision(predicted=all_predictions.data.numpy(), actual=all_targets.data.numpy())
 	print('Epoch',epoch,' Train Loss=', train_loss)
-	# print('Epoch',epoch,' Train Recall=', train_recall)
-	# print('Epoch',epoch,' Train Precision=', train_precision)
+	print('Epoch',epoch,' Train Recall=', train_recall)
+	print('Epoch',epoch,' Train Precision=', train_precision)
 
 	# Report TEST performance after each epoch
-	all_scores = []
+	all_predictions = []
 	all_targets = []
 	for v in range(len(Xtest)):
 		big_input = Xtest[v]
@@ -149,26 +149,27 @@ for epoch in range(num_epochs):  # again, normally you would NOT do 300 epochs, 
 		target_inds = torch.tensor(np.argmax(target_sequence, axis=1))
 
 		# Step 3. Run our forward pass.
-		tag_scores = model(torch.FloatTensor(input_sequence))
+		predicted_class_scores = model(torch.FloatTensor(input_sequence))
+		predicted_class_index = torch.argmax(predicted_class_scores) # this is the model's class prediction i.e. the highest scoring element
 
-		all_scores.append(tag_scores)
+		all_predictions.append(predicted_class_index)
 		all_targets.append(target_inds)
 	# Step 4. Compute the losses
-	all_scores = torch.cat(all_scores)
+	all_predictions = torch.cat(all_predictions)
 	all_targets = torch.cat(all_targets)
-	test_loss = loss_function(all_scores, all_targets)
-	# test_recall = recall(all_scores.data.numpy(), all_targets.data.numpy())
-	# test_precision = precision(all_scores.data.numpy(), all_targets.data.numpy())
+	test_loss = loss_function(all_predictions, all_targets)
+	test_recall = recall(predicted=all_predictions.data.numpy(), actual=all_targets.data.numpy())
+	test_precision = precision(predicted=all_predictions.data.numpy(), actual=all_targets.data.numpy())
 	print('Epoch',epoch,' Test Loss=', test_loss)
-	# print('Epoch',epoch,' Test Recall=', test_recall)
-	# print('Epoch',epoch,' Test Precision=', test_precision)
+	print('Epoch',epoch,' Test Recall=', test_recall)
+	print('Epoch',epoch,' Test Precision=', test_precision)
 
 
 # See what the scores are after training
 with torch.no_grad():
     inputs = torch.FloatTensor(Xtest[0])
-    tag_scores = model(inputs)
-    print(tag_scores)
+    predicted_class_scores = model(inputs)
+    print(predicted_class_scores)
 
 
 
