@@ -32,8 +32,8 @@ class LSTMTagger(nn.Module):
 
 
 video_path = '/Users/matthewlevine/Downloads/'
-train_videos = [os.path.join('TRAIN_lite_small',v) for v in os.listdir(video_path+'TRAIN_lite_small')]
-test_videos = [os.path.join('TEST_lite_small',v) for v in os.listdir(video_path+'TEST_lite_small')]
+train_videos = [os.path.join('TRAIN_lite_whole',v) for v in os.listdir(video_path+'TRAIN_lite_whole')]
+test_videos = [os.path.join('TEST_lite_whole',v) for v in os.listdir(video_path+'TEST_lite_whole')]
 
 
 behs = {}
@@ -79,8 +79,8 @@ optimizer = optim.SGD(model.parameters(), lr=0.1)
 
 ## Normalize the data
 Xtrain_stats = stats_of(Xtrain)
-Xtrain = normalize_maxmin(X=Xtrain, stats=Xtrain_stats)
-Xtest = normalize_maxmin(X=Xtest, stats=Xtrain_stats) # using Xtrain stats on purpose here...for now.
+Xtrain = normalize(X=Xtrain, stats=Xtrain_stats)
+Xtest = normalize(X=Xtest, stats=Xtrain_stats) # using Xtrain stats on purpose here...for now.
 
 
 # See what the scores are before training
@@ -104,8 +104,13 @@ for epoch in range(num_epochs):  # again, normally you would NOT do 300 epochs, 
 		# sample a random chunk of video
 		max_start_ind = big_input.shape[0] - num_frames + 1
 
-		start_ind = np.random.randint(max_start_ind)
-		end_ind = start_ind + num_frames
+		if max_start_ind < 0:
+			# if video is shorter than num_frames
+			start_ind = 0
+			end_ind = big_input.shape[0] - 1
+		else:
+			start_ind = np.random.randint(max_start_ind)
+			end_ind = start_ind + num_frames
 
 		input_sequence = big_input[start_ind:end_ind,:]
 		target_sequence = big_target[start_ind:end_ind,:]
@@ -136,11 +141,11 @@ for epoch in range(num_epochs):  # again, normally you would NOT do 300 epochs, 
 
 	# Report Train losses after each epoch
 	train_loss = loss_function(all_predicted_scores, all_targets)
-	# train_recall = recall(predicted=all_predicted_classes.data.numpy(), actual=all_targets.data.numpy())
-	# train_precision = precision(predicted=all_predicted_classes.data.numpy(), actual=all_targets.data.numpy())
+	train_recall = recall(predicted=all_predicted_classes.data.numpy(), actual=all_targets.data.numpy())
+	train_precision = precision(predicted=all_predicted_classes.data.numpy(), actual=all_targets.data.numpy())
 	print('Epoch',epoch,' Train Loss=', train_loss)
-	# print('Epoch',epoch,' Train Recall=', train_recall)
-	# print('Epoch',epoch,' Train Precision=', train_precision)
+	print('Epoch',epoch,' Train Recall=', train_recall)
+	print('Epoch',epoch,' Train Precision=', train_precision)
 
 	# Report TEST performance after each epoch
 	all_predicted_classes = []
@@ -165,11 +170,11 @@ for epoch in range(num_epochs):  # again, normally you would NOT do 300 epochs, 
 	all_predicted_scores = torch.cat(all_predicted_scores)
 	all_targets = torch.cat(all_targets)
 	test_loss = loss_function(all_predicted_scores, all_targets)
-	# test_recall = recall(predicted=all_predicted_classes.data.numpy(), actual=all_targets.data.numpy())
-	# test_precision = precision(predicted=all_predicted_classes.data.numpy(), actual=all_targets.data.numpy())
+	test_recall = recall(predicted=all_predicted_classes.data.numpy(), actual=all_targets.data.numpy())
+	test_precision = precision(predicted=all_predicted_classes.data.numpy(), actual=all_targets.data.numpy())
 	print('Epoch',epoch,' Test Loss=', test_loss)
-	# print('Epoch',epoch,' Test Recall=', test_recall)
-	# print('Epoch',epoch,' Test Precision=', test_precision)
+	print('Epoch',epoch,' Test Recall=', test_recall)
+	print('Epoch',epoch,' Test Precision=', test_precision)
 
 
 # See what the scores are after training
