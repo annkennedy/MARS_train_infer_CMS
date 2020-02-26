@@ -1,55 +1,66 @@
 import numpy as np
 
-def precision(predicted, actual):
+def precision(predicted, actual, is_one_hot = False):
     '''Returns precision of categorical predictions per category
     Precision is defined as the ratio of predicted true values that are
     actually true in the ground truth. The formula is:
     True Positive / (True Positive + False Positive)
 
     Arguments
-        - predicted: numpy array of predicted values, with each row
-        being a sample and each column being a one hot encoded feature
-        - actual: numpy array of ground truth, matching the dimensions of
-        our predicted array
+        - predicted: array of predicted values
+        - actual: array of ground truth
+        - is_one_hot: Bool indicating if your predictions and actuals are
+        one hot encoded (numpy array of predicted values, with each row
+        being a sample and each column being a one hot encoded feature)
 
     Returns
-        - Precision: a list of the precisions per feature, indexes match
-        with those of features passed on with predicted/actual arrays
-    ''''
+        - Precision: a list of the precisions per feature
+    '''
+    if is_one_hot:
+        predicted = np.argmax(predicted, axis=1)
+        actual = np.argmax(actual, axis=1)
     precision = []
-    for i in range(predicted.shape[1]):
-        is_i = i == np.argmax(predicted, axis=1)
-        is_correct = i == np.argmax(actual, axis=1)
-        num = np.sum(is_correct & is_i)
-        denom = np.sum(is_i)
-        precision.append(float(num)/float(denom))
+    for i in range(np.max(actual) + 1):
+        predicted_i = i == predicted
+        actual_i = i == actual
+        num = np.sum(predicted_i & actual_i)
+        denom = np.sum(predicted_i)
+        if (denom == 0):
+            precision.append("N/A")
+        else:
+            precision.append(float(num)/float(denom))
     return(precision)
 
-def recall(predicted, actual):
+def recall(predicted, actual, is_one_hot = False):
     '''Returns recall of categorical predictions per category
     Precision is defined as the ratio of ground truth true values that are
     predicted correctly. The formula is:
     True Positive / (True Positive + False Negative)
 
     Arguments
-        - predicted: numpy array of predicted values, with each row
-        being a sample and each column being a one hot encoded feature
-        - actual: numpy array of ground truth, matching the dimensions of
-        our predicted array
+        - predicted: array of predicted values
+        - actual: array of ground truth
+        - is_one_hot: Bool indicating if your predictions and actuals are
+        one hot encoded (numpy array of predicted values, with each row
+        being a sample and each column being a one hot encoded feature)
 
     Returns
-        - Precision: a list of the recalls per feature, indexes match
-        with those of features passed on with predicted/actual arrays
-    ''''
+        - Precision: a list of the recalls per feature
+    '''
+    if is_one_hot:
+        predicted = np.argmax(predicted, axis=1)
+        actual = np.argmax(actual, axis=1)
 
     recall = []
-    for i in range(predicted.shape[1]):
-        is_i = i == np.argmax(actual, axis=1)
-        is_correct = np.argmax(predicted, axis=1) == np.argmax(actual, axis=1)
-        num = np.sum(is_i & is_correct)
-        denom = np.sum(is_i)
-
-        recall.append(float(num)/float(denom))
+    for i in range(np.max(actual) + 1):
+        predicted_i = i == predicted
+        actual_i = i == actual
+        num = np.sum(predicted_i & actual_i)
+        denom = np.sum(actual_i)
+        if (denom == 0):
+            recall.append("N/A")
+        else:
+            recall.append(float(num)/float(denom))
     return recall
 
 def stats_of(X):
