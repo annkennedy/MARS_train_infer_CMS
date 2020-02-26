@@ -149,12 +149,12 @@ def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', v
             if len(beh['behs_frame']) != d.shape[0]:
                 print('Length mismatch: %s %d %d' % (v, len(beh['behs_frame']), d.shape[0]))
 
-        y = {}
-        for label_name in keepLabels.keys():
-            y_temp = np.array([]).astype(int)
-            for i in beh['behs_frame']: y_temp = np.append(y_temp,1) if i in keepLabels[label_name] else np.append(y_temp,0)
-            y[label_name] = y_temp
-        Ybig.append(y)
+            y = {}
+            for label_name in keepLabels.keys():
+                y_temp = np.array([]).astype(int)
+                for i in beh['behs_frame']: y_temp = np.append(y_temp,1) if i in keepLabels[label_name] else np.append(y_temp,0)
+                y[label_name] = y_temp
+            Ybig.append(y)
 
     if not data:
         print('No feature files found')
@@ -167,7 +167,7 @@ def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', v
         print('fitting preprocessing parameters...')
 
     print('done!\n')
-
+    
     key_order = Ybig[0].keys()
     y_final = []
     for video in Ybig:
