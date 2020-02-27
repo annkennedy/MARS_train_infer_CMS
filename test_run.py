@@ -69,9 +69,11 @@ def main():
 	                                  ver=ver, feat_type=feat_type, verbose=verbose, do_wnd=do_wnd, do_cwt=do_cwt)
 
 
-	n_features = 22
-	Xtrain = [x[:,:n_features] for x in Xtrain]
-	Xtest = [x[:,:n_features] for x in Xtest]
+	n_features = 14 # just key-points
+	mouse2_start = len(names_train)
+	feature_inds = np.hstack((np.arange(0,n_features), np.arange(mouse2_start,mouse2_start+n_features)))
+	Xtrain = [x[:,feature_inds] for x in Xtrain]
+	Xtest = [x[:,feature_inds] for x in Xtest]
 	num_classes = ytrain[0].shape[1]
 	input_dim = Xtrain[0].shape[1]
 	# model = LSTMTagger(input_dim=input_dim, hidden_dim=FLAGS.hidden_dim, num_classes=num_classes)
