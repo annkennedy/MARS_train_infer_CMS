@@ -80,7 +80,7 @@ def choose_classifier(clf_type='xgb', clf_params=dict()):
     return clf
 
 
-def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', verbose=0, do_wnd=False, do_cwt=False, just_keypoints=False):
+def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', verbose=0, do_wnd=False, do_cwt=False):
     data = []
     labels = []
 
@@ -119,7 +119,6 @@ def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', v
             print('Feature file not found for %s' % vbase)
         else:
             names = vid['features']
-            # if not just_keypoints:
             if 'data_smooth' in vid.keys():
                 d = vid['data_smooth']
                 d = mts.clean_data(d)
