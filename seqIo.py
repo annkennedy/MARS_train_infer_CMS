@@ -11,7 +11,7 @@ import colour_demosaicing
 import skvideo.io
 import re
 import copy
-import cPickle as pickle
+import pickle
 import pdb
 import cv2
 import progressbar as pb
