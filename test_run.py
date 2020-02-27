@@ -24,6 +24,7 @@ parser.add_argument('--loss', type=str, default='nn.NLLLoss', help='specifiy whi
 parser.add_argument('--model_name', type=str, default='LSTMTagger', help='specifiy which RNN model to use')
 parser.add_argument('--train_path', type=str, default='/Users/matthewlevine/Downloads/TRAIN_lite_small', help='specifiy path to TRAIN videos')
 parser.add_argument('--test_path', type=str, default='/Users/matthewlevine/Downloads/TEST_lite_small', help='specifiy path to TEST videos')
+parser.add_argument('--balance_weights', type=str2bool, default=True, help='If true, compute cost function weights based on relative class frequencies')
 FLAGS = parser.parse_args()
 
 
@@ -75,8 +76,6 @@ def main():
 	# model = LSTMTagger(input_dim=input_dim, hidden_dim=FLAGS.hidden_dim, num_classes=num_classes)
 	model = get_model(name=FLAGS.model_name, input_dim=input_dim, hidden_dim=FLAGS.hidden_dim, num_classes=num_classes)
 
-	loss_function = get_loss(name=FLAGS.loss, weight=None) #e.g. nn.NLLLoss()
-
 	optimizer = get_optimizer(name=FLAGS.optimizer, params=model.parameters(), lr=FLAGS.lr)
 	# optimizer = optim.SGD(model.parameters(), lr=FLAGS.lr)
 
@@ -93,6 +92,17 @@ def main():
 	foo = np.concatenate(ytest).sum(axis=0)
 	test_fracs = foo / float(foo.sum())
 	print('Test Class Balance:', test_fracs)
+
+	# compute sample weight based on inverse frequencies
+	# https://stats.stackexchange.com/questions/342170/how-to-train-an-lstm-when-the-sequence-has-imbalanced-classes
+	if FLAGS.balance_weights:
+		weight = 1. / np.concatenate(ytrain).sum(axis=0)
+		weight = weight / weight.sum()
+		weight = torch.FloatTensor(weight)
+	else:
+		weight = None
+
+	loss_function = get_loss(name=FLAGS.loss, weight=weight) #e.g. nn.NLLLoss()
 
 	# train the model
 	num_frames = FLAGS.num_frames
