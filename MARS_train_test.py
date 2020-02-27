@@ -80,12 +80,13 @@ def choose_classifier(clf_type='xgb', clf_params=dict()):
     return clf
 
 
-def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', verbose=0, do_wnd=False, do_cwt=False):
+def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', verbose=0, do_wnd=False, do_cwt=False, just_keypoints=False):
     data = []
     labels = []
 
     for v in video_list:
         vbase = os.path.basename(v)
+        vbase2 = '_'.join(vbase.split('_')[:-1])
         vid = []
         seq = []
 
@@ -104,15 +105,21 @@ def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', v
 
         for version in ver:
             fstr = os.path.join(video_path, v, vbase + '_raw_feat_%s_v1_%d.npz' % (feat_type, version))
+            fstr2 = os.path.join(video_path, v, vbase2 + '_raw_feat_%s_v1_%d.npz' % (feat_type, version))
             if os.path.isfile(fstr):
                 if verbose:
                     print('loaded file: ' + os.path.basename(fstr))
                 vid = np.load(open(fstr, 'rb'))
+            elif os.path.isfile(fstr2):
+                if verbose:
+                    print('loaded file: ' + os.path.basename(fstr2))
+                vid = np.load(open(fstr2, 'rb'))
 
         if not vid:
             print('Feature file not found for %s' % vbase)
         else:
             names = vid['features']
+            # if not just_keypoints:
             if 'data_smooth' in vid.keys():
                 d = vid['data_smooth']
                 d = mts.clean_data(d)
