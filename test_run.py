@@ -22,8 +22,9 @@ parser.add_argument('--hidden_dim', type=int, default=10, help='number of dimens
 parser.add_argument('--optimizer', type=str, default='SGD', help='specifiy which optimizer to use')
 parser.add_argument('--loss', type=str, default='nn.NLLLoss', help='specifiy which loss function to use')
 parser.add_argument('--model_name', type=str, default='LSTMTagger', help='specifiy which RNN model to use')
-parser.add_argument('--train_path', type=str, default='/Users/matthewlevine/Downloads/TRAIN_lite_small', help='specifiy path to TRAIN videos')
-parser.add_argument('--test_path', type=str, default='/Users/matthewlevine/Downloads/TEST_lite_small', help='specifiy path to TEST videos')
+parser.add_argument('--train_path', type=str, default='TRAIN_lite_small', help='specifiy path to TRAIN videos')
+parser.add_argument('--test_path', type=str, default='TEST_lite_small', help='specifiy path to TEST videos')
+parser.add_argument('--output_path', type=str, default='default_output', help='specifiy path to TEST videos')
 parser.add_argument('--balance_weights', type=str2bool, default=True, help='If true, compute cost function weights based on relative class frequencies')
 FLAGS = parser.parse_args()
 
