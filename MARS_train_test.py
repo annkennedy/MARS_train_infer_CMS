@@ -6,7 +6,7 @@ from sklearn.preprocessing import binarize
 import dill
 import time
 from sklearn.ensemble import BaggingClassifier
-from hmmlearn import hmm
+# from hmmlearn import hmm
 from scipy import signal
 import copy
 from sklearn.preprocessing import StandardScaler
@@ -94,6 +94,7 @@ def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', v
 
     for v in video_list:
         vbase = os.path.basename(v)
+        vbase2 = '_'.join(vbase.split('_')[:-1])
         vid = []
         seq = []
 
@@ -112,10 +113,17 @@ def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', v
 
         for version in ver:
             fstr = os.path.join(video_path, v, vbase + '_raw_feat_%s_v1_%d.npz' % (feat_type, version))
+            fstr2 = os.path.join(video_path, v, vbase2 + '_raw_feat_%s_v1_%d.npz' % (feat_type, version))
+
             if os.path.isfile(fstr):
                 if verbose:
                     print('loaded file: ' + os.path.basename(fstr))
                 vid = np.load(open(fstr, 'rb'))
+
+            if os.path.isfile(fstr2):
+                if verbose:
+                    print('loaded file: ' + os.path.basename(fstr2))
+                vid = np.load(open(fstr2, 'rb'))
 
         if not vid:
             print('Feature file not found for %s' % vbase)
@@ -167,7 +175,7 @@ def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', v
         print('fitting preprocessing parameters...')
 
     print('done!\n')
-    
+
     key_order = Ybig[0].keys()
     y_final = []
     for video in Ybig:
