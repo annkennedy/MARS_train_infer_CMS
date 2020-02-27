@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+import pdb
 
 class LSTMTagger(nn.Module):
 
@@ -28,9 +29,9 @@ def get_optimizer(name, params, lr):
     else:
         return None
 
-def get_loss(name, params=None):
+def get_loss(name, weight=None):
     if name=='nn.NLLLoss':
-        return nn.NLLLoss()
+        return nn.NLLLoss(weight=weight)
     else:
         return None
 

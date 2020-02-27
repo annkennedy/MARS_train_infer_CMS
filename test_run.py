@@ -24,7 +24,6 @@ parser.add_argument('--loss', type=str, default='nn.NLLLoss', help='specifiy whi
 parser.add_argument('--model_name', type=str, default='LSTMTagger', help='specifiy which RNN model to use')
 parser.add_argument('--train_path', type=str, default='/Users/matthewlevine/Downloads/TRAIN_lite_small', help='specifiy path to TRAIN videos')
 parser.add_argument('--test_path', type=str, default='/Users/matthewlevine/Downloads/TEST_lite_small', help='specifiy path to TEST videos')
-
 FLAGS = parser.parse_args()
 
 
@@ -76,7 +75,7 @@ def main():
 	# model = LSTMTagger(input_dim=input_dim, hidden_dim=FLAGS.hidden_dim, num_classes=num_classes)
 	model = get_model(name=FLAGS.model_name, input_dim=input_dim, hidden_dim=FLAGS.hidden_dim, num_classes=num_classes)
 
-	loss_function = get_loss(name=FLAGS.loss) #e.g. nn.NLLLoss()
+	loss_function = get_loss(name=FLAGS.loss, weight=None) #e.g. nn.NLLLoss()
 
 	optimizer = get_optimizer(name=FLAGS.optimizer, params=model.parameters(), lr=FLAGS.lr)
 	# optimizer = optim.SGD(model.parameters(), lr=FLAGS.lr)
@@ -103,45 +102,39 @@ def main():
 		all_predicted_classes = []
 		all_predicted_scores = []
 		all_targets = []
-
-		# break Xtrain into random segments
-
-
 		for v in range(len(Xtrain)):
 			big_input = Xtrain[v]
 			big_target = ytrain[v]
-			# sample a random chunk of video
-			max_start_ind = big_input.shape[0] - num_frames + 1
 
-			if max_start_ind < 0:
-				# if video is shorter than num_frames
-				start_ind = 0
-				end_ind = big_input.shape[0] - 1
-			else:
-				start_ind = np.random.randint(max_start_ind)
+			offset = np.random.randint(len(big_input) % num_frames - 1)
+			permutations = list(range(int(len(big_input) / num_frames)))
+			np.random.shuffle(permutations)
+			for permutation in permutations:
+				# sample a random chunk of video
+				start_ind = permutation * num_frames + offset
 				end_ind = start_ind + num_frames
 
-			input_sequence = big_input[start_ind:end_ind,:]
-			target_sequence = big_target[start_ind:end_ind,:]
-			target_inds = torch.tensor(np.argmax(target_sequence, axis=1))
+				input_sequence = big_input[start_ind:end_ind,:]
+				target_sequence = big_target[start_ind:end_ind,:]
+				target_inds = torch.tensor(np.argmax(target_sequence, axis=1))
 
-			# Step 1. Remember that Pytorch accumulates gradients.
-			# We need to clear them out before each instance
-			model.zero_grad()
+				# Step 1. Remember that Pytorch accumulates gradients.
+				# We need to clear them out before each instance
+				model.zero_grad()
 
-			# Step 3. Run our forward pass.
-			predicted_class_scores = model(torch.FloatTensor(input_sequence))
-			predicted_class_index = torch.argmax(predicted_class_scores, axis=1) # this is the model's class prediction i.e. the highest scoring element
+				# Step 3. Run our forward pass.
+				predicted_class_scores = model(torch.FloatTensor(input_sequence))
+				predicted_class_index = torch.argmax(predicted_class_scores, axis=1) # this is the model's class prediction i.e. the highest scoring element
 
-			# Step 4. Compute the loss, gradients, and update the parameters by
-			#  calling optimizer.step()
-			loss = loss_function(predicted_class_scores, target_inds)
-			loss.backward()
-			optimizer.step()
+				# Step 4. Compute the loss, gradients, and update the parameters by
+				#  calling optimizer.step()
+				loss = loss_function(predicted_class_scores, target_inds)
+				loss.backward()
+				optimizer.step()
 
-			all_predicted_classes.append(predicted_class_index)
-			all_predicted_scores.append(predicted_class_scores)
-			all_targets.append(target_inds)
+				all_predicted_classes.append(predicted_class_index)
+				all_predicted_scores.append(predicted_class_scores)
+				all_targets.append(target_inds)
 
 
 		all_predicted_classes = torch.cat(all_predicted_classes)
@@ -152,7 +145,7 @@ def main():
 		train_loss = loss_function(all_predicted_scores, all_targets)
 		train_recall = recall(predicted=all_predicted_classes.data.numpy(), actual=all_targets.data.numpy())
 		train_precision = precision(predicted=all_predicted_classes.data.numpy(), actual=all_targets.data.numpy())
-		print('Epoch',epoch,' Train Loss=', train_loss.data.numpy())
+		print('Epoch',epoch,' Train Loss=', train_loss.data.numpy().item())
 		print('Epoch',epoch,' Train Recall=', train_recall)
 		print('Epoch',epoch,' Train Precision=', train_precision)
 
@@ -181,7 +174,7 @@ def main():
 		test_loss = loss_function(all_predicted_scores, all_targets)
 		test_recall = recall(predicted=all_predicted_classes.data.numpy(), actual=all_targets.data.numpy())
 		test_precision = precision(predicted=all_predicted_classes.data.numpy(), actual=all_targets.data.numpy())
-		print('Epoch',epoch,' Test Loss=', test_loss.data.numpy())
+		print('Epoch',epoch,' Test Loss=', test_loss.data.numpy().item())
 		print('Epoch',epoch,' Test Recall=', test_recall)
 		print('Epoch',epoch,' Test Precision=', test_precision)
 
