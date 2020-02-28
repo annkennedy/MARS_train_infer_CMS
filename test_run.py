@@ -13,6 +13,10 @@ import pdb
 
 import argparse
 
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+
 
 parser = argparse.ArgumentParser(description='behaviorRNN')
 parser.add_argument('--num_epochs', type=int, default=10, help='number of training epochs')
@@ -30,6 +34,10 @@ FLAGS = parser.parse_args()
 
 
 def main():
+	output_path = FLAGS.output_path
+
+	if not os.path.exists(output_path):
+		os.mkdir(output_path)
 
 	train_video_path, train_video_nm = os.path.split(FLAGS.train_path)
 	test_video_path, test_video_nm = os.path.split(FLAGS.test_path)
@@ -68,10 +76,10 @@ def main():
 	Xtest, ytest, key_order_test, names_test = mars.load_data(test_video_path, test_videos, behs,
 	                                  ver=ver, feat_type=feat_type, verbose=verbose, do_wnd=do_wnd, do_cwt=do_cwt)
 
-	pdb.set_trace()
 
-# use_inds = ['nose_x', 'nose_y', 'right_ear_x', 'right_ear_y', 'left_ear_x', 'left_ear_y', 'neck_x', 'neck_y', 'right_side_x', 'right_side_y', 'left_side_x', 'left_side_y', 'tail_base_x', 'tail_base_y']
+	# use_inds = ['nose_x', 'nose_y', 'right_ear_x', 'right_ear_y', 'left_ear_x', 'left_ear_y', 'neck_x', 'neck_y', 'right_side_x', 'right_side_y', 'left_side_x', 'left_side_y', 'tail_base_x', 'tail_base_y']
 
+	class_names = key_order_train
 	n_features = 14 # just key-points
 	mouse2_start = 149 # location of second 'nose_x'
 	feature_inds = np.hstack((np.arange(0,n_features), np.arange(mouse2_start,mouse2_start+n_features)))
@@ -111,6 +119,9 @@ def main():
 	loss_function = get_loss(name=FLAGS.loss, weight=weight) #e.g. nn.NLLLoss()
 
 	# train the model
+	num_frames = FLAGS.num_frames
+	num_epochs = FLAGS.num_epochs
+
 	train_loss_vec = np.zeros((num_epochs,1))
 	test_loss_vec = np.zeros((num_epochs,1))
 	train_precision_vec = np.zeros((num_epochs,num_classes))
@@ -118,8 +129,6 @@ def main():
 	train_recall_vec = np.zeros((num_epochs,num_classes))
 	test_recall_vec = np.zeros((num_epochs,num_classes))
 
-	num_frames = FLAGS.num_frames
-	num_epochs = FLAGS.num_epochs
 	for epoch in range(num_epochs):  # again, normally you would NOT do 300 epochs, it is toy data
 		# setence is our features, tags are INDICES of true label
 		all_predicted_classes = []
@@ -173,9 +182,12 @@ def main():
 		print('Epoch',epoch,' Train Precision=', train_precision)
 
 		# save data
-		train_loss_vec[epoch] = train_loss
+		train_loss_vec[epoch] = train_loss.data.numpy().item()
 		train_recall_vec[epoch,:] = train_recall
 		train_precision_vec[epoch,:] = train_precision
+		np.savetxt(output_path+'/train_loss_vec.txt',train_loss_vec[:epoch])
+		np.savetxt(output_path+'/train_recall_vec.txt',train_recall_vec[:epoch,:])
+		np.savetxt(output_path+'/train_precision_vec.txt',train_precision_vec[:epoch,:])
 
 		# Report TEST performance after each epoch
 		all_predicted_classes = []
@@ -207,9 +219,48 @@ def main():
 		print('Epoch',epoch,' Test Precision=', test_precision)
 
 		# save data
-		test_loss_vec[epoch] = test_loss
+		test_loss_vec[epoch] = test_loss.data.numpy().item()
 		test_recall_vec[epoch,:] = test_recall
 		test_precision_vec[epoch,:] = test_precision
+		np.savetxt(output_path+'/test_loss_vec.txt',test_loss_vec[:epoch])
+		np.savetxt(output_path+'/test_recall_vec.txt',test_recall_vec[:epoch,:])
+		np.savetxt(output_path+'/test_precision_vec.txt',test_precision_vec[:epoch,:])
+
+		## make plots
+		fig, ax_list = plt.subplots(1,3)
+
+		# loss function
+		ax = ax_list[0]
+		ax.plot(train_loss_vec[:epoch], label='Training Loss')
+		ax.plot(test_loss_vec[:epoch], label='Testing Loss')
+		ax.set_ylabel('Loss')
+		ax.set_xlabel('Epochs')
+		ax.legend()
+
+		# precision
+		ax = ax_list[1]
+		for c in range(num_classes):
+			ax.plot(train_precision_vec[:epoch,c], label=class_names[c]+' Train')
+			ax.plot(test_precision_vec[:epoch,c], label=class_names[c]+' Test')
+			ax.set_ylabel('Precision')
+			ax.set_xlabel('Epochs')
+		ax.set_title('Precision')
+		ax.legend()
+
+		# recall
+		ax = ax_list[2]
+		for c in range(num_classes):
+			ax.plot(train_recall_vec[:epoch,c], label=class_names[c]+' Train')
+			ax.plot(test_recall_vec[:epoch,c], label=class_names[c]+' Test')
+			ax.set_ylabel('Recall')
+			ax.set_xlabel('Epochs')
+		ax.set_title('Recall')
+		ax.legend()
+
+
+		fig.suptitle('Train/Test Performance')
+		fig.savefig(fname=output_dir+'/TrainTest_Performance')
+		plt.close(fig)
 
 
 if __name__ == '__main__':
