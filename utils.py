@@ -34,7 +34,7 @@ def precision(predicted, actual, is_one_hot = False):
         num = np.sum(predicted_i & actual_i)
         denom = np.sum(predicted_i)
         if (denom == 0):
-            precision.append("N/A")
+            precision.append(np.nan)
         else:
             precision.append(float(num)/float(denom))
     return(precision)
@@ -66,7 +66,7 @@ def recall(predicted, actual, is_one_hot = False):
         num = np.sum(predicted_i & actual_i)
         denom = np.sum(actual_i)
         if (denom == 0):
-            recall.append("N/A")
+            recall.append(np.nan)
         else:
             recall.append(float(num)/float(denom))
     return recall
