@@ -185,9 +185,9 @@ def main():
 		train_loss_vec[epoch] = train_loss.data.numpy().item()
 		train_recall_vec[epoch,:] = train_recall
 		train_precision_vec[epoch,:] = train_precision
-		np.savetxt(output_path+'/train_loss_vec.txt',train_loss_vec[:epoch])
-		np.savetxt(output_path+'/train_recall_vec.txt',train_recall_vec[:epoch,:])
-		np.savetxt(output_path+'/train_precision_vec.txt',train_precision_vec[:epoch,:])
+		np.savetxt(output_path+'/train_loss_vec.txt',train_loss_vec[:(epoch+1)])
+		np.savetxt(output_path+'/train_recall_vec.txt',train_recall_vec[:(epoch+1),:])
+		np.savetxt(output_path+'/train_precision_vec.txt',train_precision_vec[:(epoch+1),:])
 
 		# Report TEST performance after each epoch
 		all_predicted_classes = []
@@ -222,17 +222,17 @@ def main():
 		test_loss_vec[epoch] = test_loss.data.numpy().item()
 		test_recall_vec[epoch,:] = test_recall
 		test_precision_vec[epoch,:] = test_precision
-		np.savetxt(output_path+'/test_loss_vec.txt',test_loss_vec[:epoch])
-		np.savetxt(output_path+'/test_recall_vec.txt',test_recall_vec[:epoch,:])
-		np.savetxt(output_path+'/test_precision_vec.txt',test_precision_vec[:epoch,:])
+		np.savetxt(output_path+'/test_loss_vec.txt',test_loss_vec[:(epoch+1)])
+		np.savetxt(output_path+'/test_recall_vec.txt',test_recall_vec[:(epoch+1),:])
+		np.savetxt(output_path+'/test_precision_vec.txt',test_precision_vec[:(epoch+1),:])
 
 		## make plots
 		fig, ax_list = plt.subplots(1,3)
 
 		# loss function
 		ax = ax_list[0]
-		ax.plot(train_loss_vec[:epoch], label='Training Loss')
-		ax.plot(test_loss_vec[:epoch], label='Testing Loss')
+		ax.plot(train_loss_vec[:(epoch+1)], label='Training Loss')
+		ax.plot(test_loss_vec[:(epoch+1)], label='Testing Loss')
 		ax.set_ylabel('Loss')
 		ax.set_xlabel('Epochs')
 		ax.legend()
@@ -240,8 +240,8 @@ def main():
 		# precision
 		ax = ax_list[1]
 		for c in range(num_classes):
-			ax.plot(train_precision_vec[:epoch,c], label=class_names[c]+' Train')
-			ax.plot(test_precision_vec[:epoch,c], label=class_names[c]+' Test')
+			ax.plot(train_precision_vec[:(epoch+1),c], label=class_names[c]+' Train')
+			ax.plot(test_precision_vec[:(epoch+1),c], label=class_names[c]+' Test')
 			ax.set_ylabel('Precision')
 			ax.set_xlabel('Epochs')
 		ax.set_title('Precision')
@@ -250,8 +250,8 @@ def main():
 		# recall
 		ax = ax_list[2]
 		for c in range(num_classes):
-			ax.plot(train_recall_vec[:epoch,c], label=class_names[c]+' Train')
-			ax.plot(test_recall_vec[:epoch,c], label=class_names[c]+' Test')
+			ax.plot(train_recall_vec[:(epoch+1),c], label=class_names[c]+' Train')
+			ax.plot(test_recall_vec[:(epoch+1),c], label=class_names[c]+' Test')
 			ax.set_ylabel('Recall')
 			ax.set_xlabel('Epochs')
 		ax.set_title('Recall')
