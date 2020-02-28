@@ -30,11 +30,23 @@ parser.add_argument('--train_path', type=str, default='TRAIN_lite', help='specif
 parser.add_argument('--test_path', type=str, default='TEST_lite', help='specifiy path to TEST videos')
 parser.add_argument('--output_path', type=str, default='default_output', help='specifiy path to TEST videos')
 parser.add_argument('--balance_weights', type=str2bool, default=True, help='If true, compute cost function weights based on relative class frequencies')
+parser.add_argument('--use_gpu', type=str2bool, default=True, help='If true, set dtype=torch.cuda.FloatTensor and use cuda')
 FLAGS = parser.parse_args()
 
 
 def main():
 	output_path = FLAGS.output_path
+
+	if FLAGS.use_gpu and not torch.cuda.is_available():
+		print('Trying to use GPU, but cuda is NOT AVAILABLE. Running with CPU instead.')
+		FLAGS.use_gpu = False
+		pdb.set_trace()
+
+	# choose cuda-GPU or regular
+	if FLAGS.use_gpu:
+		dtype = torch.cuda.FloatTensor
+	else:
+		dtype = torch.FloatTensor
 
 	if not os.path.exists(output_path):
 		os.mkdir(output_path)
@@ -90,6 +102,10 @@ def main():
 	# model = LSTMTagger(input_dim=input_dim, hidden_dim=FLAGS.hidden_dim, num_classes=num_classes)
 	model = get_model(name=FLAGS.model_name, input_dim=input_dim, hidden_dim=FLAGS.hidden_dim, num_classes=num_classes)
 
+	if FLAGS.use_gpu:
+		pdb.set_trace()
+		model.cuda()
+
 	optimizer = get_optimizer(name=FLAGS.optimizer, params=model.parameters(), lr=FLAGS.lr)
 	# optimizer = optim.SGD(model.parameters(), lr=FLAGS.lr)
 
@@ -112,7 +128,7 @@ def main():
 	if FLAGS.balance_weights:
 		weight = 1. / np.concatenate(ytrain).sum(axis=0)
 		weight = weight / weight.sum()
-		weight = torch.FloatTensor(weight)
+		weight = torch.FloatTensor(weight).type(dtype.type(dtype))
 	else:
 		weight = None
 
@@ -155,7 +171,7 @@ def main():
 				model.zero_grad()
 
 				# Step 3. Run our forward pass.
-				predicted_class_scores = model(torch.FloatTensor(input_sequence))
+				predicted_class_scores = model(torch.FloatTensor(input_sequence).type(dtype)).type(dtype)
 				predicted_class_index = torch.argmax(predicted_class_scores, axis=1) # this is the model's class prediction i.e. the highest scoring element
 
 				# Step 4. Compute the loss, gradients, and update the parameters by
@@ -201,7 +217,7 @@ def main():
 			target_inds = torch.tensor(np.argmax(target_sequence, axis=1))
 
 			# Step 3. Run our forward pass.
-			predicted_class_scores = model(torch.FloatTensor(input_sequence))
+			predicted_class_scores = model(torch.FloatTensor(input_sequence).type(dtype)).type(dtype)
 			predicted_class_index = torch.argmax(predicted_class_scores, axis=1) # this is the model's class prediction i.e. the highest scoring element
 
 			all_predicted_classes.append(predicted_class_index)
@@ -230,14 +246,14 @@ def main():
 		prop_cycle = plt.rcParams['axes.prop_cycle']
 		color_list = prop_cycle.by_key()['color']
 
-		fig, ax_list = plt.subplots(3,1, figsize=[10,10])
+		fig, ax_list = plt.subplots(3,1, figsize=[12,10], sharex=True)
 
 		# loss function
 		ax = ax_list[0]
 		ax.plot(train_loss_vec[:(epoch+1)], label='Training Loss')
 		ax.plot(test_loss_vec[:(epoch+1)], label='Testing Loss')
 		ax.set_ylabel('Loss')
-		ax.set_xlabel('Epochs')
+		# ax.set_xlabel('Epochs')
 		ax.legend()
 
 		# precision
@@ -247,7 +263,7 @@ def main():
 			ax.plot(train_precision_vec[:(epoch+1),c], color=color, label=class_names[c]+' Train', linestyle='-')
 			ax.plot(test_precision_vec[:(epoch+1),c], color=color, label=class_names[c]+' Test', linestyle='--')
 			ax.set_ylabel('Precision')
-			ax.set_xlabel('Epochs')
+			# ax.set_xlabel('Epochs')
 		ax.set_title('Precision')
 		ax.legend(fontsize='small')
 
