@@ -5,6 +5,8 @@ from matplotlib.patches import Rectangle
 from matplotlib import cm
 import matplotlib.patches as patches
 
+import pdb
+
 def str2bool(v):
     if v.lower() in ('yes', 'true', 't', 'y', '1'):
         return True
@@ -118,7 +120,7 @@ def normalize(X, stats):
 def plot_predicted_vs_actual(predicted_score, predicted_class, actual_class, states = []):
     '''Plots visualization of predicted_class actions vs actual_class actions'''
     my_cmap = cm.get_cmap('viridis', len(states))
-    fig, ax_list = plt.subplots(3,1, figsize=[10,2])
+    fig, ax_list = plt.subplots(3,1, figsize=[20,4])
     ax_list[0].imshow([predicted_class], cmap = my_cmap, aspect = 'auto')
     ax_list[0].set_yticks([])
     ax_list[0].set_title("Predicted Actions")
@@ -128,7 +130,7 @@ def plot_predicted_vs_actual(predicted_score, predicted_class, actual_class, sta
     ax_list[1].set_title("Actual Actions")
 
     for s in range(len(states)):
-        ax_list[2].plot(predicted_score[s,:], color=my_cmap(s), label=states[s])
+        ax_list[2].plot(predicted_score[:,s], color=my_cmap(s), label=states[s])
     ax_list[2].set_ylabel('Class Scores')
 
 
