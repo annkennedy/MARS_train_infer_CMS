@@ -227,7 +227,10 @@ def main():
 		np.savetxt(output_path+'/test_precision_vec.txt',test_precision_vec[:(epoch+1),:])
 
 		## make plots
-		fig, ax_list = plt.subplots(1,3)
+		prop_cycle = plt.rcParams['axes.prop_cycle']
+		color_list = prop_cycle.by_key()['color']
+
+		fig, ax_list = plt.subplots(3,1)
 
 		# loss function
 		ax = ax_list[0]
@@ -240,8 +243,9 @@ def main():
 		# precision
 		ax = ax_list[1]
 		for c in range(num_classes):
-			ax.plot(train_precision_vec[:(epoch+1),c], label=class_names[c]+' Train')
-			ax.plot(test_precision_vec[:(epoch+1),c], label=class_names[c]+' Test')
+			color = color_list[c]
+			ax.plot(train_precision_vec[:(epoch+1),c], color=color, label=class_names[c]+' Train', linestyle='-')
+			ax.plot(test_precision_vec[:(epoch+1),c], color=color, label=class_names[c]+' Test', linestyle='--')
 			ax.set_ylabel('Precision')
 			ax.set_xlabel('Epochs')
 		ax.set_title('Precision')
@@ -250,8 +254,9 @@ def main():
 		# recall
 		ax = ax_list[2]
 		for c in range(num_classes):
-			ax.plot(train_recall_vec[:(epoch+1),c], label=class_names[c]+' Train')
-			ax.plot(test_recall_vec[:(epoch+1),c], label=class_names[c]+' Test')
+			color = color_list[c]
+			ax.plot(train_recall_vec[:(epoch+1),c], color=color, label=class_names[c]+' Train', linestyle='-')
+			ax.plot(test_recall_vec[:(epoch+1),c], color=color, label=class_names[c]+' Test', linestyle='--')
 			ax.set_ylabel('Recall')
 			ax.set_xlabel('Epochs')
 		ax.set_title('Recall')
