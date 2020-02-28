@@ -164,7 +164,7 @@ def remove_pixel_data(data, view):
     if type(data)==np.ndarray:
         data = np.delete(data, fd, 1)
     else:
-        data = [i for j, i in enumerate(data) if j not in fd[0]]
+        data = [i for j, i in enumerate(data) if j not in fd]
     return data
 
 

@@ -118,7 +118,7 @@ def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', v
         if not vid:
             print('Feature file not found for %s' % vbase)
         else:
-            names = vid['features']
+            names = vid['features'].tolist()
             if 'data_smooth' in vid.keys():
                 d = vid['data_smooth']
                 d = mts.clean_data(d)
