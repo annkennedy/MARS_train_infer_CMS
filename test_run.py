@@ -30,7 +30,7 @@ parser.add_argument('--train_path', type=str, default='TRAIN_lite', help='specif
 parser.add_argument('--test_path', type=str, default='TEST_lite', help='specifiy path to TEST videos')
 parser.add_argument('--output_path', type=str, default='default_output', help='specifiy path to TEST videos')
 parser.add_argument('--balance_weights', type=str2bool, default=True, help='If true, compute cost function weights based on relative class frequencies')
-parser.add_argument('--use_gpu', type=str2bool, default=True, help='If true, set dtype=torch.cuda.FloatTensor and use cuda')
+parser.add_argument('--use_gpu', type=str2bool, default=False, help='If true, set dtype=torch.cuda.FloatTensor and use cuda')
 FLAGS = parser.parse_args()
 
 
@@ -38,6 +38,7 @@ def main():
 	output_path = FLAGS.output_path
 
 	if FLAGS.use_gpu and not torch.cuda.is_available():
+		# https://thedavidnguyenblog.xyz/installing-pytorch-1-0-stable-with-cuda-10-0-on-windows-10-using-anaconda/
 		print('Trying to use GPU, but cuda is NOT AVAILABLE. Running with CPU instead.')
 		FLAGS.use_gpu = False
 		pdb.set_trace()
