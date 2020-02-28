@@ -8,15 +8,16 @@ import torch.optim as optim
 import numpy as np
 from time import time
 
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+
 from utils import *
 from rnn_models import *
 import pdb
 
 import argparse
 
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
 
 
 parser = argparse.ArgumentParser(description='behaviorRNN')
