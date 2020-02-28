@@ -219,7 +219,7 @@ def main():
 		train_loss_vec[epoch] = train_loss.cpu().data.numpy().item()
 		train_recall_vec[epoch,:] = train_recall
 		train_precision_vec[epoch,:] = train_precision
-		if do_saving
+		if do_saving:
 			np.savetxt(output_path+'/train_loss_vec.txt',train_loss_vec[:(epoch+1)])
 			np.savetxt(output_path+'/train_recall_vec.txt',train_recall_vec[:(epoch+1),:])
 			np.savetxt(output_path+'/train_precision_vec.txt',train_precision_vec[:(epoch+1),:])
