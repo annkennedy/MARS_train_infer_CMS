@@ -190,31 +190,31 @@ def main():
 				loss.backward()
 				optimizer.step()
 
-				# all_predicted_classes.append(predicted_class_index)
-				# all_predicted_scores.append(predicted_class_scores)
-				# all_targets.append(target_inds)
+				all_predicted_classes.append(predicted_class_index)
+				all_predicted_scores.append(predicted_class_scores)
+				all_targets.append(target_inds)
 
-		# all_predicted_classes = torch.cat(all_predicted_classes)
-		# all_predicted_scores = torch.cat(all_predicted_scores)
-		# all_targets = torch.cat(all_targets)
+		all_predicted_classes = torch.cat(all_predicted_classes)
+		all_predicted_scores = torch.cat(all_predicted_scores)
+		all_targets = torch.cat(all_targets)
 
 		# Report Train losses after each epoch
-		# train_loss = loss_function(all_predicted_scores, all_targets)
-		# train_recall = recall(predicted=all_predicted_classes.cpu().data.numpy(), actual=all_targets.cpu().data.numpy())
-		# train_precision = precision(predicted=all_predicted_classes.cpu().data.numpy(), actual=all_targets.cpu().data.numpy())
-		# print('Epoch',epoch,' Train Loss=', train_loss.cpu().data.numpy().item())
-		# print('Epoch',epoch,' Train Recall=', train_recall)
-		# print('Epoch',epoch,' Train Precision=', train_precision)
+		train_loss = loss_function(all_predicted_scores, all_targets)
+		train_recall = recall(predicted=all_predicted_classes.cpu().data.numpy(), actual=all_targets.cpu().data.numpy())
+		train_precision = precision(predicted=all_predicted_classes.cpu().data.numpy(), actual=all_targets.cpu().data.numpy())
+		print('Epoch',epoch,' Train Loss=', train_loss.cpu().data.numpy().item())
+		print('Epoch',epoch,' Train Recall=', train_recall)
+		print('Epoch',epoch,' Train Precision=', train_precision)
 
 		print('Train Epoch', epoch, time()-t0)
 
 		# save data
-		# train_loss_vec[epoch] = train_loss.cpu().data.numpy().item()
-		# train_recall_vec[epoch,:] = train_recall
-		# train_precision_vec[epoch,:] = train_precision
-		# np.savetxt(output_path+'/train_loss_vec.txt',train_loss_vec[:(epoch+1)])
-		# np.savetxt(output_path+'/train_recall_vec.txt',train_recall_vec[:(epoch+1),:])
-		# np.savetxt(output_path+'/train_precision_vec.txt',train_precision_vec[:(epoch+1),:])
+		train_loss_vec[epoch] = train_loss.cpu().data.numpy().item()
+		train_recall_vec[epoch,:] = train_recall
+		train_precision_vec[epoch,:] = train_precision
+		np.savetxt(output_path+'/train_loss_vec.txt',train_loss_vec[:(epoch+1)])
+		np.savetxt(output_path+'/train_recall_vec.txt',train_recall_vec[:(epoch+1),:])
+		np.savetxt(output_path+'/train_precision_vec.txt',train_precision_vec[:(epoch+1),:])
 
 		# Report TEST performance after each epoch
 		all_predicted_classes = []
@@ -231,68 +231,68 @@ def main():
 			predicted_class_scores = model(torch.FloatTensor(input_sequence).type(dtype)).type(dtype)
 			predicted_class_index = torch.argmax(predicted_class_scores, 1) # this is the model's class prediction i.e. the highest scoring element
 
-			# all_predicted_classes.append(predicted_class_index)
-			# all_predicted_scores.append(predicted_class_scores)
-			# all_targets.append(target_inds)
+			all_predicted_classes.append(predicted_class_index)
+			all_predicted_scores.append(predicted_class_scores)
+			all_targets.append(target_inds)
 		# Step 4. Compute the losses
-		# all_predicted_classes = torch.cat(all_predicted_classes)
-		# all_predicted_scores = torch.cat(all_predicted_scores)
-		# all_targets = torch.cat(all_targets)
-		# test_loss = loss_function(all_predicted_scores, all_targets)
-		# test_recall = recall(predicted=all_predicted_classes.cpu().data.numpy(), actual=all_targets.cpu().data.numpy())
-		# test_precision = precision(predicted=all_predicted_classes.cpu().data.numpy(), actual=all_targets.cpu().data.numpy())
-		# print('Epoch',epoch,' Test Loss=', test_loss.cpu().data.numpy().item())
-		# print('Epoch',epoch,' Test Recall=', test_recall)
-		# print('Epoch',epoch,' Test Precision=', test_precision)
+		all_predicted_classes = torch.cat(all_predicted_classes)
+		all_predicted_scores = torch.cat(all_predicted_scores)
+		all_targets = torch.cat(all_targets)
+		test_loss = loss_function(all_predicted_scores, all_targets)
+		test_recall = recall(predicted=all_predicted_classes.cpu().data.numpy(), actual=all_targets.cpu().data.numpy())
+		test_precision = precision(predicted=all_predicted_classes.cpu().data.numpy(), actual=all_targets.cpu().data.numpy())
+		print('Epoch',epoch,' Test Loss=', test_loss.cpu().data.numpy().item())
+		print('Epoch',epoch,' Test Recall=', test_recall)
+		print('Epoch',epoch,' Test Precision=', test_precision)
 
 		# save data
-		# test_loss_vec[epoch] = test_loss.cpu().data.numpy().item()
-		# test_recall_vec[epoch,:] = test_recall
-		# test_precision_vec[epoch,:] = test_precision
-		# np.savetxt(output_path+'/test_loss_vec.txt',test_loss_vec[:(epoch+1)])
-		# np.savetxt(output_path+'/test_recall_vec.txt',test_recall_vec[:(epoch+1),:])
-		# np.savetxt(output_path+'/test_precision_vec.txt',test_precision_vec[:(epoch+1),:])
+		test_loss_vec[epoch] = test_loss.cpu().data.numpy().item()
+		test_recall_vec[epoch,:] = test_recall
+		test_precision_vec[epoch,:] = test_precision
+		np.savetxt(output_path+'/test_loss_vec.txt',test_loss_vec[:(epoch+1)])
+		np.savetxt(output_path+'/test_recall_vec.txt',test_recall_vec[:(epoch+1),:])
+		np.savetxt(output_path+'/test_precision_vec.txt',test_precision_vec[:(epoch+1),:])
 
-		## make plots
-		# prop_cycle = plt.rcParams['axes.prop_cycle']
-		# color_list = prop_cycle.by_key()['color']
+		# make plots
+		prop_cycle = plt.rcParams['axes.prop_cycle']
+		color_list = prop_cycle.by_key()['color']
 
-		# fig, ax_list = plt.subplots(3,1, figsize=[12,10], sharex=True)
+		fig, ax_list = plt.subplots(3,1, figsize=[12,10], sharex=True)
 
-		# # loss function
-		# ax = ax_list[0]
-		# ax.plot(train_loss_vec[:(epoch+1)], label='Training Loss')
-		# ax.plot(test_loss_vec[:(epoch+1)], label='Testing Loss')
-		# ax.set_ylabel('Loss')
-		# # ax.set_xlabel('Epochs')
-		# ax.legend()
+		# loss function
+		ax = ax_list[0]
+		ax.plot(train_loss_vec[:(epoch+1)], label='Training Loss')
+		ax.plot(test_loss_vec[:(epoch+1)], label='Testing Loss')
+		ax.set_ylabel('Loss')
+		# ax.set_xlabel('Epochs')
+		ax.legend()
 
-		# # precision
-		# ax = ax_list[1]
-		# for c in range(num_classes):
-		# 	color = color_list[c]
-		# 	ax.plot(train_precision_vec[:(epoch+1),c], color=color, label=class_names[c]+' Train', linestyle='-')
-		# 	ax.plot(test_precision_vec[:(epoch+1),c], color=color, label=class_names[c]+' Test', linestyle='--')
-		# 	ax.set_ylabel('Precision')
-		# 	# ax.set_xlabel('Epochs')
-		# ax.set_title('Precision')
-		# ax.legend(fontsize='small')
+		# precision
+		ax = ax_list[1]
+		for c in range(num_classes):
+			color = color_list[c]
+			ax.plot(train_precision_vec[:(epoch+1),c], color=color, label=class_names[c]+' Train', linestyle='-')
+			ax.plot(test_precision_vec[:(epoch+1),c], color=color, label=class_names[c]+' Test', linestyle='--')
+			ax.set_ylabel('Precision')
+			# ax.set_xlabel('Epochs')
+		ax.set_title('Precision')
+		ax.legend(fontsize='small')
 
-		# # recall
-		# ax = ax_list[2]
-		# for c in range(num_classes):
-		# 	color = color_list[c]
-		# 	ax.plot(train_recall_vec[:(epoch+1),c], color=color, label=class_names[c]+' Train', linestyle='-')
-		# 	ax.plot(test_recall_vec[:(epoch+1),c], color=color, label=class_names[c]+' Test', linestyle='--')
-		# 	ax.set_ylabel('Recall')
-		# 	ax.set_xlabel('Epochs')
-		# ax.set_title('Recall')
-		# ax.legend(fontsize='small')
+		# recall
+		ax = ax_list[2]
+		for c in range(num_classes):
+			color = color_list[c]
+			ax.plot(train_recall_vec[:(epoch+1),c], color=color, label=class_names[c]+' Train', linestyle='-')
+			ax.plot(test_recall_vec[:(epoch+1),c], color=color, label=class_names[c]+' Test', linestyle='--')
+			ax.set_ylabel('Recall')
+			ax.set_xlabel('Epochs')
+		ax.set_title('Recall')
+		ax.legend(fontsize='small')
 
 
-		# fig.suptitle('Train/Test Performance')
-		# fig.savefig(fname=output_path+'/TrainTest_Performance')
-		# plt.close(fig)
+		fig.suptitle('Train/Test Performance')
+		fig.savefig(fname=output_path+'/TrainTest_Performance')
+		plt.close(fig)
 
 		print('Test Epoch', epoch, time() - t0)
 
