@@ -1,5 +1,10 @@
 import numpy as np
 
+import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle
+from matplotlib import cm
+import matplotlib.patches as patches
+
 def str2bool(v):
     if v.lower() in ('yes', 'true', 't', 'y', '1'):
         return True
@@ -107,3 +112,21 @@ def normalize(X, stats):
     for i in range(len(X)):
         X[i] = (stats["max"] - X[i]) / span
     return X
+
+
+
+def plot_predicted_vs_actual(predicted, actual, states = []):
+    '''Plots visualization of predicted actions vs actual actions'''
+    viridis = cm.get_cmap('viridis', len(states))
+    fig, ax_list = plt.subplots(2,1, figsize=[6,1])
+    ax_list[0].imshow([predicted], cmap = viridis, aspect = 'auto')
+    ax_list[0].set_yticks([])
+    ax_list[0].set_title("Predicted Actions")
+    ax_list[1].imshow([actual], cmap = viridis)
+    ax_list[1].set_yticks([])
+    ax_list[1].set_title("Actual Actions")
+    handles = []
+    for i in range(len(states)):
+        handles.append(patches.Patch(color=viridis(i), label=states[i]))
+    plt.legend(handles=handles, loc = 'upper left')
+    return fig
