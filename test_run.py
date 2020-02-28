@@ -230,7 +230,7 @@ def main():
 		prop_cycle = plt.rcParams['axes.prop_cycle']
 		color_list = prop_cycle.by_key()['color']
 
-		fig, ax_list = plt.subplots(3,1)
+		fig, ax_list = plt.subplots(3,1, figsize=[10,10])
 
 		# loss function
 		ax = ax_list[0]
@@ -249,7 +249,7 @@ def main():
 			ax.set_ylabel('Precision')
 			ax.set_xlabel('Epochs')
 		ax.set_title('Precision')
-		ax.legend()
+		ax.legend(fontsize='small')
 
 		# recall
 		ax = ax_list[2]
@@ -260,7 +260,7 @@ def main():
 			ax.set_ylabel('Recall')
 			ax.set_xlabel('Epochs')
 		ax.set_title('Recall')
-		ax.legend()
+		ax.legend(fontsize='small')
 
 
 		fig.suptitle('Train/Test Performance')
