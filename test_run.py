@@ -187,21 +187,20 @@ def main():
 				all_predicted_scores.append(predicted_class_scores)
 				all_targets.append(target_inds)
 
-		pdb.set_trace()
 		all_predicted_classes = torch.cat(all_predicted_classes)
 		all_predicted_scores = torch.cat(all_predicted_scores)
 		all_targets = torch.cat(all_targets)
 
 		# Report Train losses after each epoch
 		train_loss = loss_function(all_predicted_scores, all_targets)
-		train_recall = recall(predicted=all_predicted_classes.data.numpy(), actual=all_targets.data.numpy())
-		train_precision = precision(predicted=all_predicted_classes.data.numpy(), actual=all_targets.data.numpy())
-		print('Epoch',epoch,' Train Loss=', train_loss.data.numpy().item())
+		train_recall = recall(predicted=all_predicted_classes.cpu().data.numpy(), actual=all_targets.cpu().data.numpy())
+		train_precision = precision(predicted=all_predicted_classes.cpu().data.numpy(), actual=all_targets.cpu().data.numpy())
+		print('Epoch',epoch,' Train Loss=', train_loss.cpu().data.numpy().item())
 		print('Epoch',epoch,' Train Recall=', train_recall)
 		print('Epoch',epoch,' Train Precision=', train_precision)
 
 		# save data
-		train_loss_vec[epoch] = train_loss.data.numpy().item()
+		train_loss_vec[epoch] = train_loss.cpu().data.numpy().item()
 		train_recall_vec[epoch,:] = train_recall
 		train_precision_vec[epoch,:] = train_precision
 		np.savetxt(output_path+'/train_loss_vec.txt',train_loss_vec[:(epoch+1)])
@@ -231,14 +230,14 @@ def main():
 		all_predicted_scores = torch.cat(all_predicted_scores)
 		all_targets = torch.cat(all_targets)
 		test_loss = loss_function(all_predicted_scores, all_targets)
-		test_recall = recall(predicted=all_predicted_classes.data.numpy(), actual=all_targets.data.numpy())
-		test_precision = precision(predicted=all_predicted_classes.data.numpy(), actual=all_targets.data.numpy())
-		print('Epoch',epoch,' Test Loss=', test_loss.data.numpy().item())
+		test_recall = recall(predicted=all_predicted_classes.cpu().data.numpy(), actual=all_targets.cpu().data.numpy())
+		test_precision = precision(predicted=all_predicted_classes.cpu().data.numpy(), actual=all_targets.cpu().data.numpy())
+		print('Epoch',epoch,' Test Loss=', test_loss.cpu().data.numpy().item())
 		print('Epoch',epoch,' Test Recall=', test_recall)
 		print('Epoch',epoch,' Test Precision=', test_precision)
 
 		# save data
-		test_loss_vec[epoch] = test_loss.data.numpy().item()
+		test_loss_vec[epoch] = test_loss.cpu().data.numpy().item()
 		test_recall_vec[epoch,:] = test_recall
 		test_precision_vec[epoch,:] = test_precision
 		np.savetxt(output_path+'/test_loss_vec.txt',test_loss_vec[:(epoch+1)])
