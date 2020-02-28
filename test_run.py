@@ -129,7 +129,7 @@ def main():
 	if FLAGS.balance_weights:
 		weight = 1. / np.concatenate(ytrain).sum(axis=0)
 		weight = weight / weight.sum()
-		weight = torch.FloatTensor(weight).type(dtype.type(dtype))
+		weight = torch.FloatTensor(weight).type(dtype)
 	else:
 		weight = None
 
