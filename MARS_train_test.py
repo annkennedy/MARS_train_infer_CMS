@@ -152,7 +152,7 @@ def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', v
                 d = mts.apply_wavelet_transform(d)
             data.append(np.array(d))
 
-            beh = map.parse_annotations(os.path.join(video_path, v, ann), timestamps=timestamps)
+            beh = map.parse_annotations(os.path.join(video_path, v, ann), use_channels=['Ch1'], timestamps=timestamps)
             # labels += beh['behs_frame']
             labels.append(np.array(beh['behs_frame']))
 
@@ -571,4 +571,3 @@ def run_classifier(behs, video_path, test_videos, test_annot, save_path=[], ver=
         map.dump_labels_bento(all_pred_fbs_hmm, os.path.join(save_path, 'predictions_fbs_hmm_' + vname + '.annot'),
                               moviename=vid, framerate=30, beh_list=beh_list, gt=all_gt)
         print('\n\n')
-
