@@ -259,7 +259,7 @@ def main():
 
 
 		fig.suptitle('Train/Test Performance')
-		fig.savefig(fname=output_dir+'/TrainTest_Performance')
+		fig.savefig(fname=output_path+'/TrainTest_Performance')
 		plt.close(fig)
 
 
