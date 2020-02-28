@@ -46,10 +46,10 @@ def main():
 	# choose cuda-GPU or regular
 	if FLAGS.use_gpu:
 		dtype = torch.cuda.FloatTensor
-		inttype = torch.cuda.IntTensor
+		inttype = torch.cuda.LongTensor
 	else:
 		dtype = torch.FloatTensor
-		inttype = torch.IntTensor
+		inttype = torch.LongTensor
 
 	if not os.path.exists(output_path):
 		os.mkdir(output_path)
