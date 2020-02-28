@@ -183,7 +183,7 @@ def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', v
     for video in Ybig:
         y_final.append(y_dict_to_array(video, key_order))
 
-    key_order += 'None'
+    key_order += ['None']
     return data, y_final, key_order, names
 
 
