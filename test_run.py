@@ -265,11 +265,11 @@ def main():
 
 		# make plots
 		if make_plots:
-
 			# RNN performance plots
+			predicted_scores = all_predicted_scores[:num_frames].cpu().data.numpy()
 			predicted = all_predicted_classes[:num_frames].cpu().data.numpy()
 			actual = all_targets[:num_frames].cpu().data.numpy()
-			fig = plot_predicted_vs_actual(predicted, actual, states = class_names)
+			fig = plot_predicted_vs_actual(predicted_scores, predicted, actual, states = class_names)
 			# fig.suptitle('Train/Test Performance')
 			fig.savefig(fname=output_path+'/example_RNN_outputs')
 			plt.close(fig)
