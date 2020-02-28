@@ -122,9 +122,11 @@ def plot_predicted_vs_actual(predicted, actual, states = []):
     ax_list[0].imshow([predicted], cmap = viridis, aspect = 'auto')
     ax_list[0].set_yticks([])
     ax_list[0].set_title("Predicted Actions")
-    ax_list[1].imshow([actual], cmap = viridis)
+
+    ax_list[1].imshow([actual], cmap = viridis, aspect = 'auto')
     ax_list[1].set_yticks([])
     ax_list[1].set_title("Actual Actions")
+    
     handles = []
     for i in range(len(states)):
         handles.append(patches.Patch(color=viridis(i), label=states[i]))
