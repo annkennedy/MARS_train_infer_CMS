@@ -173,7 +173,7 @@ def main():
 
 				# Step 3. Run our forward pass.
 				predicted_class_scores = model(torch.FloatTensor(input_sequence).type(dtype)).type(dtype)
-				predicted_class_index = torch.argmax(predicted_class_scores, axis=1) # this is the model's class prediction i.e. the highest scoring element
+				predicted_class_index = torch.argmax(predicted_class_scores, 1) # this is the model's class prediction i.e. the highest scoring element
 
 				# Step 4. Compute the loss, gradients, and update the parameters by
 				#  calling optimizer.step()
@@ -219,7 +219,7 @@ def main():
 
 			# Step 3. Run our forward pass.
 			predicted_class_scores = model(torch.FloatTensor(input_sequence).type(dtype)).type(dtype)
-			predicted_class_index = torch.argmax(predicted_class_scores, axis=1) # this is the model's class prediction i.e. the highest scoring element
+			predicted_class_index = torch.argmax(predicted_class_scores, 1) # this is the model's class prediction i.e. the highest scoring element
 
 			all_predicted_classes.append(predicted_class_index)
 			all_predicted_scores.append(predicted_class_scores)
