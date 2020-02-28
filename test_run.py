@@ -33,6 +33,7 @@ parser.add_argument('--output_path', type=str, default='default_output', help='s
 parser.add_argument('--balance_weights', type=str2bool, default=True, help='If true, compute cost function weights based on relative class frequencies')
 parser.add_argument('--use_gpu', type=str2bool, default=False, help='If true, use cuda')
 parser.add_argument('--keypoints_only', type=str2bool, default=True, help='If true, set dtype=torch.cuda.FloatTensor and use cuda')
+parser.add_argument('--save_freq', type=int, default=1, help='interval of epochs for which we should save outputs')
 FLAGS = parser.parse_args()
 
 
@@ -155,6 +156,12 @@ def main():
 	test_recall_vec = np.zeros((num_epochs,num_classes))
 
 	for epoch in range(num_epochs):  # again, normally you would NOT do 300 epochs, it is toy data
+		if (epoch % FLAGS.save_freq)==0:
+			do_saving = True
+			make_plots = True
+		else:
+			do_saving = False
+			make_plots = False
 		t0 = time()
 		# setence is our features, tags are INDICES of true label
 		all_predicted_classes = []
@@ -212,9 +219,10 @@ def main():
 		train_loss_vec[epoch] = train_loss.cpu().data.numpy().item()
 		train_recall_vec[epoch,:] = train_recall
 		train_precision_vec[epoch,:] = train_precision
-		np.savetxt(output_path+'/train_loss_vec.txt',train_loss_vec[:(epoch+1)])
-		np.savetxt(output_path+'/train_recall_vec.txt',train_recall_vec[:(epoch+1),:])
-		np.savetxt(output_path+'/train_precision_vec.txt',train_precision_vec[:(epoch+1),:])
+		if do_saving
+			np.savetxt(output_path+'/train_loss_vec.txt',train_loss_vec[:(epoch+1)])
+			np.savetxt(output_path+'/train_recall_vec.txt',train_recall_vec[:(epoch+1),:])
+			np.savetxt(output_path+'/train_precision_vec.txt',train_precision_vec[:(epoch+1),:])
 
 		# Report TEST performance after each epoch
 		all_predicted_classes = []
@@ -249,50 +257,51 @@ def main():
 		test_loss_vec[epoch] = test_loss.cpu().data.numpy().item()
 		test_recall_vec[epoch,:] = test_recall
 		test_precision_vec[epoch,:] = test_precision
-		np.savetxt(output_path+'/test_loss_vec.txt',test_loss_vec[:(epoch+1)])
-		np.savetxt(output_path+'/test_recall_vec.txt',test_recall_vec[:(epoch+1),:])
-		np.savetxt(output_path+'/test_precision_vec.txt',test_precision_vec[:(epoch+1),:])
+		if do_saving:
+			np.savetxt(output_path+'/test_loss_vec.txt',test_loss_vec[:(epoch+1)])
+			np.savetxt(output_path+'/test_recall_vec.txt',test_recall_vec[:(epoch+1),:])
+			np.savetxt(output_path+'/test_precision_vec.txt',test_precision_vec[:(epoch+1),:])
 
 		# make plots
-		prop_cycle = plt.rcParams['axes.prop_cycle']
-		color_list = prop_cycle.by_key()['color']
+		if make_plots:
+			prop_cycle = plt.rcParams['axes.prop_cycle']
+			color_list = prop_cycle.by_key()['color']
 
-		fig, ax_list = plt.subplots(3,1, figsize=[12,10], sharex=True)
+			fig, ax_list = plt.subplots(3,1, figsize=[12,10], sharex=True)
 
-		# loss function
-		ax = ax_list[0]
-		ax.plot(train_loss_vec[:(epoch+1)], label='Training Loss')
-		ax.plot(test_loss_vec[:(epoch+1)], label='Testing Loss')
-		ax.set_ylabel('Loss')
-		# ax.set_xlabel('Epochs')
-		ax.legend()
-
-		# precision
-		ax = ax_list[1]
-		for c in range(num_classes):
-			color = color_list[c]
-			ax.plot(train_precision_vec[:(epoch+1),c], color=color, label=class_names[c]+' Train', linestyle='-')
-			ax.plot(test_precision_vec[:(epoch+1),c], color=color, label=class_names[c]+' Test', linestyle='--')
-			ax.set_ylabel('Precision')
+			# loss function
+			ax = ax_list[0]
+			ax.plot(train_loss_vec[:(epoch+1)], label='Training Loss')
+			ax.plot(test_loss_vec[:(epoch+1)], label='Testing Loss')
+			ax.set_ylabel('Loss')
 			# ax.set_xlabel('Epochs')
-		ax.set_title('Precision')
-		ax.legend(fontsize='small')
+			ax.legend()
 
-		# recall
-		ax = ax_list[2]
-		for c in range(num_classes):
-			color = color_list[c]
-			ax.plot(train_recall_vec[:(epoch+1),c], color=color, label=class_names[c]+' Train', linestyle='-')
-			ax.plot(test_recall_vec[:(epoch+1),c], color=color, label=class_names[c]+' Test', linestyle='--')
-			ax.set_ylabel('Recall')
-			ax.set_xlabel('Epochs')
-		ax.set_title('Recall')
-		ax.legend(fontsize='small')
+			# precision
+			ax = ax_list[1]
+			for c in range(num_classes):
+				color = color_list[c]
+				ax.plot(train_precision_vec[:(epoch+1),c], color=color, label=class_names[c]+' Train', linestyle='-')
+				ax.plot(test_precision_vec[:(epoch+1),c], color=color, label=class_names[c]+' Test', linestyle='--')
+				ax.set_ylabel('Precision')
+				# ax.set_xlabel('Epochs')
+			ax.set_title('Precision')
+			ax.legend(fontsize='small')
 
+			# recall
+			ax = ax_list[2]
+			for c in range(num_classes):
+				color = color_list[c]
+				ax.plot(train_recall_vec[:(epoch+1),c], color=color, label=class_names[c]+' Train', linestyle='-')
+				ax.plot(test_recall_vec[:(epoch+1),c], color=color, label=class_names[c]+' Test', linestyle='--')
+				ax.set_ylabel('Recall')
+				ax.set_xlabel('Epochs')
+			ax.set_title('Recall')
+			ax.legend(fontsize='small')
 
-		fig.suptitle('Train/Test Performance')
-		fig.savefig(fname=output_path+'/TrainTest_Performance')
-		plt.close(fig)
+			fig.suptitle('Train/Test Performance')
+			fig.savefig(fname=output_path+'/TrainTest_Performance')
+			plt.close(fig)
 
 		print('Test Epoch', epoch, time() - t0)
 
