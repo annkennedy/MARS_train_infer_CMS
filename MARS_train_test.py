@@ -137,9 +137,11 @@ def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', v
                 # we remove some features that have the same value for both mice (hardcoded for now, shaaame)
                 featToKeep = list(flatten([range(39), range(49, 58), 59, 61, 62, 63, range(113, n_feat)]))
                 d = np.hstack((d[0, :, :], d[1, :, featToKeep].transpose()))
+                names = names.tolist() + names[featToKeep].tolist()
 
                 # for this project, we also remove raw pixel-based features to keep things simple
                 d = mts.remove_pixel_data(d, 'top')
+                names = mts.remove_pixel_data(names, 'top')
             else: # this is for features created with MARS_feature_extractor (which currently doesn't build data_smooth)
                 d = vid['data']
             d = mts.clean_data(d)

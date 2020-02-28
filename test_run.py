@@ -22,8 +22,8 @@ parser.add_argument('--hidden_dim', type=int, default=10, help='number of dimens
 parser.add_argument('--optimizer', type=str, default='SGD', help='specifiy which optimizer to use')
 parser.add_argument('--loss', type=str, default='nn.NLLLoss', help='specifiy which loss function to use')
 parser.add_argument('--model_name', type=str, default='LSTMTagger', help='specifiy which RNN model to use')
-parser.add_argument('--train_path', type=str, default='TRAIN_lite_small', help='specifiy path to TRAIN videos')
-parser.add_argument('--test_path', type=str, default='TEST_lite_small', help='specifiy path to TEST videos')
+parser.add_argument('--train_path', type=str, default='TRAIN_lite', help='specifiy path to TRAIN videos')
+parser.add_argument('--test_path', type=str, default='TEST_lite', help='specifiy path to TEST videos')
 parser.add_argument('--output_path', type=str, default='default_output', help='specifiy path to TEST videos')
 parser.add_argument('--balance_weights', type=str2bool, default=True, help='If true, compute cost function weights based on relative class frequencies')
 FLAGS = parser.parse_args()
@@ -68,9 +68,12 @@ def main():
 	Xtest, ytest, key_order_test, names_test = mars.load_data(test_video_path, test_videos, behs,
 	                                  ver=ver, feat_type=feat_type, verbose=verbose, do_wnd=do_wnd, do_cwt=do_cwt)
 
+	pdb.set_trace()
+
+# use_inds = ['nose_x', 'nose_y', 'right_ear_x', 'right_ear_y', 'left_ear_x', 'left_ear_y', 'neck_x', 'neck_y', 'right_side_x', 'right_side_y', 'left_side_x', 'left_side_y', 'tail_base_x', 'tail_base_y']
 
 	n_features = 14 # just key-points
-	mouse2_start = len(names_train)
+	mouse2_start = 149 # location of second 'nose_x'
 	feature_inds = np.hstack((np.arange(0,n_features), np.arange(mouse2_start,mouse2_start+n_features)))
 	Xtrain = [x[:,feature_inds] for x in Xtrain]
 	Xtest = [x[:,feature_inds] for x in Xtest]
@@ -108,6 +111,13 @@ def main():
 	loss_function = get_loss(name=FLAGS.loss, weight=weight) #e.g. nn.NLLLoss()
 
 	# train the model
+	train_loss_vec = np.zeros((num_epochs,1))
+	test_loss_vec = np.zeros((num_epochs,1))
+	train_precision_vec = np.zeros((num_epochs,num_classes))
+	test_precision_vec = np.zeros((num_epochs,num_classes))
+	train_recall_vec = np.zeros((num_epochs,num_classes))
+	test_recall_vec = np.zeros((num_epochs,num_classes))
+
 	num_frames = FLAGS.num_frames
 	num_epochs = FLAGS.num_epochs
 	for epoch in range(num_epochs):  # again, normally you would NOT do 300 epochs, it is toy data
@@ -162,6 +172,11 @@ def main():
 		print('Epoch',epoch,' Train Recall=', train_recall)
 		print('Epoch',epoch,' Train Precision=', train_precision)
 
+		# save data
+		train_loss_vec[epoch] = train_loss
+		train_recall_vec[epoch,:] = train_recall
+		train_precision_vec[epoch,:] = train_precision
+
 		# Report TEST performance after each epoch
 		all_predicted_classes = []
 		all_predicted_scores = []
@@ -190,6 +205,11 @@ def main():
 		print('Epoch',epoch,' Test Loss=', test_loss.data.numpy().item())
 		print('Epoch',epoch,' Test Recall=', test_recall)
 		print('Epoch',epoch,' Test Precision=', test_precision)
+
+		# save data
+		test_loss_vec[epoch] = test_loss
+		test_recall_vec[epoch,:] = test_recall
+		test_precision_vec[epoch,:] = test_precision
 
 
 if __name__ == '__main__':

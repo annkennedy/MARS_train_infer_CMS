@@ -6,7 +6,7 @@ from sklearn.metrics import precision_recall_fscore_support as score
 from sklearn.preprocessing import binarize
 from collections import Counter
 from sklearn.ensemble import BaggingClassifier
-from hmmlearn import hmm
+# from hmmlearn import hmm
 import scipy
 from scipy import signal
 import MARS_annotation_parsers as map
@@ -15,6 +15,7 @@ from scipy.signal import medfilt
 import progressbar
 import multiprocessing as mp
 
+import pdb
 
 flatten = lambda *n: (e for a in n for e in (flatten(*a) if isinstance(a, (tuple, list)) else (a,)))
 
@@ -161,7 +162,10 @@ def remove_pixel_data(data, view):
     elif view == 'front': fd=[range(47,67)]
     elif view == 'top_pcf':fd=[range(40,57)]
     fd = list(flatten(fd))
-    data = np.delete(data, fd, 1)
+    if type(data)==np.ndarray:
+        data = np.delete(data, fd, 1)
+    else:
+        data = [i for j, i in enumerate(data) if j not in fd]
     return data
 
 
