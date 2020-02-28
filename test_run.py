@@ -206,7 +206,7 @@ def main():
 		# print('Epoch',epoch,' Train Recall=', train_recall)
 		# print('Epoch',epoch,' Train Precision=', train_precision)
 
-		print('Train Epoch', epoch, time-t0)
+		print('Train Epoch', epoch, time()-t0)
 
 		# save data
 		# train_loss_vec[epoch] = train_loss.cpu().data.numpy().item()
