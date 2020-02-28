@@ -264,6 +264,16 @@ def main():
 
 		# make plots
 		if make_plots:
+
+			# RNN performance plots
+			predicted = all_predicted_classes[:num_frames].cpu().data.numpy()
+			actual = all_targets[:num_frames].cpu().data.numpy()
+			fig = plot_predicted_vs_actual(predicted, actual, states = class_names)
+			# fig.suptitle('Train/Test Performance')
+			fig.savefig(fname=output_path+'/example_RNN_outputs')
+			plt.close(fig)
+
+
 			prop_cycle = plt.rcParams['axes.prop_cycle']
 			color_list = prop_cycle.by_key()['color']
 
