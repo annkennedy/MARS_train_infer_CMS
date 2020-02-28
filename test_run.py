@@ -190,7 +190,6 @@ def main():
 		all_predicted_scores = torch.cat(all_predicted_scores)
 		all_targets = torch.cat(all_targets)
 
-		pdb.set_trace()
 		# Report Train losses after each epoch
 		train_loss = loss_function(all_predicted_scores, all_targets)
 		train_recall = recall(predicted=all_predicted_classes.cpu().data.numpy(), actual=all_targets.cpu().data.numpy())
