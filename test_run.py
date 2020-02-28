@@ -46,8 +46,10 @@ def main():
 	# choose cuda-GPU or regular
 	if FLAGS.use_gpu:
 		dtype = torch.cuda.FloatTensor
+		inttype = torch.cuda.IntTensor
 	else:
 		dtype = torch.FloatTensor
+		inttype = torch.IntTensor
 
 	if not os.path.exists(output_path):
 		os.mkdir(output_path)
@@ -165,7 +167,7 @@ def main():
 
 				input_sequence = big_input[start_ind:end_ind,:]
 				target_sequence = big_target[start_ind:end_ind,:]
-				target_inds = torch.tensor(np.argmax(target_sequence, axis=1))
+				target_inds = torch.tensor(np.argmax(target_sequence, axis=1)).type(inttype)
 
 				# Step 1. Remember that Pytorch accumulates gradients.
 				# We need to clear them out before each instance
@@ -215,7 +217,7 @@ def main():
 			big_target = ytest[v]
 			input_sequence = big_input
 			target_sequence = big_target
-			target_inds = torch.tensor(np.argmax(target_sequence, axis=1))
+			target_inds = torch.tensor(np.argmax(target_sequence, axis=1)).type(inttype)
 
 			# Step 3. Run our forward pass.
 			predicted_class_scores = model(torch.FloatTensor(input_sequence).type(dtype)).type(dtype)
