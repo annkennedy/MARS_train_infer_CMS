@@ -1,7 +1,7 @@
 #!/bin/bash
 # https://s3-us-west-2.amazonaws.com/imss-hpc/index.html to generate script
 #SBATCH --time=48:00:00   # walltime
-#SBATCH --gres=gpu:4
+#SBATCH --gres=gpu:1
 #SBATCH --gid=andersonlab
 
 # Execute jobs in parallel
