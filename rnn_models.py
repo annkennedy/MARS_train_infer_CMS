@@ -36,6 +36,10 @@ def get_optimizer(name, params, lr=None):
         if lr is None:
             lr = 1
         return optim.LBFGS(params, lr=lr)
+    elif name=='RMSprop':
+        if lr is None:
+            lr = 0.01
+        return optim.RMSprop(params, lr=lr)
     else:
         return None
 
