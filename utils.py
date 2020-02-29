@@ -1,4 +1,5 @@
 import numpy as np
+import json
 
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
@@ -6,6 +7,17 @@ from matplotlib import cm
 import matplotlib.patches as patches
 
 import pdb
+
+def getval(x):
+    try:
+        return getattr(x, '__dict__', str(x))
+    except:
+        return None
+
+def write_settings(FLAGS, settings_fname):
+    with open(settings_fname, 'w') as f:
+        json.dump(FLAGS.__dict__, f, default=lambda x: getval(x) , indent=2)
+    return
 
 def str2bool(v):
     if v.lower() in ('yes', 'true', 't', 'y', '1'):

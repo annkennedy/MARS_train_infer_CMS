@@ -61,6 +61,11 @@ def main():
 	train_video_path, train_video_nm = os.path.split(FLAGS.train_path)
 	test_video_path, test_video_nm = os.path.split(FLAGS.test_path)
 
+
+	settings_fname = output_path + '/run_settings.txt'
+	write_settings(FLAGS, settings_fname)
+
+
 	train_videos = [os.path.join(train_video_nm,v) for v in os.listdir(FLAGS.train_path)]
 	test_videos = [os.path.join(test_video_nm,v) for v in os.listdir(FLAGS.test_path)]
 
