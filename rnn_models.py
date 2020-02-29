@@ -23,9 +23,19 @@ class LSTMTagger(nn.Module):
         predicted_class_scores = F.log_softmax(tag_space, dim=1)
         return predicted_class_scores
 
-def get_optimizer(name, params, lr):
+def get_optimizer(name, params, lr=None):
     if name=='SGD':
+        if lr is None:
+            lr = 0.1
         return optim.SGD(params, lr=lr)
+    elif name=='Adam':
+        if lr is None:
+            lr = 0.01
+        return optim.Adam(params, lr=lr)
+    elif name=='LBFGS':
+        if lr is None:
+            lr = 1
+        return optim.LBFGS(params, lr=lr)
     else:
         return None
 

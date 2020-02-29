@@ -22,7 +22,7 @@ import argparse
 
 parser = argparse.ArgumentParser(description='behaviorRNN')
 parser.add_argument('--num_epochs', type=int, default=10, help='number of training epochs')
-parser.add_argument('--lr', type=float, default=0.1, help='learning rate')
+parser.add_argument('--lr', type=float, default=None, help='learning rate, whose default depends on the specified optimizer')
 parser.add_argument('--num_frames', type=int, default=1000, help='number of frames per training video chunk')
 parser.add_argument('--hidden_dim', type=int, default=10, help='number of dimensions for RNN hidden state')
 parser.add_argument('--optimizer', type=str, default='SGD', help='specifiy which optimizer to use')
@@ -128,7 +128,6 @@ def main():
 		model.cuda()
 
 	optimizer = get_optimizer(name=FLAGS.optimizer, params=model.parameters(), lr=FLAGS.lr)
-	# optimizer = optim.SGD(model.parameters(), lr=FLAGS.lr)
 
 	## Normalize the data
 	Xtrain_stats = stats_of(Xtrain)
