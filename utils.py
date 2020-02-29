@@ -135,13 +135,13 @@ def plot_predicted_vs_actual(predicted_score, predicted_class, actual_class, sta
     fig, ax_list = plt.subplots(3,1, figsize=[20,6], sharex=True)
     ax_list[0].imshow([predicted_class], cmap = my_cmap, aspect = 'auto')
     ax_list[0].set_yticks([])
-    ax_list[0].set_xticks([])
+    # ax_list[0].set_xticks([])
     ax_list[0].set_ylabel("Predicted Actions")
 
     ax_list[1].imshow([actual_class], cmap = my_cmap, aspect = 'auto')
     ax_list[1].set_yticks([])
-    ax_list[0].set_xticks([])
-    ax_list[1].set_ylabel("Actual Actions")
+    # ax_list[1].set_xticks([])
+    ax_list[1].set_ylabel("Labeled Actions")
 
     for s in range(len(states)):
         ax_list[2].plot(predicted_score[:,s], color=my_cmap(s), label=states[s])

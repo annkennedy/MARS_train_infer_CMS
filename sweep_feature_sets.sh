@@ -5,6 +5,7 @@
 #SBATCH --nodes=1   # number of nodes
 #SBATCH --mem-per-cpu=10G   # memory per CPU core
 #SBATCH -c 1 # 1 core per task
+#SBATCH --gid=andersonlab
 
 # Execute jobs in parallel
 srun --exclusive -N 1 -n 1 python test_run.py --output_path ./test_output_featurestyle_all --feature_style 'all' --lr 0.1 --use_gpu False --train_path /groups/Andersonlab/CMS273/TRAIN_lite/ --test_path /groups/Andersonlab/CMS273/TEST_lite/  &
