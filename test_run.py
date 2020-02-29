@@ -33,7 +33,7 @@ parser.add_argument('--test_path', type=str, default='TEST_lite', help='specifiy
 parser.add_argument('--output_path', type=str, default='default_output', help='specifiy path to TEST videos')
 parser.add_argument('--balance_weights', type=str2bool, default=True, help='If true, compute cost function weights based on relative class frequencies')
 parser.add_argument('--use_gpu', type=str2bool, default=False, help='If true, use cuda')
-parser.add_argument('--keypoints_only', type=str2bool, default=True, help='If true, set dtype=torch.cuda.FloatTensor and use cuda')
+parser.add_argument('--feature_style', type=str, default="keypoints_only", help='If true, set dtype=torch.cuda.FloatTensor and use cuda')
 parser.add_argument('--save_freq', type=int, default=1, help='interval of epochs for which we should save outputs')
 FLAGS = parser.parse_args()
 
@@ -105,12 +105,17 @@ def main():
 
 	class_names = key_order_train
 
-	if FLAGS.keypoints_only:
+	if FLAGS.feature_style == "keypoints_only":
 		n_features = 14 # just key-points
 		mouse2_start = 149 # location of second 'nose_x'
 		feature_inds = np.hstack((np.arange(0,n_features), np.arange(mouse2_start,mouse2_start+n_features)))
+	elif FLAGS.feature_style == "all":
+		feature_inds = np.arange(len(names_train))
+	elif FLAGS.feature_style == "selective":
+		feature_inds = [True if 'dist' not in name and '_w' not in name else False for i, name in enumerate(names_train)]
 	else:
-		feature_inds = np.arange(len(class_names))
+		print("Not an applicable feature style! Try again!")
+		return
 
 	Xtrain = [x[:,feature_inds] for x in Xtrain]
 	Xtest = [x[:,feature_inds] for x in Xtest]
