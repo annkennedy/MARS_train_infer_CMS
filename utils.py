@@ -131,6 +131,14 @@ def normalize(X, stats):
 
 def plot_predicted_vs_actual(predicted_score, predicted_class, actual_class, states = []):
     '''Plots visualization of predicted_class actions vs actual_class actions'''
+
+    predicted_class[0] = 0
+    actual_class[0] = 0
+
+    predicted_class[-1] = 3
+    actual_class[-1] = 3
+
+
     my_cmap = cm.get_cmap('viridis', len(states))
     fig, ax_list = plt.subplots(3,1, figsize=[20,6], sharex=True)
     ax_list[1].imshow([predicted_class], cmap = my_cmap, aspect = 'auto')
