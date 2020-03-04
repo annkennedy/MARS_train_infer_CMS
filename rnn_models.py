@@ -80,8 +80,8 @@ def get_loss(name, weight=None):
 
 def get_model(name, input_dim, hidden_dim, num_classes, bidirectional = False, num_layers=1):
     if name=='LSTMTagger':
-        return LSTMTagger(input_dim=input_dim, hidden_dim=hidden_dim, num_classes=num_classes, bidirectional = bidirectional)
+        return LSTMTagger(input_dim=input_dim, hidden_dim=hidden_dim, num_classes=num_classes, bidirectional=bidirectional, num_layers=num_layers)
     elif name=='GRUTagger':
-        return GRUTagger(input_dim=input_dim, hidden_dim=hidden_dim, num_classes=num_classes, bidirectional = bidirectional)
+        return GRUTagger(input_dim=input_dim, hidden_dim=hidden_dim, num_classes=num_classes, bidirectional=bidirectional, num_layers=num_layers)
     else:
         return None
