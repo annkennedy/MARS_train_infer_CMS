@@ -196,7 +196,6 @@ def main():
 		print('GLM Test Recall=', test_recall)
 		print('GLM Test Precision=', test_precision)
 
-		pdb.set_trace()
 		glm_dict = {'Train':
 						{FLAGS.loss: train_loss.cpu().data.numpy().item(),
 						'Precision': train_precision,
