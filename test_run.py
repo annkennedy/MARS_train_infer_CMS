@@ -208,14 +208,15 @@ def main():
 								}
 							}
 						}
-
+		pdb.set_trace()
 		for c in range(num_classes):
-			best_model_dict['glm']['Train'][glm_names[c]]['Precision'] = train_precision[c]
-			best_model_dict['glm']['Train'][glm_names[c]]['Recall'] = train_recall[c]
-			best_model_dict['glm']['Test'][glm_names[c]]['Precision'] = test_precision[c]
-			best_model_dict['glm']['Test'][glm_names[c]]['Recall'] = test_recall[c]
+			best_model_dict['glm']['Train'][glm_names[c][4:]]['Precision'] = train_precision[c]
+			best_model_dict['glm']['Train'][glm_names[c][4:]]['Recall'] = train_recall[c]
+			best_model_dict['glm']['Test'][glm_names[c][4:]]['Precision'] = test_precision[c]
+			best_model_dict['glm']['Test'][glm_names[c][4:]]['Recall'] = test_recall[c]
 			# best_model_dict[model_nm]['Train'][class_names[c]]['Precision'] = train_precision_vec[my_ind,c]
 
+		pdb.set_trace()
 
 		best_model_fname = os.path.join(output_path,'best_model_performances.txt')
 		with open(best_model_fname, 'w') as f:
@@ -394,6 +395,7 @@ def main():
 			## Now, choose the epoch that optimizes either Loss, Precision, or Recall and plot its performance
 			fig, axlist = plt.subplots(2,4, figsize=[20,10], sharey=True)
 
+			pdb.set_trace()
 			# plot GLM-alone performance
 			cc = 0
 			ax = axlist[0,cc]
