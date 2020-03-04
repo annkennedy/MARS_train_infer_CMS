@@ -208,10 +208,8 @@ def main():
 					}
 
 		glm_fname = os.path.join(output_path,'glm_performance.txt')
-	    with open(glm_fname, 'w') as f:
-	        json.dump(glm_dict, f, indent=2)
-
-
+		with open(glm_fname, 'w') as f:
+			json.dump(glm_dict, f, indent=2)
 
 	# train the model
 	num_frames = FLAGS.num_frames
