@@ -38,6 +38,7 @@ parser.add_argument('--output_path', type=str, default='default_output', help='s
 parser.add_argument('--balance_weights', type=str2bool, default=True, help='If true, compute cost function weights based on relative class frequencies')
 parser.add_argument('--use_gpu', type=str2bool, default=False, help='If true, use cuda')
 parser.add_argument('--feature_style', type=str, default="keypoints_only", help='If true, set dtype=torch.cuda.FloatTensor and use cuda')
+parser.add_argument('--use_glm_socres', type=str2bool, default=True, help='include outputs from GLM model as features.')
 parser.add_argument('--save_freq', type=int, default=1, help='interval of epochs for which we should save outputs')
 parser.add_argument('--bidirectional', type=str2bool, default=False, help='interval of epochs for which we should save outputs')
 parser.add_argument('--num_rnn_layers', type=int, default=1, help='number of layers of RNN cells')
@@ -123,9 +124,15 @@ def main():
 		print("Not an applicable feature style! Try again!")
 		return
 
+	num_classes = ytrain[0].shape[1]
+
+	# if not using them already, add the glm_scores
+	if FLAGS.use_glm_socres and FLAGS.feature_style != 'all':
+		glm_inds = np.arange(len(names_train)-num_classes, len(names_train))
+		feature_inds = np.hstack((feature_inds, glm_inds))
+
 	Xtrain = [x[:,feature_inds] for x in Xtrain]
 	Xtest = [x[:,feature_inds] for x in Xtest]
-	num_classes = ytrain[0].shape[1]
 	input_dim = Xtrain[0].shape[1]
 	# model = LSTMTagger(input_dim=input_dim, hidden_dim=FLAGS.hidden_dim, num_classes=num_classes)
 	model = get_model(name=FLAGS.model_name, input_dim=input_dim, hidden_dim=FLAGS.hidden_dim, num_classes=num_classes, bidirectional = FLAGS.bidirectional, num_layers=FLAGS.num_rnn_layers)
