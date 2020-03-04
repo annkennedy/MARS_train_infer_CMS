@@ -338,7 +338,7 @@ def main():
 			my_ind = np.argmin(test_loss_vec[:(epoch+1)])
 			summary_list = []
 			for c in range(num_classes):
-				prec_dict = {'behavior': class_names[c], 'metric': 'Precision', 'value': test_precision_vec[my_ind,c]}
+				pred_dict = {'behavior': class_names[c], 'metric': 'Precision', 'value': test_precision_vec[my_ind,c]}
 				recall_dict = {'behavior': class_names[c], 'metric': 'Recall', 'value': test_recall_vec[my_ind,c]}
 				summary_list.append(pred_dict)
 				summary_list.append(recall_dict)
@@ -352,7 +352,7 @@ def main():
 			my_ind = np.argmax(np.mean(test_precision_vec[:(epoch+1),:], axis=0))
 			summary_list = []
 			for c in range(num_classes):
-				prec_dict = {'behavior': class_names[c], 'metric': 'Precision', 'value': test_precision_vec[my_ind,c]}
+				pred_dict = {'behavior': class_names[c], 'metric': 'Precision', 'value': test_precision_vec[my_ind,c]}
 				recall_dict = {'behavior': class_names[c], 'metric': 'Recall', 'value': test_recall_vec[my_ind,c]}
 				summary_list.append(pred_dict)
 				summary_list.append(recall_dict)
@@ -366,7 +366,7 @@ def main():
 			my_ind = np.argmax(np.mean(test_recall_vec[:(epoch+1),:], axis=0))
 			summary_list = []
 			for c in range(num_classes):
-				prec_dict = {'behavior': class_names[c], 'metric': 'Precision', 'value': test_precision_vec[my_ind,c]}
+				pred_dict = {'behavior': class_names[c], 'metric': 'Precision', 'value': test_precision_vec[my_ind,c]}
 				recall_dict = {'behavior': class_names[c], 'metric': 'Recall', 'value': test_recall_vec[my_ind,c]}
 				summary_list.append(pred_dict)
 				summary_list.append(recall_dict)
