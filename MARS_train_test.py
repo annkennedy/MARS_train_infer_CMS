@@ -99,7 +99,10 @@ def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', v
         seq = []
 
         for file in os.listdir(os.path.join(video_path, v)):
-            if fnmatch.fnmatch(file, '*.txt') or fnmatch.fnmatch(file, '*.annot'):
+            if fnmatch.fnmatch(file, '*OutputLikelihood.txt'):
+                # Adi's features
+                continue
+            elif fnmatch.fnmatch(file, '*.txt') or fnmatch.fnmatch(file, '*.annot'):
                 ann = file
             elif fnmatch.fnmatch(file, '*.seq'):
                 seq = file
