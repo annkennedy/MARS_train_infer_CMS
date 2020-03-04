@@ -210,10 +210,14 @@ def main():
 						}
 		pdb.set_trace()
 		for c in range(num_classes):
-			best_model_dict['glm']['Train'][glm_names[c][4:]]['Precision'] = train_precision[c]
-			best_model_dict['glm']['Train'][glm_names[c][4:]]['Recall'] = train_recall[c]
-			best_model_dict['glm']['Test'][glm_names[c][4:]]['Precision'] = test_precision[c]
-			best_model_dict['glm']['Test'][glm_names[c][4:]]['Recall'] = test_recall[c]
+			cnm = glm_names[c][4:]
+			if cnm not in best_model_dict['glm']['Train']:
+				best_model_dict['glm']['Train'][cnm] = {}
+				best_model_dict['glm']['Test'][cnm] = {}
+			best_model_dict['glm']['Train'][cnm]['Precision'] = train_precision[c]
+			best_model_dict['glm']['Train'][cnm]['Recall'] = train_recall[c]
+			best_model_dict['glm']['Test'][cnm]['Precision'] = test_precision[c]
+			best_model_dict['glm']['Test'][cnm]['Recall'] = test_recall[c]
 			# best_model_dict[model_nm]['Train'][class_names[c]]['Precision'] = train_precision_vec[my_ind,c]
 
 		pdb.set_trace()
