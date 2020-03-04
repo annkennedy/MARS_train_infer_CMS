@@ -172,33 +172,44 @@ def main():
 
 	if FLAGS.use_glm_socres:
 		# report the GLM score qualities
-		glmTrainingScores = np.array([x[:,glm_inds] for x in Xtrain_raw])
-		glmTestingScores = np.array([x[:,glm_inds] for x in Xtest_raw])
-		pdb.set_trace()
+		glmTrainingScores = np.concatenate([np.array(x[:,glm_inds]) for x in Xtrain_raw])
+		glmTestingScores = np.concatenate([x[:,glm_inds] for x in Xtest_raw])
 		glmTrainingClassPredictions = np.argmax(glmTrainingScores, axis=1)
 		glmTestingClassPredictions = np.argmax(glmTestingScores, axis=1)
 
-		glm_names = names_train[glm_inds]
-		my_train_inds = [np.where(class_names==g) for g in glm_names]
+		glm_names = [names_train[i] for i in glm_inds]
+		label_inds = [class_names.index(g[4:]) for g in glm_names]
 
-		pdb.set_trace()
+		TrainLabels = np.concatenate([np.argmax(y[:,label_inds], axis=1) for y in ytrain])
+		TestLabels = np.concatenate([np.argmax(y[:,label_inds], axis=1) for y in ytest])
 
-		TrainLabels = np.array([y[:,label_inds] for y in ytrain])
-		TestLabels = np.array([y[:,label_inds] for y in ytest])
-
-		train_loss = loss_function(glmTrainingScores, TrainLabels)
+		train_loss = loss_function(torch.FloatTensor(glmTrainingScores).type(dtype), torch.tensor(TrainLabels).type(inttype))
 		train_recall = recall(predicted=glmTrainingClassPredictions, actual=TrainLabels)
 		train_precision = precision(predicted=glmTrainingClassPredictions, actual=TrainLabels)
 		print('GLM Train Loss=', train_loss.cpu().data.numpy().item())
 		print('GLM Train Recall=', train_recall)
 		print('GLM Train Precision=', train_precision)
-		test_loss = loss_function(glmTestingScores, TestLabels)
+		test_loss = loss_function(torch.FloatTensor(glmTestingScores).type(dtype), torch.tensor(TestLabels).type(inttype))
 		test_recall = recall(predicted=glmTestingClassPredictions, actual=TestLabels)
 		test_precision = precision(predicted=glmTestingClassPredictions, actual=TestLabels)
-		print('GLM Train Loss=', test_loss.cpu().data.numpy().item())
-		print('GLM Train Recall=', test_recall)
-		print('GLM Train Precision=', test_precision)
+		print('GLM Test Loss=', test_loss.cpu().data.numpy().item())
+		print('GLM Test Recall=', test_recall)
+		print('GLM Test Precision=', test_precision)
 
+		pdb.set_trace()
+		glm_dict = {'Train':
+						{FLAGS.loss: train_loss,
+						'Precision': train_precision,
+						'Recall': train_recall},
+					'Test':
+						{FLAGS.loss: test_loss,
+						'Precision': test_precision,
+						'Recall': test_recall}
+					}
+
+		glm_fname = os.path.join(output_path,'glm_performance.txt')
+	    with open(glm_fname, 'w') as f:
+	        json.dump(glm_dict, f, indent=2)
 
 
 
