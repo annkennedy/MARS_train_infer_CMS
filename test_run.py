@@ -331,6 +331,7 @@ def main():
 
 
 			## Now, choose the epoch that optimizes either Loss, Precision, or Recall and plot its performance
+			pdb.set_trace()
 			fig, axlist = plt.subplots(1,3, figsize=[15,10], sharey=True)
 
 			cc = 0
