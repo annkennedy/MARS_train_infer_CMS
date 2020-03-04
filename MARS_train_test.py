@@ -87,7 +87,7 @@ def y_dict_to_array(y, key_order):
     x = 1 - np.sum(z,axis=1)
     return np.hstack((z, x[:,None]))
 
-def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', verbose=0, do_wnd=False, do_cwt=False):
+def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', verbose=0, do_wnd=False, do_cwt=False, require_glm_scores=True):
     data = []
     labels = []
     Ybig = []
@@ -107,6 +107,9 @@ def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', v
                 ann = file
             elif fnmatch.fnmatch(file, '*.seq'):
                 seq = file
+
+        if require_glm_scores and not glm_scores:
+            continue
 
         # we load exact frame timestamps for *.annot files to make sure we get the time->frame conversion correct
         if fnmatch.fnmatch(ann, '*.annot') and seq:
@@ -157,9 +160,8 @@ def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', v
 
             # add glm model outputs as features
             foo = np.array(d)
-            if not glm_scores:
-                glm_scores = np.nan((foo.shape[0],len(glm_names)))
-            foo = np.concatenate((foo, glm_scores),axis=1)
+            if require_glm_scores:
+                foo = np.concatenate((foo, glm_scores), axis=1)
             data.append(foo)
 
             beh = map.parse_annotations(os.path.join(video_path, v, ann), use_channels=['Ch1'], timestamps=timestamps)
@@ -195,7 +197,7 @@ def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', v
 
     key_order += ['None']
 
-    if glm_names:
+    if require_glm_scores:
         names += glm_names
 
     return data, y_final, key_order, names
