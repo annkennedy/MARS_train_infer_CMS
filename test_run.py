@@ -38,7 +38,7 @@ parser.add_argument('--output_path', type=str, default='default_output', help='s
 parser.add_argument('--balance_weights', type=str2bool, default=True, help='If true, compute cost function weights based on relative class frequencies')
 parser.add_argument('--use_gpu', type=str2bool, default=False, help='If true, use cuda')
 parser.add_argument('--feature_style', type=str, default="keypoints_only", help='If true, set dtype=torch.cuda.FloatTensor and use cuda')
-parser.add_argument('--use_glm_socres', type=str2bool, default=True, help='include outputs from GLM model as features.')
+parser.add_argument('--use_glm_scores', type=str2bool, default=True, help='include outputs from GLM model as features.')
 parser.add_argument('--save_freq', type=int, default=1, help='interval of epochs for which we should save outputs')
 parser.add_argument('--bidirectional', type=str2bool, default=False, help='interval of epochs for which we should save outputs')
 parser.add_argument('--num_rnn_layers', type=int, default=1, help='number of layers of RNN cells')
@@ -131,7 +131,7 @@ def main():
 	num_classes = ytrain[0].shape[1]
 
 	# if not using them already, add the glm_scores
-	if FLAGS.use_glm_socres:
+	if FLAGS.use_glm_scores:
 		glm_inds = np.arange(len(names_train)-num_classes, len(names_train))
 		if FLAGS.feature_style != 'all':
 			feature_inds = np.hstack((feature_inds, glm_inds))
@@ -173,7 +173,7 @@ def main():
 	loss_function = get_loss(name=FLAGS.loss, weight=weight) #e.g. nn.NLLLoss()
 
 
-	if FLAGS.use_glm_socres:
+	if FLAGS.use_glm_scores:
 		# report the GLM score qualities
 		glmTrainingScores = np.concatenate([np.array(x[:,glm_inds]) for x in Xtrain_raw])
 		glmTestingScores = np.concatenate([x[:,glm_inds] for x in Xtest_raw])
