@@ -198,11 +198,11 @@ def main():
 
 		pdb.set_trace()
 		glm_dict = {'Train':
-						{FLAGS.loss: train_loss,
+						{FLAGS.loss: train_loss.cpu().data.numpy().item(),
 						'Precision': train_precision,
 						'Recall': train_recall},
 					'Test':
-						{FLAGS.loss: test_loss,
+						{FLAGS.loss: test_loss.cpu().data.numpy().item(),
 						'Precision': test_precision,
 						'Recall': test_recall}
 					}
