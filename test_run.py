@@ -36,6 +36,7 @@ parser.add_argument('--use_gpu', type=str2bool, default=False, help='If true, us
 parser.add_argument('--feature_style', type=str, default="keypoints_only", help='If true, set dtype=torch.cuda.FloatTensor and use cuda')
 parser.add_argument('--save_freq', type=int, default=1, help='interval of epochs for which we should save outputs')
 parser.add_argument('--bidirectional', type=str2bool, default=False, help='interval of epochs for which we should save outputs')
+parser.add_argument('--num_rnn_layers', type=int, default=1, help='number of layers of RNN cells')
 FLAGS = parser.parse_args()
 
 
@@ -123,7 +124,7 @@ def main():
 	num_classes = ytrain[0].shape[1]
 	input_dim = Xtrain[0].shape[1]
 	# model = LSTMTagger(input_dim=input_dim, hidden_dim=FLAGS.hidden_dim, num_classes=num_classes)
-	model = get_model(name=FLAGS.model_name, input_dim=input_dim, hidden_dim=FLAGS.hidden_dim, num_classes=num_classes, bidirectional = FLAGS.bidirectional)
+	model = get_model(name=FLAGS.model_name, input_dim=input_dim, hidden_dim=FLAGS.hidden_dim, num_classes=num_classes, bidirectional = FLAGS.bidirectional, num_layers=FLAGS.num_rnn_layers)
 
 	if FLAGS.use_gpu:
 		model.cuda()

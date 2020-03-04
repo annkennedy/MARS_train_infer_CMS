@@ -6,13 +6,17 @@ import pdb
 
 class LSTMTagger(nn.Module):
 
-    def __init__(self, input_dim, hidden_dim, num_classes, bidirectional):
+    def __init__(self, input_dim, hidden_dim, num_classes, bidirectional, num_layers):
         super(LSTMTagger, self).__init__()
-        self.hidden_dim = hidden_dim
+
+        if bidirectional and hidden_dim % 2 != 0:
+            raise RuntimeError('hidden_dim is expected to be even in the bidirectional mode!')
+
+        self.hidden_dim = hidden_dim // 2 if bidirectional else hidden_dim
 
         # The LSTM takes word embeddings as inputs, and outputs hidden states
         # with dimensionality hidden_dim.
-        self.lstm = nn.LSTM(input_dim, hidden_dim, bidirectional = bidirectional)
+        self.lstm = nn.LSTM(input_dim, hidden_dim, bidirectional = bidirectional, num_layers=num_layers)
 
         # The linear layer that maps from hidden state space to tag space
         self.hidden2tag = nn.Linear(hidden_dim, num_classes)
@@ -25,13 +29,18 @@ class LSTMTagger(nn.Module):
 
 class GRUTagger(nn.Module):
 
-    def __init__(self, input_dim, hidden_dim, num_classes, bidirectional):
+    def __init__(self, input_dim, hidden_dim, num_classes, bidirectional, num_layers):
         super(GRUTagger, self).__init__()
         self.hidden_dim = hidden_dim
 
+        if bidirectional and hidden_dim % 2 != 0:
+            raise RuntimeError('hidden_dim is expected to be even in the bidirectional mode!')
+
+        self.hidden_dim = hidden_dim // 2 if bidirectional else hidden_dim
+
         # The LSTM takes word embeddings as inputs, and outputs hidden states
         # with dimensionality hidden_dim.
-        self.gru = nn.GRU(input_dim, hidden_dim, bidirectional = bidirectional)
+        self.gru = nn.GRU(input_dim, hidden_dim, bidirectional = bidirectional, num_layers=num_layers)
 
         # The linear layer that maps from hidden state space to tag space
         self.hidden2tag = nn.Linear(hidden_dim, num_classes)
