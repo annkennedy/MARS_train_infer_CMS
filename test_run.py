@@ -11,12 +11,16 @@ from time import time
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 from utils import *
 from rnn_models import *
+
+import pandas as pd
+import argparse
+
 import pdb
 
-import argparse
 
 
 
@@ -324,6 +328,59 @@ def main():
 			fig.suptitle('Train/Test Performance')
 			fig.savefig(fname=output_path+'/TrainTest_Performance')
 			plt.close(fig)
+
+
+			## Now, choose the epoch that optimizes either Loss, Precision, or Recall and plot its performance
+			fig, axlist = plt.subplots(1,3, figsize=[15,10], sharey=True)
+
+			cc = 0
+			ax = axlist[cc]
+			my_ind = np.argmin(test_loss_vec[:(epoch+1)])
+			summary_list = []
+			for c in range(num_classes):
+				prec_dict = {'behavior': class_names[c], 'metric': 'Precision', 'value': test_precision_vec[my_ind,c]}
+				recall_dict = {'behavior': class_names[c], 'metric': 'Recall', 'value': test_recall_vec[my_ind,c]}
+				summary_list.append(pred_dict)
+				summary_list.append(recall_dict)
+			df = pd.DataFrame(summary_list)
+			sns.barplot(ax=ax, x='behavior', y='value', hue='metric', data=df)
+			ax.set_xticklabels(ax.get_xticklabels(), rotation=45, horizontalalignment='right', fontweight='light', fontsize='x-large')
+			ax.set_title('Best Test Loss (Loss = {0})'.format(test_loss_vec[my_ind]))
+
+			cc = 1
+			ax = axlist[cc]
+			my_ind = np.argmax(np.mean(test_precision_vec[:(epoch+1),:], axis=0))
+			summary_list = []
+			for c in range(num_classes):
+				prec_dict = {'behavior': class_names[c], 'metric': 'Precision', 'value': test_precision_vec[my_ind,c]}
+				recall_dict = {'behavior': class_names[c], 'metric': 'Recall', 'value': test_recall_vec[my_ind,c]}
+				summary_list.append(pred_dict)
+				summary_list.append(recall_dict)
+			df = pd.DataFrame(summary_list)
+			sns.barplot(ax=ax, x='behavior', y='value', hue='metric', data=df)
+			ax.set_xticklabels(ax.get_xticklabels(), rotation=45, horizontalalignment='right', fontweight='light', fontsize='x-large')
+			ax.set_title('Best Avg Precision (Loss = {0})'.format(test_loss_vec[my_ind]))
+
+			cc = 2
+			ax = axlist[cc]
+			my_ind = np.argmax(np.mean(test_recall_vec[:(epoch+1),:], axis=0))
+			summary_list = []
+			for c in range(num_classes):
+				prec_dict = {'behavior': class_names[c], 'metric': 'Precision', 'value': test_precision_vec[my_ind,c]}
+				recall_dict = {'behavior': class_names[c], 'metric': 'Recall', 'value': test_recall_vec[my_ind,c]}
+				summary_list.append(pred_dict)
+				summary_list.append(recall_dict)
+			df = pd.DataFrame(summary_list)
+			sns.barplot(ax=ax, x='behavior', y='value', hue='metric', data=df)
+			ax.set_xticklabels(ax.get_xticklabels(), rotation=45, horizontalalignment='right', fontweight='light', fontsize='x-large')
+			ax.set_title('Best Avg Recall (Loss = {0})'.format(test_loss_vec[my_ind]))
+
+
+			fig.subplots_adjust(bottom=0.3)
+			fig.suptitle('Model Test Performances')
+			fig.savefig(fname=output_path+'/BarChart_Performance')
+			plt.close(fig)
+
 
 		print('Test Epoch', epoch, time() - t0)
 
