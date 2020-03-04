@@ -91,6 +91,7 @@ def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', v
     data = []
     labels = []
     Ybig = []
+    glm_names = []
 
     for v in video_list:
         vbase = os.path.basename(v)
@@ -101,7 +102,8 @@ def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', v
         for file in os.listdir(os.path.join(video_path, v)):
             if fnmatch.fnmatch(file, '*OutputLikelihood.txt'):
                 # Adi's features
-                continue
+                glm_scores = np.loadtxt(os.path.join(video_path,v,file))
+                glm_names = ['glm_None','glm_mount','glm_attack','glm_sniff']
             elif fnmatch.fnmatch(file, '*.txt') or fnmatch.fnmatch(file, '*.annot'):
                 ann = file
             elif fnmatch.fnmatch(file, '*.seq'):
@@ -153,7 +155,13 @@ def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', v
                 d = mts.apply_windowing(d)
             elif do_cwt:
                 d = mts.apply_wavelet_transform(d)
-            data.append(np.array(d))
+
+            # add glm model outputs as features
+            foo = np.array(d)
+            pdb.set_trace()
+            if glm_names:
+                foo = np.concatenate(d, glm_scores)
+            data.append(foo)
 
             beh = map.parse_annotations(os.path.join(video_path, v, ann), use_channels=['Ch1'], timestamps=timestamps)
             # labels += beh['behs_frame']
@@ -187,6 +195,10 @@ def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', v
         y_final.append(y_dict_to_array(video, key_order))
 
     key_order += ['None']
+
+    if glm_names:
+        names += glm_names
+
     return data, y_final, key_order, names
 
 
