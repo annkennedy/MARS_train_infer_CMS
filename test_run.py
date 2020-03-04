@@ -199,19 +199,27 @@ def main():
 		print('GLM Test Recall=', test_recall)
 		print('GLM Test Precision=', test_precision)
 
-		glm_dict = {'Train':
-						{FLAGS.loss: train_loss.cpu().data.numpy().item(),
-						'Precision': train_precision,
-						'Recall': train_recall},
-					'Test':
-						{FLAGS.loss: test_loss.cpu().data.numpy().item(),
-						'Precision': test_precision,
-						'Recall': test_recall}
-					}
+		best_model_dict = {'glm':
+							{'Train':{
+								FLAGS.loss: train_loss.cpu().data.numpy().item(),
+								},
+							'Test':{
+								FLAGS.loss: test_loss.cpu().data.numpy().item(),
+								}
+							}
+						}
 
-		glm_fname = os.path.join(output_path,'glm_performance.txt')
-		with open(glm_fname, 'w') as f:
-			json.dump(glm_dict, f, indent=2)
+		for c in range(num_classes):
+			best_model_dict['glm']['Train'][glm_names[c]]['Precision'] = train_precision[c]
+			best_model_dict['glm']['Train'][glm_names[c]]['Recall'] = train_recall[c]
+			best_model_dict['glm']['Test'][glm_names[c]]['Precision'] = test_precision[c]
+			best_model_dict['glm']['Test'][glm_names[c]]['Recall'] = test_recall[c]
+			# best_model_dict[model_nm]['Train'][class_names[c]]['Precision'] = train_precision_vec[my_ind,c]
+
+
+		best_model_fname = os.path.join(output_path,'best_model_performances.txt')
+		with open(best_model_fname, 'w') as f:
+			json.dump(best_model_dict, f, indent=2)
 
 	# train the model
 	num_frames = FLAGS.num_frames
@@ -384,13 +392,20 @@ def main():
 
 
 			## Now, choose the epoch that optimizes either Loss, Precision, or Recall and plot its performance
-			fig, axlist = plt.subplots(2,3, figsize=[15,10], sharey=True)
+			fig, axlist = plt.subplots(2,3, figsize=[18,10], sharey=True)
 
 			cc = 0
 			ax = axlist[0,cc]
 			my_ind = np.argmin(test_loss_vec[:(epoch+1)])
 			summary_list = []
+			model_nm = 'RNN_best_test_loss'
+			best_model_dict[model_nm]['Train'][FLAGS.loss] = train_loss_vec[my_ind]
+			best_model_dict[model_nm]['Test'][FLAGS.loss] = test_loss_vec[my_ind]
 			for c in range(num_classes):
+				best_model_dict[model_nm]['Train'][class_names[c]]['Precision'] = train_precision_vec[my_ind,c]
+				best_model_dict[model_nm]['Train'][class_names[c]]['Recall'] = train_recall_vec[my_ind,c]
+				best_model_dict[model_nm]['Test'][class_names[c]]['Precision'] = test_precision_vec[my_ind,c]
+				best_model_dict[model_nm]['Test'][class_names[c]]['Recall'] = test_recall_vec[my_ind,c]
 				pred_dict = {'behavior': class_names[c], 'metric': 'Precision', 'value': test_precision_vec[my_ind,c]}
 				recall_dict = {'behavior': class_names[c], 'metric': 'Recall', 'value': test_recall_vec[my_ind,c]}
 				summary_list.append(pred_dict)
@@ -404,7 +419,14 @@ def main():
 			ax = axlist[1,cc]
 			my_ind = np.argmin(train_loss_vec[:(epoch+1)])
 			summary_list = []
+			model_nm = 'RNN_best_train_loss'
+			best_model_dict[model_nm]['Train'][FLAGS.loss] = train_loss_vec[my_ind]
+			best_model_dict[model_nm]['Test'][FLAGS.loss] = test_loss_vec[my_ind]
 			for c in range(num_classes):
+				best_model_dict[model_nm]['Train'][class_names[c]]['Precision'] = train_precision_vec[my_ind,c]
+				best_model_dict[model_nm]['Train'][class_names[c]]['Recall'] = train_recall_vec[my_ind,c]
+				best_model_dict[model_nm]['Test'][class_names[c]]['Precision'] = test_precision_vec[my_ind,c]
+				best_model_dict[model_nm]['Test'][class_names[c]]['Recall'] = test_recall_vec[my_ind,c]
 				pred_dict = {'behavior': class_names[c], 'metric': 'Precision', 'value': test_precision_vec[my_ind,c]}
 				recall_dict = {'behavior': class_names[c], 'metric': 'Recall', 'value': test_recall_vec[my_ind,c]}
 				summary_list.append(pred_dict)
@@ -418,7 +440,14 @@ def main():
 			ax = axlist[0,cc]
 			my_ind = np.argmax(np.mean(test_precision_vec[:(epoch+1),:], axis=0))
 			summary_list = []
+			model_nm = 'RNN_best_test_avg_precision'
+			best_model_dict[model_nm]['Train'][FLAGS.loss] = train_loss_vec[my_ind]
+			best_model_dict[model_nm]['Test'][FLAGS.loss] = test_loss_vec[my_ind]
 			for c in range(num_classes):
+				best_model_dict[model_nm]['Train'][class_names[c]]['Precision'] = train_precision_vec[my_ind,c]
+				best_model_dict[model_nm]['Train'][class_names[c]]['Recall'] = train_recall_vec[my_ind,c]
+				best_model_dict[model_nm]['Test'][class_names[c]]['Precision'] = test_precision_vec[my_ind,c]
+				best_model_dict[model_nm]['Test'][class_names[c]]['Recall'] = test_recall_vec[my_ind,c]
 				pred_dict = {'behavior': class_names[c], 'metric': 'Precision', 'value': test_precision_vec[my_ind,c]}
 				recall_dict = {'behavior': class_names[c], 'metric': 'Recall', 'value': test_recall_vec[my_ind,c]}
 				summary_list.append(pred_dict)
@@ -432,7 +461,14 @@ def main():
 			ax = axlist[0,cc]
 			my_ind = np.argmax(np.mean(train_precision_vec[:(epoch+1),:], axis=0))
 			summary_list = []
+			model_nm = 'RNN_best_train_avg_precision'
+			best_model_dict[model_nm]['Train'][FLAGS.loss] = train_loss_vec[my_ind]
+			best_model_dict[model_nm]['Test'][FLAGS.loss] = test_loss_vec[my_ind]
 			for c in range(num_classes):
+				best_model_dict[model_nm]['Train'][class_names[c]]['Precision'] = train_precision_vec[my_ind,c]
+				best_model_dict[model_nm]['Train'][class_names[c]]['Recall'] = train_recall_vec[my_ind,c]
+				best_model_dict[model_nm]['Test'][class_names[c]]['Precision'] = test_precision_vec[my_ind,c]
+				best_model_dict[model_nm]['Test'][class_names[c]]['Recall'] = test_recall_vec[my_ind,c]
 				pred_dict = {'behavior': class_names[c], 'metric': 'Precision', 'value': test_precision_vec[my_ind,c]}
 				recall_dict = {'behavior': class_names[c], 'metric': 'Recall', 'value': test_recall_vec[my_ind,c]}
 				summary_list.append(pred_dict)
@@ -447,7 +483,14 @@ def main():
 			ax = axlist[0,cc]
 			my_ind = np.argmax(np.mean(test_recall_vec[:(epoch+1),:], axis=0))
 			summary_list = []
+			model_nm = 'RNN_best_test_avg_recall'
+			best_model_dict[model_nm]['Train'][FLAGS.loss] = train_loss_vec[my_ind]
+			best_model_dict[model_nm]['Test'][FLAGS.loss] = test_loss_vec[my_ind]
 			for c in range(num_classes):
+				best_model_dict[model_nm]['Train'][class_names[c]]['Precision'] = train_precision_vec[my_ind,c]
+				best_model_dict[model_nm]['Train'][class_names[c]]['Recall'] = train_recall_vec[my_ind,c]
+				best_model_dict[model_nm]['Test'][class_names[c]]['Precision'] = test_precision_vec[my_ind,c]
+				best_model_dict[model_nm]['Test'][class_names[c]]['Recall'] = test_recall_vec[my_ind,c]
 				pred_dict = {'behavior': class_names[c], 'metric': 'Precision', 'value': test_precision_vec[my_ind,c]}
 				recall_dict = {'behavior': class_names[c], 'metric': 'Recall', 'value': test_recall_vec[my_ind,c]}
 				summary_list.append(pred_dict)
@@ -461,7 +504,14 @@ def main():
 			ax = axlist[1,cc]
 			my_ind = np.argmax(np.mean(train_recall_vec[:(epoch+1),:], axis=0))
 			summary_list = []
+			model_nm = 'RNN_best_train_avg_recall'
+			best_model_dict[model_nm]['Train'][FLAGS.loss] = train_loss_vec[my_ind]
+			best_model_dict[model_nm]['Test'][FLAGS.loss] = test_loss_vec[my_ind]
 			for c in range(num_classes):
+				best_model_dict[model_nm]['Train'][class_names[c]]['Precision'] = train_precision_vec[my_ind,c]
+				best_model_dict[model_nm]['Train'][class_names[c]]['Recall'] = train_recall_vec[my_ind,c]
+				best_model_dict[model_nm]['Test'][class_names[c]]['Precision'] = test_precision_vec[my_ind,c]
+				best_model_dict[model_nm]['Test'][class_names[c]]['Recall'] = test_recall_vec[my_ind,c]
 				pred_dict = {'behavior': class_names[c], 'metric': 'Precision', 'value': test_precision_vec[my_ind,c]}
 				recall_dict = {'behavior': class_names[c], 'metric': 'Recall', 'value': test_recall_vec[my_ind,c]}
 				summary_list.append(pred_dict)
@@ -472,10 +522,14 @@ def main():
 			ax.set_title('Best Avg Train Recall (Test Loss = {0})'.format(test_loss_vec[my_ind]))
 
 
-			fig.subplots_adjust(bottom=0.3)
+			fig.subplots_adjust(bottom=0.1)
 			fig.suptitle('Model Test Performances')
 			fig.savefig(fname=output_path+'/BarChart_Performance')
 			plt.close(fig)
+
+			# write out best model summary
+			with open(best_model_fname, 'w') as f:
+				json.dump(best_model_dict, f, indent=2)
 
 
 		print('Test Epoch', epoch, time() - t0)
