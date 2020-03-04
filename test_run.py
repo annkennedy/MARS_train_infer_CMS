@@ -101,10 +101,10 @@ def main():
 
 
 	# Read in Train and Test sets
-	Xtrain, ytrain, key_order_train, names_train = mars.load_data(train_video_path, train_videos, behs,
+	Xtrain_raw, ytrain, key_order_train, names_train = mars.load_data(train_video_path, train_videos, behs,
 	                                  ver=ver, feat_type=feat_type, verbose=verbose, do_wnd=do_wnd, do_cwt=do_cwt)
 
-	Xtest, ytest, key_order_test, names_test = mars.load_data(test_video_path, test_videos, behs,
+	Xtest_raw, ytest, key_order_test, names_test = mars.load_data(test_video_path, test_videos, behs,
 	                                  ver=ver, feat_type=feat_type, verbose=verbose, do_wnd=do_wnd, do_cwt=do_cwt)
 
 
@@ -133,8 +133,8 @@ def main():
 		if FLAGS.feature_style != 'all':
 			feature_inds = np.hstack((feature_inds, glm_inds))
 
-	Xtrain = [x[:,feature_inds] for x in Xtrain]
-	Xtest = [x[:,feature_inds] for x in Xtest]
+	Xtrain = [x[:,feature_inds] for x in Xtrain_raw]
+	Xtest = [x[:,feature_inds] for x in Xtest_raw]
 	input_dim = Xtrain[0].shape[1]
 	# model = LSTMTagger(input_dim=input_dim, hidden_dim=FLAGS.hidden_dim, num_classes=num_classes)
 	model = get_model(name=FLAGS.model_name, input_dim=input_dim, hidden_dim=FLAGS.hidden_dim, num_classes=num_classes, bidirectional = FLAGS.bidirectional, num_layers=FLAGS.num_rnn_layers)
