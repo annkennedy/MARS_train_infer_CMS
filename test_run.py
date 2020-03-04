@@ -110,6 +110,7 @@ def main():
 
 	# use_inds = ['nose_x', 'nose_y', 'right_ear_x', 'right_ear_y', 'left_ear_x', 'left_ear_y', 'neck_x', 'neck_y', 'right_side_x', 'right_side_y', 'left_side_x', 'left_side_y', 'tail_base_x', 'tail_base_y']
 
+
 	class_names = key_order_train
 
 	if FLAGS.feature_style == "keypoints_only":
@@ -127,9 +128,10 @@ def main():
 	num_classes = ytrain[0].shape[1]
 
 	# if not using them already, add the glm_scores
-	if FLAGS.use_glm_socres and FLAGS.feature_style != 'all':
+	if FLAGS.use_glm_socres:
 		glm_inds = np.arange(len(names_train)-num_classes, len(names_train))
-		feature_inds = np.hstack((feature_inds, glm_inds))
+		if FLAGS.feature_style != 'all':
+			feature_inds = np.hstack((feature_inds, glm_inds))
 
 	Xtrain = [x[:,feature_inds] for x in Xtrain]
 	Xtest = [x[:,feature_inds] for x in Xtest]
@@ -166,6 +168,39 @@ def main():
 		weight = None
 
 	loss_function = get_loss(name=FLAGS.loss, weight=weight) #e.g. nn.NLLLoss()
+
+
+	if FLAGS.use_glm_socres:
+		# report the GLM score qualities
+		pdb.set_trace()
+		glmTrainingScores = np.array([x[:,glm_inds] for x in Xtrain])
+		glmTestingScores = np.array([x[:,glm_inds] for x in Xtest])
+		glmTrainingClassPredictions = np.argmax(glmTrainingScores, axis=1)
+		glmTestingClassPredictions = np.argmax(glmTestingScores, axis=1)
+
+		glm_names = names_train[glm_inds]
+		my_train_inds = [np.where(class_names==g) for g in glm_names]
+
+		pdb.set_trace()
+
+		TrainLabels = np.array([y[:,label_inds] for y in ytrain])
+		TestLabels = np.array([y[:,label_inds] for y in ytest])
+
+		train_loss = loss_function(glmTrainingScores, TrainLabels)
+		train_recall = recall(predicted=glmTrainingClassPredictions, actual=TrainLabels)
+		train_precision = precision(predicted=glmTrainingClassPredictions, actual=TrainLabels)
+		print('GLM Train Loss=', train_loss.cpu().data.numpy().item())
+		print('GLM Train Recall=', train_recall)
+		print('GLM Train Precision=', train_precision)
+		test_loss = loss_function(glmTestingScores, TestLabels)
+		test_recall = recall(predicted=glmTestingClassPredictions, actual=TestLabels)
+		test_precision = precision(predicted=glmTestingClassPredictions, actual=TestLabels)
+		print('GLM Train Loss=', test_loss.cpu().data.numpy().item())
+		print('GLM Train Recall=', test_recall)
+		print('GLM Train Precision=', test_precision)
+
+
+
 
 	# train the model
 	num_frames = FLAGS.num_frames
