@@ -173,8 +173,8 @@ def main():
 	if FLAGS.use_glm_socres:
 		# report the GLM score qualities
 		pdb.set_trace()
-		glmTrainingScores = np.array([x[:,glm_inds] for x in Xtrain])
-		glmTestingScores = np.array([x[:,glm_inds] for x in Xtest])
+		glmTrainingScores = np.array([x[:,glm_inds] for x in Xtrain_raw])
+		glmTestingScores = np.array([x[:,glm_inds] for x in Xtest_raw])
 		glmTrainingClassPredictions = np.argmax(glmTrainingScores, axis=1)
 		glmTestingClassPredictions = np.argmax(glmTestingScores, axis=1)
 
