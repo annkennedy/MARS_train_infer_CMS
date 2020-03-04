@@ -108,7 +108,7 @@ def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', v
             elif fnmatch.fnmatch(file, '*.seq'):
                 seq = file
 
-        if require_glm_scores and glm_scores is not None:
+        if require_glm_scores and glm_scores is None:
             continue
 
         # we load exact frame timestamps for *.annot files to make sure we get the time->frame conversion correct
