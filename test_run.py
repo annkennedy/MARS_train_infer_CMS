@@ -123,7 +123,7 @@ def main():
 	num_classes = ytrain[0].shape[1]
 	input_dim = Xtrain[0].shape[1]
 	# model = LSTMTagger(input_dim=input_dim, hidden_dim=FLAGS.hidden_dim, num_classes=num_classes)
-	model = get_model(name=FLAGS.model_name, input_dim=input_dim, hidden_dim=FLAGS.hidden_dim, num_classes=num_classes, bidirectional = bidirectional)
+	model = get_model(name=FLAGS.model_name, input_dim=input_dim, hidden_dim=FLAGS.hidden_dim, num_classes=num_classes, bidirectional = FLAGS.bidirectional)
 
 	if FLAGS.use_gpu:
 		model.cuda()
