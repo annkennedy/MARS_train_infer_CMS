@@ -64,6 +64,9 @@ def main():
 
 	if not os.path.exists(output_path):
 		os.mkdir(output_path)
+	else:
+		print('Path already exists')
+		return
 
 	train_video_path, train_video_nm = os.path.split(FLAGS.train_path)
 	test_video_path, test_video_nm = os.path.split(FLAGS.test_path)
