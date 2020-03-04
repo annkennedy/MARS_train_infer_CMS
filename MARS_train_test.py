@@ -157,8 +157,10 @@ def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', v
                 d = mts.apply_wavelet_transform(d)
 
             # add glm model outputs as features
+            foo = np.array(d)
             if glm_names:
-                foo = np.concatenate((d, glm_scores),axis=1)
+                pdb.set_trace()
+                foo = np.concatenate((foo, glm_scores),axis=1)
             data.append(foo)
 
             beh = map.parse_annotations(os.path.join(video_path, v, ann), use_channels=['Ch1'], timestamps=timestamps)
