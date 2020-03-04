@@ -102,7 +102,7 @@ def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', v
         for file in os.listdir(os.path.join(video_path, v)):
             if fnmatch.fnmatch(file, '*OutputLikelihood.txt'):
                 # Adi's features
-                glm_scores = np.loadtxt(os.path.join(video_path,v,file))
+                glm_scores = np.loadtxt(os.path.join(video_path,v,file), delimiter=',')
                 glm_names = ['glm_None','glm_mount','glm_attack','glm_sniff']
             elif fnmatch.fnmatch(file, '*.txt') or fnmatch.fnmatch(file, '*.annot'):
                 ann = file
