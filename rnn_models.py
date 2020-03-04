@@ -26,7 +26,7 @@ class LSTMTagger(nn.Module):
 class GRUTagger(nn.Module):
 
     def __init__(self, input_dim, hidden_dim, num_classes, bidirectional):
-        super(LSTMTagger, self).__init__()
+        super(GRUTagger, self).__init__()
         self.hidden_dim = hidden_dim
 
         # The LSTM takes word embeddings as inputs, and outputs hidden states
