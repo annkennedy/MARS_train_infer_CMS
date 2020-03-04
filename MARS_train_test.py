@@ -159,8 +159,10 @@ def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', v
             # add glm model outputs as features
             foo = np.array(d)
             if glm_names:
-                pdb.set_trace()
-                foo = np.concatenate((foo, glm_scores),axis=1)
+                try:
+                    foo = np.concatenate((foo, glm_scores),axis=1)
+                except:
+                    pdb.set_trace()
             data.append(foo)
 
             beh = map.parse_annotations(os.path.join(video_path, v, ann), use_channels=['Ch1'], timestamps=timestamps)
