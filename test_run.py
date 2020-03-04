@@ -338,10 +338,10 @@ def main():
 
 
 			## Now, choose the epoch that optimizes either Loss, Precision, or Recall and plot its performance
-			fig, axlist = plt.subplots(1,3, figsize=[15,10], sharey=True)
+			fig, axlist = plt.subplots(2,3, figsize=[15,10], sharey=True)
 
 			cc = 0
-			ax = axlist[cc]
+			ax = axlist[0,cc]
 			my_ind = np.argmin(test_loss_vec[:(epoch+1)])
 			summary_list = []
 			for c in range(num_classes):
@@ -354,8 +354,22 @@ def main():
 			ax.set_xticklabels(ax.get_xticklabels(), rotation=45, horizontalalignment='right', fontweight='light', fontsize='x-large')
 			ax.set_title('Best Test Loss (Loss = {0})'.format(test_loss_vec[my_ind]))
 
+			cc = 0
+			ax = axlist[1,cc]
+			my_ind = np.argmin(train_loss_vec[:(epoch+1)])
+			summary_list = []
+			for c in range(num_classes):
+				pred_dict = {'behavior': class_names[c], 'metric': 'Precision', 'value': test_precision_vec[my_ind,c]}
+				recall_dict = {'behavior': class_names[c], 'metric': 'Recall', 'value': test_recall_vec[my_ind,c]}
+				summary_list.append(pred_dict)
+				summary_list.append(recall_dict)
+			df = pd.DataFrame(summary_list)
+			sns.barplot(ax=ax, x='behavior', y='value', hue='metric', data=df)
+			ax.set_xticklabels(ax.get_xticklabels(), rotation=45, horizontalalignment='right', fontweight='light', fontsize='x-large')
+			ax.set_title('Best Train Loss (Test Loss = {0})'.format(test_loss_vec[my_ind]))
+
 			cc = 1
-			ax = axlist[cc]
+			ax = axlist[0,cc]
 			my_ind = np.argmax(np.mean(test_precision_vec[:(epoch+1),:], axis=0))
 			summary_list = []
 			for c in range(num_classes):
@@ -366,10 +380,25 @@ def main():
 			df = pd.DataFrame(summary_list)
 			sns.barplot(ax=ax, x='behavior', y='value', hue='metric', data=df)
 			ax.set_xticklabels(ax.get_xticklabels(), rotation=45, horizontalalignment='right', fontweight='light', fontsize='x-large')
-			ax.set_title('Best Avg Precision (Loss = {0})'.format(test_loss_vec[my_ind]))
+			ax.set_title('Best Avg Test Precision (Test Loss = {0})'.format(test_loss_vec[my_ind]))
+
+			cc = 1
+			ax = axlist[0,cc]
+			my_ind = np.argmax(np.mean(train_precision_vec[:(epoch+1),:], axis=0))
+			summary_list = []
+			for c in range(num_classes):
+				pred_dict = {'behavior': class_names[c], 'metric': 'Precision', 'value': test_precision_vec[my_ind,c]}
+				recall_dict = {'behavior': class_names[c], 'metric': 'Recall', 'value': test_recall_vec[my_ind,c]}
+				summary_list.append(pred_dict)
+				summary_list.append(recall_dict)
+			df = pd.DataFrame(summary_list)
+			sns.barplot(ax=ax, x='behavior', y='value', hue='metric', data=df)
+			ax.set_xticklabels(ax.get_xticklabels(), rotation=45, horizontalalignment='right', fontweight='light', fontsize='x-large')
+			ax.set_title('Best Avg Train Precision (Test Loss = {0})'.format(test_loss_vec[my_ind]))
+
 
 			cc = 2
-			ax = axlist[cc]
+			ax = axlist[0,cc]
 			my_ind = np.argmax(np.mean(test_recall_vec[:(epoch+1),:], axis=0))
 			summary_list = []
 			for c in range(num_classes):
@@ -380,7 +409,21 @@ def main():
 			df = pd.DataFrame(summary_list)
 			sns.barplot(ax=ax, x='behavior', y='value', hue='metric', data=df)
 			ax.set_xticklabels(ax.get_xticklabels(), rotation=45, horizontalalignment='right', fontweight='light', fontsize='x-large')
-			ax.set_title('Best Avg Recall (Loss = {0})'.format(test_loss_vec[my_ind]))
+			ax.set_title('Best Avg Test Recall (Test Loss = {0})'.format(test_loss_vec[my_ind]))
+
+			cc = 2
+			ax = axlist[1,cc]
+			my_ind = np.argmax(np.mean(train_recall_vec[:(epoch+1),:], axis=0))
+			summary_list = []
+			for c in range(num_classes):
+				pred_dict = {'behavior': class_names[c], 'metric': 'Precision', 'value': test_precision_vec[my_ind,c]}
+				recall_dict = {'behavior': class_names[c], 'metric': 'Recall', 'value': test_recall_vec[my_ind,c]}
+				summary_list.append(pred_dict)
+				summary_list.append(recall_dict)
+			df = pd.DataFrame(summary_list)
+			sns.barplot(ax=ax, x='behavior', y='value', hue='metric', data=df)
+			ax.set_xticklabels(ax.get_xticklabels(), rotation=45, horizontalalignment='right', fontweight='light', fontsize='x-large')
+			ax.set_title('Best Avg Train Recall (Test Loss = {0})'.format(test_loss_vec[my_ind]))
 
 
 			fig.subplots_adjust(bottom=0.3)
