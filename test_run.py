@@ -427,7 +427,7 @@ def main():
 			best_model_dict[model_nm]['Test'][FLAGS.loss] = test_loss_vec[my_ind]
 			for c in range(num_classes):
 				cnm = class_names[c]
-				if cnm not in best_model_dict[model_nm]['Train'][cnm]:
+				if cnm not in best_model_dict[model_nm]['Train']:
 					best_model_dict[model_nm]['Train'][cnm] = {}
 					best_model_dict[model_nm]['Test'][cnm] = {}
 				best_model_dict[model_nm]['Train'][cnm]['Precision'] = train_precision_vec[my_ind,c]
@@ -454,7 +454,7 @@ def main():
 			best_model_dict[model_nm]['Test'][FLAGS.loss] = test_loss_vec[my_ind]
 			for c in range(num_classes):
 				cnm = class_names[c]
-				if cnm not in best_model_dict[model_nm]['Train'][cnm]:
+				if cnm not in best_model_dict[model_nm]['Train']:
 					best_model_dict[model_nm]['Train'][cnm] = {}
 					best_model_dict[model_nm]['Test'][cnm] = {}
 				best_model_dict[model_nm]['Train'][cnm]['Precision'] = train_precision_vec[my_ind,c]
@@ -481,7 +481,7 @@ def main():
 			best_model_dict[model_nm]['Test'][FLAGS.loss] = test_loss_vec[my_ind]
 			for c in range(num_classes):
 				cnm = class_names[c]
-				if cnm not in best_model_dict[model_nm]['Train'][cnm]:
+				if cnm not in best_model_dict[model_nm]['Train']:
 					best_model_dict[model_nm]['Train'][cnm] = {}
 					best_model_dict[model_nm]['Test'][cnm] = {}
 				best_model_dict[model_nm]['Train'][cnm]['Precision'] = train_precision_vec[my_ind,c]
@@ -508,7 +508,7 @@ def main():
 			best_model_dict[model_nm]['Test'][FLAGS.loss] = test_loss_vec[my_ind]
 			for c in range(num_classes):
 				cnm = class_names[c]
-				if cnm not in best_model_dict[model_nm]['Train'][cnm]:
+				if cnm not in best_model_dict[model_nm]['Train']:
 					best_model_dict[model_nm]['Train'][cnm] = {}
 					best_model_dict[model_nm]['Test'][cnm] = {}
 				best_model_dict[model_nm]['Train'][cnm]['Precision'] = train_precision_vec[my_ind,c]
@@ -536,7 +536,7 @@ def main():
 			best_model_dict[model_nm]['Test'][FLAGS.loss] = test_loss_vec[my_ind]
 			for c in range(num_classes):
 				cnm = class_names[c]
-				if cnm not in best_model_dict[model_nm]['Train'][cnm]:
+				if cnm not in best_model_dict[model_nm]['Train']:
 					best_model_dict[model_nm]['Train'][cnm] = {}
 					best_model_dict[model_nm]['Test'][cnm] = {}
 				best_model_dict[model_nm]['Train'][cnm]['Precision'] = train_precision_vec[my_ind,c]
@@ -563,7 +563,7 @@ def main():
 			best_model_dict[model_nm]['Test'][FLAGS.loss] = test_loss_vec[my_ind]
 			for c in range(num_classes):
 				cnm = class_names[c]
-				if cnm not in best_model_dict[model_nm]['Train'][cnm]:
+				if cnm not in best_model_dict[model_nm]['Train']:
 					best_model_dict[model_nm]['Train'][cnm] = {}
 					best_model_dict[model_nm]['Test'][cnm] = {}
 				best_model_dict[model_nm]['Train'][cnm]['Precision'] = train_precision_vec[my_ind,c]
