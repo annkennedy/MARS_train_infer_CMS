@@ -1,0 +1,16 @@
+#!/bin/bash
+# https://s3-us-west-2.amazonaws.com/imss-hpc/index.html to generate script
+#SBATCH --time=48:00:00   # walltime
+#SBATCH --gres=gpu:1
+#SBATCH --gid=andersonlab
+
+# Execute jobs in parallel
+srun --exclusive -N 1 -n 1 python test_run.py --output_path ./test_output_rnn_GRU_glmFeatures_backwards_1layer_hiddenDim10_v1 --num_rnn_layers 1 --hidden_dim 10 --use_glm_scores True --model_name GRUTagger --bidirectional True --lr 0.1 --use_gpu True --num_epochs 100 --train_path /groups/Andersonlab/CMS273/TRAIN_lite/ --test_path /groups/Andersonlab/CMS273/TEST_lite/  &
+srun --exclusive -N 1 -n 1 python test_run.py --output_path ./test_output_rnn_GRU_glmFeatures_backwards_2layer_hiddenDim10_v1 --num_rnn_layers 2 --hidden_dim 10 --use_glm_scores True --model_name GRUTagger --bidirectional True --lr 0.1 --use_gpu True --num_epochs 100 --train_path /groups/Andersonlab/CMS273/TRAIN_lite/ --test_path /groups/Andersonlab/CMS273/TEST_lite/  &
+srun --exclusive -N 1 -n 1 python test_run.py --output_path ./test_output_rnn_GRU_glmFeatures_backwards_3layer_hiddenDim10_v1 --num_rnn_layers 3 --hidden_dim 10 --use_glm_scores True --model_name GRUTagger --bidirectional True --lr 0.1 --use_gpu True --num_epochs 100 --train_path /groups/Andersonlab/CMS273/TRAIN_lite/ --test_path /groups/Andersonlab/CMS273/TEST_lite/  &
+srun --exclusive -N 1 -n 1 python test_run.py --output_path ./test_output_rnn_GRU_glmFeatures_backwards_4layer_hiddenDim10_v1 --num_rnn_layers 4 --hidden_dim 10 --use_glm_scores True --model_name GRUTagger --bidirectional True --lr 0.1 --use_gpu True --num_epochs 100 --train_path /groups/Andersonlab/CMS273/TRAIN_lite/ --test_path /groups/Andersonlab/CMS273/TEST_lite/  &
+srun --exclusive -N 1 -n 1 python test_run.py --output_path ./test_output_rnn_GRU_glmFeatures_backwards_1layer_hiddenDim50_v1 --num_rnn_layers 1 --hidden_dim 50 --use_glm_scores True --model_name GRUTagger --bidirectional True --lr 0.1 --use_gpu True --num_epochs 100 --train_path /groups/Andersonlab/CMS273/TRAIN_lite/ --test_path /groups/Andersonlab/CMS273/TEST_lite/  &
+srun --exclusive -N 1 -n 1 python test_run.py --output_path ./test_output_rnn_GRU_glmFeatures_backwards_2layer_hiddenDim50_v1 --num_rnn_layers 2 --hidden_dim 50 --use_glm_scores True --model_name GRUTagger --bidirectional True --lr 0.1 --use_gpu True --num_epochs 100 --train_path /groups/Andersonlab/CMS273/TRAIN_lite/ --test_path /groups/Andersonlab/CMS273/TEST_lite/  &
+srun --exclusive -N 1 -n 1 python test_run.py --output_path ./test_output_rnn_GRU_glmFeatures_backwards_3layer_hiddenDim50_v1 --num_rnn_layers 3 --hidden_dim 50 --use_glm_scores True --model_name GRUTagger --bidirectional True --lr 0.1 --use_gpu True --num_epochs 100 --train_path /groups/Andersonlab/CMS273/TRAIN_lite/ --test_path /groups/Andersonlab/CMS273/TEST_lite/  &
+srun --exclusive -N 1 -n 1 python test_run.py --output_path ./test_output_rnn_GRU_glmFeatures_backwards_4layer_hiddenDim50_v1 --num_rnn_layers 4 --hidden_dim 50 --use_glm_scores True --model_name GRUTagger --bidirectional True --lr 0.1 --use_gpu True --num_epochs 100 --train_path /groups/Andersonlab/CMS273/TRAIN_lite/ --test_path /groups/Andersonlab/CMS273/TEST_lite/
+wait
