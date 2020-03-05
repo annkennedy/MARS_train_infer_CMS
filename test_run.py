@@ -585,7 +585,7 @@ def main():
 			plt.close(fig)
 
 			# write out best model summary
-			pdb.set_trace()
+			print(best_model_dict)
 			with open(best_model_fname, 'w') as f:
 				json.dump(best_model_dict, f, indent=2)
 
