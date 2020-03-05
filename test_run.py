@@ -400,7 +400,7 @@ def main():
 			ax = axlist[cc]
 			summary_list = []
 			model_nm = 'glm'
-			foo_test_loss = best_model_dict[model_nm]['Test'][FLAGS.loss]
+			foo_test_loss = best_model_dict[model_nm]['Test'][FLAGS.loss].item()
 			for c in range(num_classes):
 				val_dict = best_model_dict[model_nm]['Test'][class_names[c]]
 				pred_dict = {'behavior': class_names[c], 'metric': 'Precision', 'value': val_dict['Precision']}
@@ -442,7 +442,7 @@ def main():
 			ax.xaxis.set_label_text("")
 			ax.yaxis.set_label_text("")
 			ax.set_xticklabels(ax.get_xticklabels(), rotation=0, horizontalalignment='right', fontweight='light', fontsize='x-large')
-			ax.set_title('Best Test Loss (Test Loss = {0:.2f})'.format(test_loss_vec[my_ind]))
+			ax.set_title('Best Test Loss (Test Loss = {0:.2f})'.format(test_loss_vec[my_ind].item()))
 
 			cc = 2
 			ax = axlist[cc]
