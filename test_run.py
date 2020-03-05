@@ -430,12 +430,12 @@ def main():
 				if cnm not in best_model_dict[model_nm]['Train']:
 					best_model_dict[model_nm]['Train'][cnm] = {}
 					best_model_dict[model_nm]['Test'][cnm] = {}
-				best_model_dict[model_nm]['Train'][cnm]['Precision'] = train_precision_vec[my_ind,c]
-				best_model_dict[model_nm]['Train'][cnm]['Recall'] = train_recall_vec[my_ind,c]
-				best_model_dict[model_nm]['Test'][cnm]['Precision'] = test_precision_vec[my_ind,c]
-				best_model_dict[model_nm]['Test'][cnm]['Recall'] = test_recall_vec[my_ind,c]
-				pred_dict = {'behavior': cnm, 'metric': 'Precision', 'value': test_precision_vec[my_ind,c]}
-				recall_dict = {'behavior': cnm, 'metric': 'Recall', 'value': test_recall_vec[my_ind,c]}
+				best_model_dict[model_nm]['Train'][cnm]['Precision'] = train_precision_vec[my_ind,c].item()
+				best_model_dict[model_nm]['Train'][cnm]['Recall'] = train_recall_vec[my_ind,c].item()
+				best_model_dict[model_nm]['Test'][cnm]['Precision'] = test_precision_vec[my_ind,c].item()
+				best_model_dict[model_nm]['Test'][cnm]['Recall'] = test_recall_vec[my_ind,c].item()
+				pred_dict = {'behavior': cnm, 'metric': 'Precision', 'value': test_precision_vec[my_ind,c].item()}
+				recall_dict = {'behavior': cnm, 'metric': 'Recall', 'value': test_recall_vec[my_ind,c].item()}
 				summary_list.append(pred_dict)
 				summary_list.append(recall_dict)
 			df = pd.DataFrame(summary_list)
@@ -457,18 +457,18 @@ def main():
 				if cnm not in best_model_dict[model_nm]['Train']:
 					best_model_dict[model_nm]['Train'][cnm] = {}
 					best_model_dict[model_nm]['Test'][cnm] = {}
-				best_model_dict[model_nm]['Train'][cnm]['Precision'] = train_precision_vec[my_ind,c]
-				best_model_dict[model_nm]['Train'][cnm]['Recall'] = train_recall_vec[my_ind,c]
-				best_model_dict[model_nm]['Test'][cnm]['Precision'] = test_precision_vec[my_ind,c]
-				best_model_dict[model_nm]['Test'][cnm]['Recall'] = test_recall_vec[my_ind,c]
-				pred_dict = {'behavior': cnm, 'metric': 'Precision', 'value': test_precision_vec[my_ind,c]}
-				recall_dict = {'behavior': cnm, 'metric': 'Recall', 'value': test_recall_vec[my_ind,c]}
+				best_model_dict[model_nm]['Train'][cnm]['Precision'] = train_precision_vec[my_ind,c].item()
+				best_model_dict[model_nm]['Train'][cnm]['Recall'] = train_recall_vec[my_ind,c].item()
+				best_model_dict[model_nm]['Test'][cnm]['Precision'] = test_precision_vec[my_ind,c].item()
+				best_model_dict[model_nm]['Test'][cnm]['Recall'] = test_recall_vec[my_ind,c].item()
+				pred_dict = {'behavior': cnm, 'metric': 'Precision', 'value': test_precision_vec[my_ind,c].item()}
+				recall_dict = {'behavior': cnm, 'metric': 'Recall', 'value': test_recall_vec[my_ind,c].item()}
 				summary_list.append(pred_dict)
 				summary_list.append(recall_dict)
 			df = pd.DataFrame(summary_list)
 			sns.barplot(ax=ax, x='behavior', y='value', hue='metric', data=df)
 			ax.set_xticklabels(ax.get_xticklabels(), rotation=45, horizontalalignment='right', fontweight='light', fontsize='x-large')
-			ax.set_title('Best Train Loss (Test Loss = {0})'.format(test_loss_vec[my_ind]))
+			ax.set_title('Best Train Loss (Test Loss = {0})'.format(test_loss_vec[my_ind].item()))
 
 			cc = 2
 			ax = axlist[0,cc]
@@ -484,18 +484,18 @@ def main():
 				if cnm not in best_model_dict[model_nm]['Train']:
 					best_model_dict[model_nm]['Train'][cnm] = {}
 					best_model_dict[model_nm]['Test'][cnm] = {}
-				best_model_dict[model_nm]['Train'][cnm]['Precision'] = train_precision_vec[my_ind,c]
-				best_model_dict[model_nm]['Train'][cnm]['Recall'] = train_recall_vec[my_ind,c]
-				best_model_dict[model_nm]['Test'][cnm]['Precision'] = test_precision_vec[my_ind,c]
-				best_model_dict[model_nm]['Test'][cnm]['Recall'] = test_recall_vec[my_ind,c]
-				pred_dict = {'behavior': cnm, 'metric': 'Precision', 'value': test_precision_vec[my_ind,c]}
-				recall_dict = {'behavior': cnm, 'metric': 'Recall', 'value': test_recall_vec[my_ind,c]}
+				best_model_dict[model_nm]['Train'][cnm]['Precision'] = train_precision_vec[my_ind,c].item()
+				best_model_dict[model_nm]['Train'][cnm]['Recall'] = train_recall_vec[my_ind,c].item()
+				best_model_dict[model_nm]['Test'][cnm]['Precision'] = test_precision_vec[my_ind,c].item()
+				best_model_dict[model_nm]['Test'][cnm]['Recall'] = test_recall_vec[my_ind,c].item()
+				pred_dict = {'behavior': cnm, 'metric': 'Precision', 'value': test_precision_vec[my_ind,c].item()}
+				recall_dict = {'behavior': cnm, 'metric': 'Recall', 'value': test_recall_vec[my_ind,c].item()}
 				summary_list.append(pred_dict)
 				summary_list.append(recall_dict)
 			df = pd.DataFrame(summary_list)
 			sns.barplot(ax=ax, x='behavior', y='value', hue='metric', data=df)
 			ax.set_xticklabels(ax.get_xticklabels(), rotation=45, horizontalalignment='right', fontweight='light', fontsize='x-large')
-			ax.set_title('Best Avg Test Precision (Test Loss = {0})'.format(test_loss_vec[my_ind]))
+			ax.set_title('Best Avg Test Precision (Test Loss = {0})'.format(test_loss_vec[my_ind].item()))
 
 			cc = 2
 			ax = axlist[0,cc]
@@ -511,18 +511,18 @@ def main():
 				if cnm not in best_model_dict[model_nm]['Train']:
 					best_model_dict[model_nm]['Train'][cnm] = {}
 					best_model_dict[model_nm]['Test'][cnm] = {}
-				best_model_dict[model_nm]['Train'][cnm]['Precision'] = train_precision_vec[my_ind,c]
-				best_model_dict[model_nm]['Train'][cnm]['Recall'] = train_recall_vec[my_ind,c]
-				best_model_dict[model_nm]['Test'][cnm]['Precision'] = test_precision_vec[my_ind,c]
-				best_model_dict[model_nm]['Test'][cnm]['Recall'] = test_recall_vec[my_ind,c]
-				pred_dict = {'behavior': cnm, 'metric': 'Precision', 'value': test_precision_vec[my_ind,c]}
-				recall_dict = {'behavior': cnm, 'metric': 'Recall', 'value': test_recall_vec[my_ind,c]}
+				best_model_dict[model_nm]['Train'][cnm]['Precision'] = train_precision_vec[my_ind,c].item()
+				best_model_dict[model_nm]['Train'][cnm]['Recall'] = train_recall_vec[my_ind,c].item()
+				best_model_dict[model_nm]['Test'][cnm]['Precision'] = test_precision_vec[my_ind,c].item()
+				best_model_dict[model_nm]['Test'][cnm]['Recall'] = test_recall_vec[my_ind,c].item()
+				pred_dict = {'behavior': cnm, 'metric': 'Precision', 'value': test_precision_vec[my_ind,c].item()}
+				recall_dict = {'behavior': cnm, 'metric': 'Recall', 'value': test_recall_vec[my_ind,c].item()}
 				summary_list.append(pred_dict)
 				summary_list.append(recall_dict)
 			df = pd.DataFrame(summary_list)
 			sns.barplot(ax=ax, x='behavior', y='value', hue='metric', data=df)
 			ax.set_xticklabels(ax.get_xticklabels(), rotation=45, horizontalalignment='right', fontweight='light', fontsize='x-large')
-			ax.set_title('Best Avg Train Precision (Test Loss = {0})'.format(test_loss_vec[my_ind]))
+			ax.set_title('Best Avg Train Precision (Test Loss = {0})'.format(test_loss_vec[my_ind].item()))
 
 
 			cc = 3
@@ -539,18 +539,18 @@ def main():
 				if cnm not in best_model_dict[model_nm]['Train']:
 					best_model_dict[model_nm]['Train'][cnm] = {}
 					best_model_dict[model_nm]['Test'][cnm] = {}
-				best_model_dict[model_nm]['Train'][cnm]['Precision'] = train_precision_vec[my_ind,c]
-				best_model_dict[model_nm]['Train'][cnm]['Recall'] = train_recall_vec[my_ind,c]
-				best_model_dict[model_nm]['Test'][cnm]['Precision'] = test_precision_vec[my_ind,c]
-				best_model_dict[model_nm]['Test'][cnm]['Recall'] = test_recall_vec[my_ind,c]
-				pred_dict = {'behavior': cnm, 'metric': 'Precision', 'value': test_precision_vec[my_ind,c]}
-				recall_dict = {'behavior': cnm, 'metric': 'Recall', 'value': test_recall_vec[my_ind,c]}
+				best_model_dict[model_nm]['Train'][cnm]['Precision'] = train_precision_vec[my_ind,c].item()
+				best_model_dict[model_nm]['Train'][cnm]['Recall'] = train_recall_vec[my_ind,c].item()
+				best_model_dict[model_nm]['Test'][cnm]['Precision'] = test_precision_vec[my_ind,c].item()
+				best_model_dict[model_nm]['Test'][cnm]['Recall'] = test_recall_vec[my_ind,c].item()
+				pred_dict = {'behavior': cnm, 'metric': 'Precision', 'value': test_precision_vec[my_ind,c].item()}
+				recall_dict = {'behavior': cnm, 'metric': 'Recall', 'value': test_recall_vec[my_ind,c].item()}
 				summary_list.append(pred_dict)
 				summary_list.append(recall_dict)
 			df = pd.DataFrame(summary_list)
 			sns.barplot(ax=ax, x='behavior', y='value', hue='metric', data=df)
 			ax.set_xticklabels(ax.get_xticklabels(), rotation=45, horizontalalignment='right', fontweight='light', fontsize='x-large')
-			ax.set_title('Best Avg Test Recall (Test Loss = {0})'.format(test_loss_vec[my_ind]))
+			ax.set_title('Best Avg Test Recall (Test Loss = {0})'.format(test_loss_vec[my_ind].item()))
 
 			cc = 3
 			ax = axlist[1,cc]
@@ -566,18 +566,18 @@ def main():
 				if cnm not in best_model_dict[model_nm]['Train']:
 					best_model_dict[model_nm]['Train'][cnm] = {}
 					best_model_dict[model_nm]['Test'][cnm] = {}
-				best_model_dict[model_nm]['Train'][cnm]['Precision'] = train_precision_vec[my_ind,c]
-				best_model_dict[model_nm]['Train'][cnm]['Recall'] = train_recall_vec[my_ind,c]
-				best_model_dict[model_nm]['Test'][cnm]['Precision'] = test_precision_vec[my_ind,c]
-				best_model_dict[model_nm]['Test'][cnm]['Recall'] = test_recall_vec[my_ind,c]
-				pred_dict = {'behavior': cnm, 'metric': 'Precision', 'value': test_precision_vec[my_ind,c]}
-				recall_dict = {'behavior': cnm, 'metric': 'Recall', 'value': test_recall_vec[my_ind,c]}
+				best_model_dict[model_nm]['Train'][cnm]['Precision'] = train_precision_vec[my_ind,c].item()
+				best_model_dict[model_nm]['Train'][cnm]['Recall'] = train_recall_vec[my_ind,c].item()
+				best_model_dict[model_nm]['Test'][cnm]['Precision'] = test_precision_vec[my_ind,c].item()
+				best_model_dict[model_nm]['Test'][cnm]['Recall'] = test_recall_vec[my_ind,c].item()
+				pred_dict = {'behavior': cnm, 'metric': 'Precision', 'value': test_precision_vec[my_ind,c].item()}
+				recall_dict = {'behavior': cnm, 'metric': 'Recall', 'value': test_recall_vec[my_ind,c].item()}
 				summary_list.append(pred_dict)
 				summary_list.append(recall_dict)
 			df = pd.DataFrame(summary_list)
 			sns.barplot(ax=ax, x='behavior', y='value', hue='metric', data=df)
 			ax.set_xticklabels(ax.get_xticklabels(), rotation=45, horizontalalignment='right', fontweight='light', fontsize='x-large')
-			ax.set_title('Best Avg Train Recall (Test Loss = {0})'.format(test_loss_vec[my_ind]))
+			ax.set_title('Best Avg Train Recall (Test Loss = {0})'.format(test_loss_vec[my_ind].item()))
 
 			fig.subplots_adjust(bottom=0.1)
 			fig.suptitle('Model Test Performances')
