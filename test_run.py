@@ -390,7 +390,7 @@ def main():
 
 
 			## Now, choose the epoch that optimizes either Loss, Precision, or Recall and plot its performance
-			fig, axlist = plt.subplots(1,3, figsize=[6,8], sharey=True)
+			fig, axlist = plt.subplots(1,3, figsize=[10,4], sharey=True)
 
 			for ax in axlist:
 				ax.yaxis.set_tick_params(labelleft=True)
