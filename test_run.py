@@ -390,14 +390,14 @@ def main():
 
 
 			## Now, choose the epoch that optimizes either Loss, Precision, or Recall and plot its performance
-			fig, axlist = plt.subplots(2,4, figsize=[20,10], sharey=True)
-			for ax_row in axlist:
-				for ax in ax_row:
-					ax.yaxis.set_tick_params(labelleft=True)
+			fig, axlist = plt.subplots(1,3, figsize=[12,8], sharey=True)
+
+			for ax in axlist:
+				ax.yaxis.set_tick_params(labelleft=True)
 
 			# plot GLM-alone performance
 			cc = 0
-			ax = axlist[0,cc]
+			ax = axlist[cc]
 			summary_list = []
 			model_nm = 'glm'
 			foo_test_loss = best_model_dict[model_nm]['Test'][FLAGS.loss]
@@ -415,9 +415,8 @@ def main():
 			ax.set_title('GLM performance (Test Loss = {0:.2f})'.format(foo_test_loss))
 
 
-
 			cc = 1
-			ax = axlist[0,cc]
+			ax = axlist[cc]
 			my_ind = np.argmin(test_loss_vec[:(epoch+1)])
 			summary_list = []
 			model_nm = 'RNN_best_test_loss'
@@ -445,8 +444,8 @@ def main():
 			ax.set_xticklabels(ax.get_xticklabels(), rotation=0, horizontalalignment='right', fontweight='light', fontsize='x-large')
 			ax.set_title('Best Test Loss (Test Loss = {0:.2f})'.format(test_loss_vec[my_ind]))
 
-			cc = 1
-			ax = axlist[1,cc]
+			cc = 2
+			ax = axlist[cc]
 			my_ind = np.argmin(train_loss_vec[:(epoch+1)])
 			summary_list = []
 			model_nm = 'RNN_best_train_loss'
@@ -474,122 +473,122 @@ def main():
 			ax.set_xticklabels(ax.get_xticklabels(), rotation=0, horizontalalignment='right', fontweight='light', fontsize='x-large')
 			ax.set_title('Best Train Loss (Test Loss = {0:.2f})'.format(test_loss_vec[my_ind].item()))
 
-			cc = 2
-			ax = axlist[0,cc]
-			my_ind = np.argmax(np.mean(test_precision_vec[:(epoch+1),:], axis=0))
-			summary_list = []
-			model_nm = 'RNN_best_test_avg_precision'
-			if model_nm not in best_model_dict:
-				best_model_dict[model_nm] = {'Train':{}, 'Test':{}}
-			best_model_dict[model_nm]['Train'][FLAGS.loss] = train_loss_vec[my_ind].item()
-			best_model_dict[model_nm]['Test'][FLAGS.loss] = test_loss_vec[my_ind].item()
-			for c in range(num_classes):
-				cnm = class_names[c]
-				if cnm not in best_model_dict[model_nm]['Train']:
-					best_model_dict[model_nm]['Train'][cnm] = {}
-					best_model_dict[model_nm]['Test'][cnm] = {}
-				best_model_dict[model_nm]['Train'][cnm]['Precision'] = train_precision_vec[my_ind,c].item()
-				best_model_dict[model_nm]['Train'][cnm]['Recall'] = train_recall_vec[my_ind,c].item()
-				best_model_dict[model_nm]['Test'][cnm]['Precision'] = test_precision_vec[my_ind,c].item()
-				best_model_dict[model_nm]['Test'][cnm]['Recall'] = test_recall_vec[my_ind,c].item()
-				pred_dict = {'behavior': cnm, 'metric': 'Precision', 'value': test_precision_vec[my_ind,c].item()}
-				recall_dict = {'behavior': cnm, 'metric': 'Recall', 'value': test_recall_vec[my_ind,c].item()}
-				summary_list.append(pred_dict)
-				summary_list.append(recall_dict)
-			df = pd.DataFrame(summary_list)
-			sns.barplot(ax=ax, x='behavior', y='value', hue='metric', data=df)
-			ax.xaxis.set_label_text("")
-			ax.yaxis.set_label_text("")
-			ax.set_xticklabels(ax.get_xticklabels(), rotation=0, horizontalalignment='right', fontweight='light', fontsize='x-large')
-			ax.set_title('Best Avg Test Precision (Test Loss = {0:.2f})'.format(test_loss_vec[my_ind].item()))
+			# cc = 2
+			# ax = axlist[0,cc]
+			# my_ind = np.argmax(np.mean(test_precision_vec[:(epoch+1),:], axis=0))
+			# summary_list = []
+			# model_nm = 'RNN_best_test_avg_precision'
+			# if model_nm not in best_model_dict:
+			# 	best_model_dict[model_nm] = {'Train':{}, 'Test':{}}
+			# best_model_dict[model_nm]['Train'][FLAGS.loss] = train_loss_vec[my_ind].item()
+			# best_model_dict[model_nm]['Test'][FLAGS.loss] = test_loss_vec[my_ind].item()
+			# for c in range(num_classes):
+			# 	cnm = class_names[c]
+			# 	if cnm not in best_model_dict[model_nm]['Train']:
+			# 		best_model_dict[model_nm]['Train'][cnm] = {}
+			# 		best_model_dict[model_nm]['Test'][cnm] = {}
+			# 	best_model_dict[model_nm]['Train'][cnm]['Precision'] = train_precision_vec[my_ind,c].item()
+			# 	best_model_dict[model_nm]['Train'][cnm]['Recall'] = train_recall_vec[my_ind,c].item()
+			# 	best_model_dict[model_nm]['Test'][cnm]['Precision'] = test_precision_vec[my_ind,c].item()
+			# 	best_model_dict[model_nm]['Test'][cnm]['Recall'] = test_recall_vec[my_ind,c].item()
+			# 	pred_dict = {'behavior': cnm, 'metric': 'Precision', 'value': test_precision_vec[my_ind,c].item()}
+			# 	recall_dict = {'behavior': cnm, 'metric': 'Recall', 'value': test_recall_vec[my_ind,c].item()}
+			# 	summary_list.append(pred_dict)
+			# 	summary_list.append(recall_dict)
+			# df = pd.DataFrame(summary_list)
+			# sns.barplot(ax=ax, x='behavior', y='value', hue='metric', data=df)
+			# ax.xaxis.set_label_text("")
+			# ax.yaxis.set_label_text("")
+			# ax.set_xticklabels(ax.get_xticklabels(), rotation=0, horizontalalignment='right', fontweight='light', fontsize='x-large')
+			# ax.set_title('Best Avg Test Precision (Test Loss = {0:.2f})'.format(test_loss_vec[my_ind].item()))
 
-			cc = 2
-			ax = axlist[1,cc]
-			my_ind = np.argmax(np.mean(train_precision_vec[:(epoch+1),:], axis=0))
-			summary_list = []
-			model_nm = 'RNN_best_train_avg_precision'
-			if model_nm not in best_model_dict:
-				best_model_dict[model_nm] = {'Train':{}, 'Test':{}}
-			best_model_dict[model_nm]['Train'][FLAGS.loss] = train_loss_vec[my_ind].item()
-			best_model_dict[model_nm]['Test'][FLAGS.loss] = test_loss_vec[my_ind].item()
-			for c in range(num_classes):
-				cnm = class_names[c]
-				if cnm not in best_model_dict[model_nm]['Train']:
-					best_model_dict[model_nm]['Train'][cnm] = {}
-					best_model_dict[model_nm]['Test'][cnm] = {}
-				best_model_dict[model_nm]['Train'][cnm]['Precision'] = train_precision_vec[my_ind,c].item()
-				best_model_dict[model_nm]['Train'][cnm]['Recall'] = train_recall_vec[my_ind,c].item()
-				best_model_dict[model_nm]['Test'][cnm]['Precision'] = test_precision_vec[my_ind,c].item()
-				best_model_dict[model_nm]['Test'][cnm]['Recall'] = test_recall_vec[my_ind,c].item()
-				pred_dict = {'behavior': cnm, 'metric': 'Precision', 'value': test_precision_vec[my_ind,c].item()}
-				recall_dict = {'behavior': cnm, 'metric': 'Recall', 'value': test_recall_vec[my_ind,c].item()}
-				summary_list.append(pred_dict)
-				summary_list.append(recall_dict)
-			df = pd.DataFrame(summary_list)
-			sns.barplot(ax=ax, x='behavior', y='value', hue='metric', data=df)
-			ax.xaxis.set_label_text("")
-			ax.yaxis.set_label_text("")
-			ax.set_xticklabels(ax.get_xticklabels(), rotation=0, horizontalalignment='right', fontweight='light', fontsize='x-large')
-			ax.set_title('Best Avg Train Precision (Test Loss = {0:.2f})'.format(test_loss_vec[my_ind].item()))
+			# cc = 2
+			# ax = axlist[1,cc]
+			# my_ind = np.argmax(np.mean(train_precision_vec[:(epoch+1),:], axis=0))
+			# summary_list = []
+			# model_nm = 'RNN_best_train_avg_precision'
+			# if model_nm not in best_model_dict:
+			# 	best_model_dict[model_nm] = {'Train':{}, 'Test':{}}
+			# best_model_dict[model_nm]['Train'][FLAGS.loss] = train_loss_vec[my_ind].item()
+			# best_model_dict[model_nm]['Test'][FLAGS.loss] = test_loss_vec[my_ind].item()
+			# for c in range(num_classes):
+			# 	cnm = class_names[c]
+			# 	if cnm not in best_model_dict[model_nm]['Train']:
+			# 		best_model_dict[model_nm]['Train'][cnm] = {}
+			# 		best_model_dict[model_nm]['Test'][cnm] = {}
+			# 	best_model_dict[model_nm]['Train'][cnm]['Precision'] = train_precision_vec[my_ind,c].item()
+			# 	best_model_dict[model_nm]['Train'][cnm]['Recall'] = train_recall_vec[my_ind,c].item()
+			# 	best_model_dict[model_nm]['Test'][cnm]['Precision'] = test_precision_vec[my_ind,c].item()
+			# 	best_model_dict[model_nm]['Test'][cnm]['Recall'] = test_recall_vec[my_ind,c].item()
+			# 	pred_dict = {'behavior': cnm, 'metric': 'Precision', 'value': test_precision_vec[my_ind,c].item()}
+			# 	recall_dict = {'behavior': cnm, 'metric': 'Recall', 'value': test_recall_vec[my_ind,c].item()}
+			# 	summary_list.append(pred_dict)
+			# 	summary_list.append(recall_dict)
+			# df = pd.DataFrame(summary_list)
+			# sns.barplot(ax=ax, x='behavior', y='value', hue='metric', data=df)
+			# ax.xaxis.set_label_text("")
+			# ax.yaxis.set_label_text("")
+			# ax.set_xticklabels(ax.get_xticklabels(), rotation=0, horizontalalignment='right', fontweight='light', fontsize='x-large')
+			# ax.set_title('Best Avg Train Precision (Test Loss = {0:.2f})'.format(test_loss_vec[my_ind].item()))
 
 
-			cc = 3
-			ax = axlist[0,cc]
-			my_ind = np.argmax(np.mean(test_recall_vec[:(epoch+1),:], axis=0))
-			summary_list = []
-			model_nm = 'RNN_best_test_avg_recall'
-			if model_nm not in best_model_dict:
-				best_model_dict[model_nm] = {'Train':{}, 'Test':{}}
-			best_model_dict[model_nm]['Train'][FLAGS.loss] = train_loss_vec[my_ind].item()
-			best_model_dict[model_nm]['Test'][FLAGS.loss] = test_loss_vec[my_ind].item()
-			for c in range(num_classes):
-				cnm = class_names[c]
-				if cnm not in best_model_dict[model_nm]['Train']:
-					best_model_dict[model_nm]['Train'][cnm] = {}
-					best_model_dict[model_nm]['Test'][cnm] = {}
-				best_model_dict[model_nm]['Train'][cnm]['Precision'] = train_precision_vec[my_ind,c].item()
-				best_model_dict[model_nm]['Train'][cnm]['Recall'] = train_recall_vec[my_ind,c].item()
-				best_model_dict[model_nm]['Test'][cnm]['Precision'] = test_precision_vec[my_ind,c].item()
-				best_model_dict[model_nm]['Test'][cnm]['Recall'] = test_recall_vec[my_ind,c].item()
-				pred_dict = {'behavior': cnm, 'metric': 'Precision', 'value': test_precision_vec[my_ind,c].item()}
-				recall_dict = {'behavior': cnm, 'metric': 'Recall', 'value': test_recall_vec[my_ind,c].item()}
-				summary_list.append(pred_dict)
-				summary_list.append(recall_dict)
-			df = pd.DataFrame(summary_list)
-			sns.barplot(ax=ax, x='behavior', y='value', hue='metric', data=df)
-			ax.xaxis.set_label_text("")
-			ax.yaxis.set_label_text("")
-			ax.set_xticklabels(ax.get_xticklabels(), rotation=0, horizontalalignment='right', fontweight='light', fontsize='x-large')
-			ax.set_title('Best Avg Test Recall (Test Loss = {0:.2f})'.format(test_loss_vec[my_ind].item()))
+			# cc = 3
+			# ax = axlist[0,cc]
+			# my_ind = np.argmax(np.mean(test_recall_vec[:(epoch+1),:], axis=0))
+			# summary_list = []
+			# model_nm = 'RNN_best_test_avg_recall'
+			# if model_nm not in best_model_dict:
+			# 	best_model_dict[model_nm] = {'Train':{}, 'Test':{}}
+			# best_model_dict[model_nm]['Train'][FLAGS.loss] = train_loss_vec[my_ind].item()
+			# best_model_dict[model_nm]['Test'][FLAGS.loss] = test_loss_vec[my_ind].item()
+			# for c in range(num_classes):
+			# 	cnm = class_names[c]
+			# 	if cnm not in best_model_dict[model_nm]['Train']:
+			# 		best_model_dict[model_nm]['Train'][cnm] = {}
+			# 		best_model_dict[model_nm]['Test'][cnm] = {}
+			# 	best_model_dict[model_nm]['Train'][cnm]['Precision'] = train_precision_vec[my_ind,c].item()
+			# 	best_model_dict[model_nm]['Train'][cnm]['Recall'] = train_recall_vec[my_ind,c].item()
+			# 	best_model_dict[model_nm]['Test'][cnm]['Precision'] = test_precision_vec[my_ind,c].item()
+			# 	best_model_dict[model_nm]['Test'][cnm]['Recall'] = test_recall_vec[my_ind,c].item()
+			# 	pred_dict = {'behavior': cnm, 'metric': 'Precision', 'value': test_precision_vec[my_ind,c].item()}
+			# 	recall_dict = {'behavior': cnm, 'metric': 'Recall', 'value': test_recall_vec[my_ind,c].item()}
+			# 	summary_list.append(pred_dict)
+			# 	summary_list.append(recall_dict)
+			# df = pd.DataFrame(summary_list)
+			# sns.barplot(ax=ax, x='behavior', y='value', hue='metric', data=df)
+			# ax.xaxis.set_label_text("")
+			# ax.yaxis.set_label_text("")
+			# ax.set_xticklabels(ax.get_xticklabels(), rotation=0, horizontalalignment='right', fontweight='light', fontsize='x-large')
+			# ax.set_title('Best Avg Test Recall (Test Loss = {0:.2f})'.format(test_loss_vec[my_ind].item()))
 
-			cc = 3
-			ax = axlist[1,cc]
-			my_ind = np.argmax(np.mean(train_recall_vec[:(epoch+1),:], axis=0))
-			summary_list = []
-			model_nm = 'RNN_best_train_avg_recall'
-			if model_nm not in best_model_dict:
-				best_model_dict[model_nm] = {'Train':{}, 'Test':{}}
-			best_model_dict[model_nm]['Train'][FLAGS.loss] = train_loss_vec[my_ind].item()
-			best_model_dict[model_nm]['Test'][FLAGS.loss] = test_loss_vec[my_ind].item()
-			for c in range(num_classes):
-				cnm = class_names[c]
-				if cnm not in best_model_dict[model_nm]['Train']:
-					best_model_dict[model_nm]['Train'][cnm] = {}
-					best_model_dict[model_nm]['Test'][cnm] = {}
-				best_model_dict[model_nm]['Train'][cnm]['Precision'] = train_precision_vec[my_ind,c].item()
-				best_model_dict[model_nm]['Train'][cnm]['Recall'] = train_recall_vec[my_ind,c].item()
-				best_model_dict[model_nm]['Test'][cnm]['Precision'] = test_precision_vec[my_ind,c].item()
-				best_model_dict[model_nm]['Test'][cnm]['Recall'] = test_recall_vec[my_ind,c].item()
-				pred_dict = {'behavior': cnm, 'metric': 'Precision', 'value': test_precision_vec[my_ind,c].item()}
-				recall_dict = {'behavior': cnm, 'metric': 'Recall', 'value': test_recall_vec[my_ind,c].item()}
-				summary_list.append(pred_dict)
-				summary_list.append(recall_dict)
-			df = pd.DataFrame(summary_list)
-			sns.barplot(ax=ax, x='behavior', y='value', hue='metric', data=df)
-			ax.xaxis.set_label_text("")
-			ax.yaxis.set_label_text("")
-			ax.set_xticklabels(ax.get_xticklabels(), rotation=0, horizontalalignment='right', fontweight='light', fontsize='x-large')
-			ax.set_title('Best Avg Train Recall (Test Loss = {0:.2f})'.format(test_loss_vec[my_ind].item()))
+			# cc = 3
+			# ax = axlist[1,cc]
+			# my_ind = np.argmax(np.mean(train_recall_vec[:(epoch+1),:], axis=0))
+			# summary_list = []
+			# model_nm = 'RNN_best_train_avg_recall'
+			# if model_nm not in best_model_dict:
+			# 	best_model_dict[model_nm] = {'Train':{}, 'Test':{}}
+			# best_model_dict[model_nm]['Train'][FLAGS.loss] = train_loss_vec[my_ind].item()
+			# best_model_dict[model_nm]['Test'][FLAGS.loss] = test_loss_vec[my_ind].item()
+			# for c in range(num_classes):
+			# 	cnm = class_names[c]
+			# 	if cnm not in best_model_dict[model_nm]['Train']:
+			# 		best_model_dict[model_nm]['Train'][cnm] = {}
+			# 		best_model_dict[model_nm]['Test'][cnm] = {}
+			# 	best_model_dict[model_nm]['Train'][cnm]['Precision'] = train_precision_vec[my_ind,c].item()
+			# 	best_model_dict[model_nm]['Train'][cnm]['Recall'] = train_recall_vec[my_ind,c].item()
+			# 	best_model_dict[model_nm]['Test'][cnm]['Precision'] = test_precision_vec[my_ind,c].item()
+			# 	best_model_dict[model_nm]['Test'][cnm]['Recall'] = test_recall_vec[my_ind,c].item()
+			# 	pred_dict = {'behavior': cnm, 'metric': 'Precision', 'value': test_precision_vec[my_ind,c].item()}
+			# 	recall_dict = {'behavior': cnm, 'metric': 'Recall', 'value': test_recall_vec[my_ind,c].item()}
+			# 	summary_list.append(pred_dict)
+			# 	summary_list.append(recall_dict)
+			# df = pd.DataFrame(summary_list)
+			# sns.barplot(ax=ax, x='behavior', y='value', hue='metric', data=df)
+			# ax.xaxis.set_label_text("")
+			# ax.yaxis.set_label_text("")
+			# ax.set_xticklabels(ax.get_xticklabels(), rotation=0, horizontalalignment='right', fontweight='light', fontsize='x-large')
+			# ax.set_title('Best Avg Train Recall (Test Loss = {0:.2f})'.format(test_loss_vec[my_ind].item()))
 
 			fig.subplots_adjust(bottom=0.1)
 			fig.suptitle('Model Test Performances')
