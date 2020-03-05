@@ -444,7 +444,7 @@ def main():
 			df = pd.DataFrame(summary_list)
 			sns.barplot(ax=ax, x='behavior', y='value', hue='metric', data=df)
 			ax.set_xticklabels(ax.get_xticklabels(), rotation=0, horizontalalignment='right', fontweight='light', fontsize='x-large')
-			ax.set_title('Best Test Loss (Loss = {0})'.format(test_loss_vec[my_ind]))
+			ax.set_title('Best Test Loss (Test Loss = {0})'.format(test_loss_vec[my_ind]))
 
 			cc = 1
 			ax = axlist[1,cc]
