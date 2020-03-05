@@ -396,6 +396,9 @@ def main():
 
 			## Now, choose the epoch that optimizes either Loss, Precision, or Recall and plot its performance
 			fig, axlist = plt.subplots(2,4, figsize=[20,10], sharey=True)
+			for ax_row in axlist:
+				for ax in ax_row:
+					ax.yaxis.set_tick_params(labelleft=True)
 
 			# plot GLM-alone performance
 			cc = 0
@@ -411,7 +414,7 @@ def main():
 				summary_list.append(recall_dict)
 			df = pd.DataFrame(summary_list)
 			sns.barplot(ax=ax, x='behavior', y='value', hue='metric', data=df)
-			ax.set_xticklabels(ax.get_xticklabels(), rotation=45, horizontalalignment='right', fontweight='light', fontsize='x-large')
+			ax.set_xticklabels(ax.get_xticklabels(), rotation=0, horizontalalignment='right', fontweight='light', fontsize='x-large')
 			ax.set_title('GLM performance (Test Loss = {0})'.format(foo_test_loss))
 
 
@@ -440,7 +443,7 @@ def main():
 				summary_list.append(recall_dict)
 			df = pd.DataFrame(summary_list)
 			sns.barplot(ax=ax, x='behavior', y='value', hue='metric', data=df)
-			ax.set_xticklabels(ax.get_xticklabels(), rotation=45, horizontalalignment='right', fontweight='light', fontsize='x-large')
+			ax.set_xticklabels(ax.get_xticklabels(), rotation=0, horizontalalignment='right', fontweight='light', fontsize='x-large')
 			ax.set_title('Best Test Loss (Loss = {0})'.format(test_loss_vec[my_ind]))
 
 			cc = 1
@@ -467,7 +470,7 @@ def main():
 				summary_list.append(recall_dict)
 			df = pd.DataFrame(summary_list)
 			sns.barplot(ax=ax, x='behavior', y='value', hue='metric', data=df)
-			ax.set_xticklabels(ax.get_xticklabels(), rotation=45, horizontalalignment='right', fontweight='light', fontsize='x-large')
+			ax.set_xticklabels(ax.get_xticklabels(), rotation=0, horizontalalignment='right', fontweight='light', fontsize='x-large')
 			ax.set_title('Best Train Loss (Test Loss = {0})'.format(test_loss_vec[my_ind].item()))
 
 			cc = 2
@@ -494,7 +497,7 @@ def main():
 				summary_list.append(recall_dict)
 			df = pd.DataFrame(summary_list)
 			sns.barplot(ax=ax, x='behavior', y='value', hue='metric', data=df)
-			ax.set_xticklabels(ax.get_xticklabels(), rotation=45, horizontalalignment='right', fontweight='light', fontsize='x-large')
+			ax.set_xticklabels(ax.get_xticklabels(), rotation=0, horizontalalignment='right', fontweight='light', fontsize='x-large')
 			ax.set_title('Best Avg Test Precision (Test Loss = {0})'.format(test_loss_vec[my_ind].item()))
 
 			cc = 2
@@ -521,7 +524,7 @@ def main():
 				summary_list.append(recall_dict)
 			df = pd.DataFrame(summary_list)
 			sns.barplot(ax=ax, x='behavior', y='value', hue='metric', data=df)
-			ax.set_xticklabels(ax.get_xticklabels(), rotation=45, horizontalalignment='right', fontweight='light', fontsize='x-large')
+			ax.set_xticklabels(ax.get_xticklabels(), rotation=0, horizontalalignment='right', fontweight='light', fontsize='x-large')
 			ax.set_title('Best Avg Train Precision (Test Loss = {0})'.format(test_loss_vec[my_ind].item()))
 
 
@@ -549,7 +552,7 @@ def main():
 				summary_list.append(recall_dict)
 			df = pd.DataFrame(summary_list)
 			sns.barplot(ax=ax, x='behavior', y='value', hue='metric', data=df)
-			ax.set_xticklabels(ax.get_xticklabels(), rotation=45, horizontalalignment='right', fontweight='light', fontsize='x-large')
+			ax.set_xticklabels(ax.get_xticklabels(), rotation=0, horizontalalignment='right', fontweight='light', fontsize='x-large')
 			ax.set_title('Best Avg Test Recall (Test Loss = {0})'.format(test_loss_vec[my_ind].item()))
 
 			cc = 3
@@ -576,7 +579,7 @@ def main():
 				summary_list.append(recall_dict)
 			df = pd.DataFrame(summary_list)
 			sns.barplot(ax=ax, x='behavior', y='value', hue='metric', data=df)
-			ax.set_xticklabels(ax.get_xticklabels(), rotation=45, horizontalalignment='right', fontweight='light', fontsize='x-large')
+			ax.set_xticklabels(ax.get_xticklabels(), rotation=0, horizontalalignment='right', fontweight='light', fontsize='x-large')
 			ax.set_title('Best Avg Train Recall (Test Loss = {0})'.format(test_loss_vec[my_ind].item()))
 
 			fig.subplots_adjust(bottom=0.1)
