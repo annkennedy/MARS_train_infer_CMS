@@ -421,6 +421,8 @@ def main():
 			my_ind = np.argmin(test_loss_vec[:(epoch+1)])
 			summary_list = []
 			model_nm = 'RNN_best_test_loss'
+			if model_nm not in best_model_dict:
+				best_model_dict[model_nm] = {'Train':{}, 'Test':{}}
 			best_model_dict[model_nm]['Train'][FLAGS.loss] = train_loss_vec[my_ind]
 			best_model_dict[model_nm]['Test'][FLAGS.loss] = test_loss_vec[my_ind]
 			for c in range(num_classes):
@@ -442,6 +444,8 @@ def main():
 			my_ind = np.argmin(train_loss_vec[:(epoch+1)])
 			summary_list = []
 			model_nm = 'RNN_best_train_loss'
+			if model_nm not in best_model_dict:
+				best_model_dict[model_nm] = {'Train':{}, 'Test':{}}
 			best_model_dict[model_nm]['Train'][FLAGS.loss] = train_loss_vec[my_ind]
 			best_model_dict[model_nm]['Test'][FLAGS.loss] = test_loss_vec[my_ind]
 			for c in range(num_classes):
@@ -463,6 +467,8 @@ def main():
 			my_ind = np.argmax(np.mean(test_precision_vec[:(epoch+1),:], axis=0))
 			summary_list = []
 			model_nm = 'RNN_best_test_avg_precision'
+			if model_nm not in best_model_dict:
+				best_model_dict[model_nm] = {'Train':{}, 'Test':{}}
 			best_model_dict[model_nm]['Train'][FLAGS.loss] = train_loss_vec[my_ind]
 			best_model_dict[model_nm]['Test'][FLAGS.loss] = test_loss_vec[my_ind]
 			for c in range(num_classes):
@@ -484,6 +490,8 @@ def main():
 			my_ind = np.argmax(np.mean(train_precision_vec[:(epoch+1),:], axis=0))
 			summary_list = []
 			model_nm = 'RNN_best_train_avg_precision'
+			if model_nm not in best_model_dict:
+				best_model_dict[model_nm] = {'Train':{}, 'Test':{}}
 			best_model_dict[model_nm]['Train'][FLAGS.loss] = train_loss_vec[my_ind]
 			best_model_dict[model_nm]['Test'][FLAGS.loss] = test_loss_vec[my_ind]
 			for c in range(num_classes):
@@ -506,6 +514,8 @@ def main():
 			my_ind = np.argmax(np.mean(test_recall_vec[:(epoch+1),:], axis=0))
 			summary_list = []
 			model_nm = 'RNN_best_test_avg_recall'
+			if model_nm not in best_model_dict:
+				best_model_dict[model_nm] = {'Train':{}, 'Test':{}}
 			best_model_dict[model_nm]['Train'][FLAGS.loss] = train_loss_vec[my_ind]
 			best_model_dict[model_nm]['Test'][FLAGS.loss] = test_loss_vec[my_ind]
 			for c in range(num_classes):
@@ -527,6 +537,8 @@ def main():
 			my_ind = np.argmax(np.mean(train_recall_vec[:(epoch+1),:], axis=0))
 			summary_list = []
 			model_nm = 'RNN_best_train_avg_recall'
+			if model_nm not in best_model_dict:
+				best_model_dict[model_nm] = {'Train':{}, 'Test':{}}
 			best_model_dict[model_nm]['Train'][FLAGS.loss] = train_loss_vec[my_ind]
 			best_model_dict[model_nm]['Test'][FLAGS.loss] = test_loss_vec[my_ind]
 			for c in range(num_classes):
