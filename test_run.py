@@ -409,6 +409,8 @@ def main():
 				summary_list.append(recall_dict)
 			df = pd.DataFrame(summary_list)
 			sns.barplot(ax=ax, x='behavior', y='value', hue='metric', data=df)
+			ax.xaxis.set_label_text("")
+			ax.yaxis.set_label_text("")
 			ax.set_xticklabels(ax.get_xticklabels(), rotation=0, horizontalalignment='right', fontweight='light', fontsize='x-large')
 			ax.set_title('GLM performance (Test Loss = {0:.2f})'.format(foo_test_loss))
 
@@ -438,8 +440,10 @@ def main():
 				summary_list.append(recall_dict)
 			df = pd.DataFrame(summary_list)
 			sns.barplot(ax=ax, x='behavior', y='value', hue='metric', data=df)
+			ax.xaxis.set_label_text("")
+			ax.yaxis.set_label_text("")
 			ax.set_xticklabels(ax.get_xticklabels(), rotation=0, horizontalalignment='right', fontweight='light', fontsize='x-large')
-			ax.set_title('Best Test Loss (Test Loss = {0})'.format(test_loss_vec[my_ind]))
+			ax.set_title('Best Test Loss (Test Loss = {0:.2f})'.format(test_loss_vec[my_ind]))
 
 			cc = 1
 			ax = axlist[1,cc]
@@ -465,6 +469,8 @@ def main():
 				summary_list.append(recall_dict)
 			df = pd.DataFrame(summary_list)
 			sns.barplot(ax=ax, x='behavior', y='value', hue='metric', data=df)
+			ax.xaxis.set_label_text("")
+			ax.yaxis.set_label_text("")
 			ax.set_xticklabels(ax.get_xticklabels(), rotation=0, horizontalalignment='right', fontweight='light', fontsize='x-large')
 			ax.set_title('Best Train Loss (Test Loss = {0:.2f})'.format(test_loss_vec[my_ind].item()))
 
@@ -492,6 +498,8 @@ def main():
 				summary_list.append(recall_dict)
 			df = pd.DataFrame(summary_list)
 			sns.barplot(ax=ax, x='behavior', y='value', hue='metric', data=df)
+			ax.xaxis.set_label_text("")
+			ax.yaxis.set_label_text("")
 			ax.set_xticklabels(ax.get_xticklabels(), rotation=0, horizontalalignment='right', fontweight='light', fontsize='x-large')
 			ax.set_title('Best Avg Test Precision (Test Loss = {0:.2f})'.format(test_loss_vec[my_ind].item()))
 
@@ -519,6 +527,8 @@ def main():
 				summary_list.append(recall_dict)
 			df = pd.DataFrame(summary_list)
 			sns.barplot(ax=ax, x='behavior', y='value', hue='metric', data=df)
+			ax.xaxis.set_label_text("")
+			ax.yaxis.set_label_text("")
 			ax.set_xticklabels(ax.get_xticklabels(), rotation=0, horizontalalignment='right', fontweight='light', fontsize='x-large')
 			ax.set_title('Best Avg Train Precision (Test Loss = {0:.2f})'.format(test_loss_vec[my_ind].item()))
 
@@ -547,6 +557,8 @@ def main():
 				summary_list.append(recall_dict)
 			df = pd.DataFrame(summary_list)
 			sns.barplot(ax=ax, x='behavior', y='value', hue='metric', data=df)
+			ax.xaxis.set_label_text("")
+			ax.yaxis.set_label_text("")
 			ax.set_xticklabels(ax.get_xticklabels(), rotation=0, horizontalalignment='right', fontweight='light', fontsize='x-large')
 			ax.set_title('Best Avg Test Recall (Test Loss = {0:.2f})'.format(test_loss_vec[my_ind].item()))
 
@@ -574,6 +586,8 @@ def main():
 				summary_list.append(recall_dict)
 			df = pd.DataFrame(summary_list)
 			sns.barplot(ax=ax, x='behavior', y='value', hue='metric', data=df)
+			ax.xaxis.set_label_text("")
+			ax.yaxis.set_label_text("")
 			ax.set_xticklabels(ax.get_xticklabels(), rotation=0, horizontalalignment='right', fontweight='light', fontsize='x-large')
 			ax.set_title('Best Avg Train Recall (Test Loss = {0:.2f})'.format(test_loss_vec[my_ind].item()))
 
