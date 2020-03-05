@@ -390,7 +390,7 @@ def main():
 
 
 			## Now, choose the epoch that optimizes either Loss, Precision, or Recall and plot its performance
-			fig, axlist = plt.subplots(1,3, figsize=[12,8], sharey=True)
+			fig, axlist = plt.subplots(1,3, figsize=[6,8], sharey=True)
 
 			for ax in axlist:
 				ax.yaxis.set_tick_params(labelleft=True)
@@ -411,7 +411,7 @@ def main():
 			sns.barplot(ax=ax, x='behavior', y='value', hue='metric', data=df)
 			ax.xaxis.set_label_text("")
 			ax.yaxis.set_label_text("")
-			ax.set_xticklabels(ax.get_xticklabels(), rotation=0, horizontalalignment='right', fontweight='light', fontsize='x-large')
+			ax.set_xticklabels(ax.get_xticklabels(), rotation=0, horizontalalignment='center', fontweight='light', fontsize='x-large')
 			ax.set_title('GLM performance (Test Loss = {0:.2f})'.format(foo_test_loss))
 
 
@@ -441,7 +441,7 @@ def main():
 			sns.barplot(ax=ax, x='behavior', y='value', hue='metric', data=df)
 			ax.xaxis.set_label_text("")
 			ax.yaxis.set_label_text("")
-			ax.set_xticklabels(ax.get_xticklabels(), rotation=0, horizontalalignment='right', fontweight='light', fontsize='x-large')
+			ax.set_xticklabels(ax.get_xticklabels(), rotation=0, horizontalalignment='center', fontweight='light', fontsize='x-large')
 			ax.set_title('Best Test Loss (Test Loss = {0:.2f})'.format(test_loss_vec[my_ind].item()))
 
 			cc = 2
@@ -470,7 +470,7 @@ def main():
 			sns.barplot(ax=ax, x='behavior', y='value', hue='metric', data=df)
 			ax.xaxis.set_label_text("")
 			ax.yaxis.set_label_text("")
-			ax.set_xticklabels(ax.get_xticklabels(), rotation=0, horizontalalignment='right', fontweight='light', fontsize='x-large')
+			ax.set_xticklabels(ax.get_xticklabels(), rotation=0, horizontalalignment='center', fontweight='light', fontsize='x-large')
 			ax.set_title('Best Train Loss (Test Loss = {0:.2f})'.format(test_loss_vec[my_ind].item()))
 
 			# cc = 2
