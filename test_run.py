@@ -401,6 +401,7 @@ def main():
 			cc = 0
 			ax = axlist[0,cc]
 			summary_list = []
+			model_nm = 'glm'
 			foo_test_loss = best_model_dict[model_nm]['Test'][FLAGS.loss]
 			for c in range(num_classes):
 				val_dict = best_model_dict[model_nm]['Test'][class_names[c]]
