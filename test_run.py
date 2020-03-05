@@ -426,12 +426,16 @@ def main():
 			best_model_dict[model_nm]['Train'][FLAGS.loss] = train_loss_vec[my_ind]
 			best_model_dict[model_nm]['Test'][FLAGS.loss] = test_loss_vec[my_ind]
 			for c in range(num_classes):
-				best_model_dict[model_nm]['Train'][class_names[c]]['Precision'] = train_precision_vec[my_ind,c]
-				best_model_dict[model_nm]['Train'][class_names[c]]['Recall'] = train_recall_vec[my_ind,c]
-				best_model_dict[model_nm]['Test'][class_names[c]]['Precision'] = test_precision_vec[my_ind,c]
-				best_model_dict[model_nm]['Test'][class_names[c]]['Recall'] = test_recall_vec[my_ind,c]
-				pred_dict = {'behavior': class_names[c], 'metric': 'Precision', 'value': test_precision_vec[my_ind,c]}
-				recall_dict = {'behavior': class_names[c], 'metric': 'Recall', 'value': test_recall_vec[my_ind,c]}
+				cnm = class_names[c]
+				if cnm not in best_model_dict[model_nm]['Train'][cnm]:
+					best_model_dict[model_nm]['Train'][cnm] = {}
+					best_model_dict[model_nm]['Test'][cnm] = {}
+				best_model_dict[model_nm]['Train'][cnm]['Precision'] = train_precision_vec[my_ind,c]
+				best_model_dict[model_nm]['Train'][cnm]['Recall'] = train_recall_vec[my_ind,c]
+				best_model_dict[model_nm]['Test'][cnm]['Precision'] = test_precision_vec[my_ind,c]
+				best_model_dict[model_nm]['Test'][cnm]['Recall'] = test_recall_vec[my_ind,c]
+				pred_dict = {'behavior': cnm, 'metric': 'Precision', 'value': test_precision_vec[my_ind,c]}
+				recall_dict = {'behavior': cnm, 'metric': 'Recall', 'value': test_recall_vec[my_ind,c]}
 				summary_list.append(pred_dict)
 				summary_list.append(recall_dict)
 			df = pd.DataFrame(summary_list)
@@ -449,12 +453,16 @@ def main():
 			best_model_dict[model_nm]['Train'][FLAGS.loss] = train_loss_vec[my_ind]
 			best_model_dict[model_nm]['Test'][FLAGS.loss] = test_loss_vec[my_ind]
 			for c in range(num_classes):
-				best_model_dict[model_nm]['Train'][class_names[c]]['Precision'] = train_precision_vec[my_ind,c]
-				best_model_dict[model_nm]['Train'][class_names[c]]['Recall'] = train_recall_vec[my_ind,c]
-				best_model_dict[model_nm]['Test'][class_names[c]]['Precision'] = test_precision_vec[my_ind,c]
-				best_model_dict[model_nm]['Test'][class_names[c]]['Recall'] = test_recall_vec[my_ind,c]
-				pred_dict = {'behavior': class_names[c], 'metric': 'Precision', 'value': test_precision_vec[my_ind,c]}
-				recall_dict = {'behavior': class_names[c], 'metric': 'Recall', 'value': test_recall_vec[my_ind,c]}
+				cnm = class_names[c]
+				if cnm not in best_model_dict[model_nm]['Train'][cnm]:
+					best_model_dict[model_nm]['Train'][cnm] = {}
+					best_model_dict[model_nm]['Test'][cnm] = {}
+				best_model_dict[model_nm]['Train'][cnm]['Precision'] = train_precision_vec[my_ind,c]
+				best_model_dict[model_nm]['Train'][cnm]['Recall'] = train_recall_vec[my_ind,c]
+				best_model_dict[model_nm]['Test'][cnm]['Precision'] = test_precision_vec[my_ind,c]
+				best_model_dict[model_nm]['Test'][cnm]['Recall'] = test_recall_vec[my_ind,c]
+				pred_dict = {'behavior': cnm, 'metric': 'Precision', 'value': test_precision_vec[my_ind,c]}
+				recall_dict = {'behavior': cnm, 'metric': 'Recall', 'value': test_recall_vec[my_ind,c]}
 				summary_list.append(pred_dict)
 				summary_list.append(recall_dict)
 			df = pd.DataFrame(summary_list)
@@ -472,12 +480,16 @@ def main():
 			best_model_dict[model_nm]['Train'][FLAGS.loss] = train_loss_vec[my_ind]
 			best_model_dict[model_nm]['Test'][FLAGS.loss] = test_loss_vec[my_ind]
 			for c in range(num_classes):
-				best_model_dict[model_nm]['Train'][class_names[c]]['Precision'] = train_precision_vec[my_ind,c]
-				best_model_dict[model_nm]['Train'][class_names[c]]['Recall'] = train_recall_vec[my_ind,c]
-				best_model_dict[model_nm]['Test'][class_names[c]]['Precision'] = test_precision_vec[my_ind,c]
-				best_model_dict[model_nm]['Test'][class_names[c]]['Recall'] = test_recall_vec[my_ind,c]
-				pred_dict = {'behavior': class_names[c], 'metric': 'Precision', 'value': test_precision_vec[my_ind,c]}
-				recall_dict = {'behavior': class_names[c], 'metric': 'Recall', 'value': test_recall_vec[my_ind,c]}
+				cnm = class_names[c]
+				if cnm not in best_model_dict[model_nm]['Train'][cnm]:
+					best_model_dict[model_nm]['Train'][cnm] = {}
+					best_model_dict[model_nm]['Test'][cnm] = {}
+				best_model_dict[model_nm]['Train'][cnm]['Precision'] = train_precision_vec[my_ind,c]
+				best_model_dict[model_nm]['Train'][cnm]['Recall'] = train_recall_vec[my_ind,c]
+				best_model_dict[model_nm]['Test'][cnm]['Precision'] = test_precision_vec[my_ind,c]
+				best_model_dict[model_nm]['Test'][cnm]['Recall'] = test_recall_vec[my_ind,c]
+				pred_dict = {'behavior': cnm, 'metric': 'Precision', 'value': test_precision_vec[my_ind,c]}
+				recall_dict = {'behavior': cnm, 'metric': 'Recall', 'value': test_recall_vec[my_ind,c]}
 				summary_list.append(pred_dict)
 				summary_list.append(recall_dict)
 			df = pd.DataFrame(summary_list)
@@ -495,12 +507,16 @@ def main():
 			best_model_dict[model_nm]['Train'][FLAGS.loss] = train_loss_vec[my_ind]
 			best_model_dict[model_nm]['Test'][FLAGS.loss] = test_loss_vec[my_ind]
 			for c in range(num_classes):
-				best_model_dict[model_nm]['Train'][class_names[c]]['Precision'] = train_precision_vec[my_ind,c]
-				best_model_dict[model_nm]['Train'][class_names[c]]['Recall'] = train_recall_vec[my_ind,c]
-				best_model_dict[model_nm]['Test'][class_names[c]]['Precision'] = test_precision_vec[my_ind,c]
-				best_model_dict[model_nm]['Test'][class_names[c]]['Recall'] = test_recall_vec[my_ind,c]
-				pred_dict = {'behavior': class_names[c], 'metric': 'Precision', 'value': test_precision_vec[my_ind,c]}
-				recall_dict = {'behavior': class_names[c], 'metric': 'Recall', 'value': test_recall_vec[my_ind,c]}
+				cnm = class_names[c]
+				if cnm not in best_model_dict[model_nm]['Train'][cnm]:
+					best_model_dict[model_nm]['Train'][cnm] = {}
+					best_model_dict[model_nm]['Test'][cnm] = {}
+				best_model_dict[model_nm]['Train'][cnm]['Precision'] = train_precision_vec[my_ind,c]
+				best_model_dict[model_nm]['Train'][cnm]['Recall'] = train_recall_vec[my_ind,c]
+				best_model_dict[model_nm]['Test'][cnm]['Precision'] = test_precision_vec[my_ind,c]
+				best_model_dict[model_nm]['Test'][cnm]['Recall'] = test_recall_vec[my_ind,c]
+				pred_dict = {'behavior': cnm, 'metric': 'Precision', 'value': test_precision_vec[my_ind,c]}
+				recall_dict = {'behavior': cnm, 'metric': 'Recall', 'value': test_recall_vec[my_ind,c]}
 				summary_list.append(pred_dict)
 				summary_list.append(recall_dict)
 			df = pd.DataFrame(summary_list)
@@ -519,12 +535,16 @@ def main():
 			best_model_dict[model_nm]['Train'][FLAGS.loss] = train_loss_vec[my_ind]
 			best_model_dict[model_nm]['Test'][FLAGS.loss] = test_loss_vec[my_ind]
 			for c in range(num_classes):
-				best_model_dict[model_nm]['Train'][class_names[c]]['Precision'] = train_precision_vec[my_ind,c]
-				best_model_dict[model_nm]['Train'][class_names[c]]['Recall'] = train_recall_vec[my_ind,c]
-				best_model_dict[model_nm]['Test'][class_names[c]]['Precision'] = test_precision_vec[my_ind,c]
-				best_model_dict[model_nm]['Test'][class_names[c]]['Recall'] = test_recall_vec[my_ind,c]
-				pred_dict = {'behavior': class_names[c], 'metric': 'Precision', 'value': test_precision_vec[my_ind,c]}
-				recall_dict = {'behavior': class_names[c], 'metric': 'Recall', 'value': test_recall_vec[my_ind,c]}
+				cnm = class_names[c]
+				if cnm not in best_model_dict[model_nm]['Train'][cnm]:
+					best_model_dict[model_nm]['Train'][cnm] = {}
+					best_model_dict[model_nm]['Test'][cnm] = {}
+				best_model_dict[model_nm]['Train'][cnm]['Precision'] = train_precision_vec[my_ind,c]
+				best_model_dict[model_nm]['Train'][cnm]['Recall'] = train_recall_vec[my_ind,c]
+				best_model_dict[model_nm]['Test'][cnm]['Precision'] = test_precision_vec[my_ind,c]
+				best_model_dict[model_nm]['Test'][cnm]['Recall'] = test_recall_vec[my_ind,c]
+				pred_dict = {'behavior': cnm, 'metric': 'Precision', 'value': test_precision_vec[my_ind,c]}
+				recall_dict = {'behavior': cnm, 'metric': 'Recall', 'value': test_recall_vec[my_ind,c]}
 				summary_list.append(pred_dict)
 				summary_list.append(recall_dict)
 			df = pd.DataFrame(summary_list)
@@ -542,12 +562,16 @@ def main():
 			best_model_dict[model_nm]['Train'][FLAGS.loss] = train_loss_vec[my_ind]
 			best_model_dict[model_nm]['Test'][FLAGS.loss] = test_loss_vec[my_ind]
 			for c in range(num_classes):
-				best_model_dict[model_nm]['Train'][class_names[c]]['Precision'] = train_precision_vec[my_ind,c]
-				best_model_dict[model_nm]['Train'][class_names[c]]['Recall'] = train_recall_vec[my_ind,c]
-				best_model_dict[model_nm]['Test'][class_names[c]]['Precision'] = test_precision_vec[my_ind,c]
-				best_model_dict[model_nm]['Test'][class_names[c]]['Recall'] = test_recall_vec[my_ind,c]
-				pred_dict = {'behavior': class_names[c], 'metric': 'Precision', 'value': test_precision_vec[my_ind,c]}
-				recall_dict = {'behavior': class_names[c], 'metric': 'Recall', 'value': test_recall_vec[my_ind,c]}
+				cnm = class_names[c]
+				if cnm not in best_model_dict[model_nm]['Train'][cnm]:
+					best_model_dict[model_nm]['Train'][cnm] = {}
+					best_model_dict[model_nm]['Test'][cnm] = {}
+				best_model_dict[model_nm]['Train'][cnm]['Precision'] = train_precision_vec[my_ind,c]
+				best_model_dict[model_nm]['Train'][cnm]['Recall'] = train_recall_vec[my_ind,c]
+				best_model_dict[model_nm]['Test'][cnm]['Precision'] = test_precision_vec[my_ind,c]
+				best_model_dict[model_nm]['Test'][cnm]['Recall'] = test_recall_vec[my_ind,c]
+				pred_dict = {'behavior': cnm, 'metric': 'Precision', 'value': test_precision_vec[my_ind,c]}
+				recall_dict = {'behavior': cnm, 'metric': 'Recall', 'value': test_recall_vec[my_ind,c]}
 				summary_list.append(pred_dict)
 				summary_list.append(recall_dict)
 			df = pd.DataFrame(summary_list)
