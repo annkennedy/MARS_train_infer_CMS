@@ -501,7 +501,7 @@ def main():
 			ax.set_title('Best Avg Test Precision (Test Loss = {0:.2f})'.format(test_loss_vec[my_ind].item()))
 
 			cc = 2
-			ax = axlist[0,cc]
+			ax = axlist[1,cc]
 			my_ind = np.argmax(np.mean(train_precision_vec[:(epoch+1),:], axis=0))
 			summary_list = []
 			model_nm = 'RNN_best_train_avg_precision'
