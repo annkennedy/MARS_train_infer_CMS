@@ -40,6 +40,7 @@ parser.add_argument('--use_gpu', type=str2bool, default=False, help='If true, us
 parser.add_argument('--feature_style', type=str, default="keypoints_only", help='If true, set dtype=torch.cuda.FloatTensor and use cuda')
 parser.add_argument('--use_glm_scores', type=str2bool, default=True, help='include outputs from GLM model as features.')
 parser.add_argument('--glm_available', type=str2bool, default=True, help='include outputs from GLM model as features.')
+parser.add_argument('--learn_glm_bias', type=str2bool, default=False, help='Learn RNN as residual of GLM scores')
 parser.add_argument('--save_freq', type=int, default=1, help='interval of epochs for which we should save outputs')
 parser.add_argument('--bidirectional', type=str2bool, default=False, help='interval of epochs for which we should save outputs')
 parser.add_argument('--num_rnn_layers', type=int, default=1, help='number of layers of RNN cells')
@@ -182,6 +183,7 @@ def main():
 
 		glm_names = [names_train[i] for i in glm_inds]
 		label_inds = [class_names.index(g[4:]) for g in glm_names]
+		reorder_glm_inds = [glm_names.index('glm_'+c) for c in class_names]
 
 		TrainLabels = np.concatenate([np.argmax(y[:,label_inds], axis=1) for y in ytrain])
 		TestLabels = np.concatenate([np.argmax(y[:,label_inds], axis=1) for y in ytest])
@@ -248,6 +250,9 @@ def main():
 		all_predicted_scores = []
 		all_targets = []
 		for v in range(len(Xtrain)):
+			if FLAGS.learn_glm_bias and FLAGS.glm_available:
+				big_input_bias = Xtrain_raw[v][:,glm_inds]
+				big_input_bias = big_input_bias[:,reorder_glm_inds]
 			big_input = Xtrain[v]
 			big_target = ytrain[v]
 
@@ -262,13 +267,17 @@ def main():
 				input_sequence = big_input[start_ind:end_ind,:]
 				target_sequence = big_target[start_ind:end_ind,:]
 				target_inds = torch.tensor(np.argmax(target_sequence, axis=1)).type(inttype)
-
+				if FLAGS.learn_glm_bias and FLAGS.glm_available:
+					bias_sequence = torch.FloatTensor(big_input_bias[start_ind:end_ind,:]).type(dtype)
+				else:
+					bias_sequence = 0
 				# Step 1. Remember that Pytorch accumulates gradients.
 				# We need to clear them out before each instance
 				model.zero_grad()
 
 				# Step 3. Run our forward pass.
-				predicted_class_scores = model(torch.FloatTensor(input_sequence).type(dtype)).type(dtype)
+				predicted_class_scores = model(input_sequence=torch.FloatTensor(input_sequence).type(dtype),
+												bias_sequence=bias_sequence).type(dtype)
 				predicted_class_index = torch.argmax(predicted_class_scores, 1) # this is the model's class prediction i.e. the highest scoring element
 
 				# Step 4. Compute the loss, gradients, and update the parameters by
@@ -309,14 +318,22 @@ def main():
 		all_predicted_scores = []
 		all_targets = []
 		for v in range(len(Xtest)):
+			if FLAGS.learn_glm_bias and FLAGS.glm_available:
+				big_input_bias = Xtest_raw[v][:,glm_inds]
+				big_input_bias = big_input_bias[:,reorder_glm_inds]
 			big_input = Xtest[v]
 			big_target = ytest[v]
 			input_sequence = big_input
 			target_sequence = big_target
 			target_inds = torch.tensor(np.argmax(target_sequence, axis=1)).type(inttype)
+			if FLAGS.learn_glm_bias and FLAGS.glm_available:
+				bias_sequence = torch.FloatTensor(big_input_bias[start_ind:end_ind,:]).type(dtype)
+			else:
+				bias_sequence = 0
 
 			# Step 3. Run our forward pass.
-			predicted_class_scores = model(torch.FloatTensor(input_sequence).type(dtype)).type(dtype)
+			predicted_class_scores = model(input_sequence=torch.FloatTensor(input_sequence).type(dtype),
+											bias_sequence=bias_sequence).type(dtype)
 			predicted_class_index = torch.argmax(predicted_class_scores, 1) # this is the model's class prediction i.e. the highest scoring element
 
 			all_predicted_classes.append(predicted_class_index)

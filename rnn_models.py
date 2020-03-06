@@ -6,7 +6,7 @@ import pdb
 
 class LSTMTagger(nn.Module):
 
-    def __init__(self, input_dim, hidden_dim, num_classes, bidirectional, num_layers, bias=None):
+    def __init__(self, input_dim, hidden_dim, num_classes, bidirectional, num_layers):
         super(LSTMTagger, self).__init__()
         self.hidden_dim = hidden_dim
 
@@ -19,22 +19,16 @@ class LSTMTagger(nn.Module):
         # The linear layer that maps from hidden state space to tag space
         self.hidden2tag = nn.Linear(num_directions*hidden_dim, num_classes)
 
+    def forward(self, input_sequence, bias_sequence=0):
         # optional bias term driven by glm_scores
-        if bias is None:
-            self.bias = 0
-        else:
-            self.bias = bias
-
-
-    def forward(self, input_sequence):
         lstm_out, _ = self.lstm(input_sequence.view(input_sequence.shape[0], 1, -1))
         tag_space = self.hidden2tag(lstm_out.view(input_sequence.shape[0], -1))
-        predicted_class_scores = self.bias + F.log_softmax(tag_space, dim=1)
+        predicted_class_scores = bias_sequence + F.log_softmax(tag_space, dim=1)
         return predicted_class_scores
 
 class GRUTagger(nn.Module):
 
-    def __init__(self, input_dim, hidden_dim, num_classes, bidirectional, num_layers, bias=None):
+    def __init__(self, input_dim, hidden_dim, num_classes, bidirectional, num_layers):
         super(GRUTagger, self).__init__()
         self.hidden_dim = hidden_dim
 
@@ -47,17 +41,12 @@ class GRUTagger(nn.Module):
         # The linear layer that maps from hidden state space to tag space
         self.hidden2tag = nn.Linear(num_directions*hidden_dim, num_classes)
 
+    def forward(self, input_sequence, bias_sequence=0):
         # optional bias term driven by glm_scores
-        if bias is None:
-            self.bias = 0
-        else:
-            self.bias = bias
-
-    def forward(self, input_sequence):
         gru_out, _ = self.gru(input_sequence.view(input_sequence.shape[0], 1, -1))
         tag_space = self.hidden2tag(gru_out.view(input_sequence.shape[0], -1))
         pdb.set_trace()
-        predicted_class_scores = self.bias + F.log_softmax(tag_space, dim=1)
+        predicted_class_scores = bias_sequence + F.log_softmax(tag_space, dim=1)
         return predicted_class_scores
 
 
