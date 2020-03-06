@@ -45,7 +45,6 @@ class GRUTagger(nn.Module):
         # optional bias term driven by glm_scores
         gru_out, _ = self.gru(input_sequence.view(input_sequence.shape[0], 1, -1))
         tag_space = self.hidden2tag(gru_out.view(input_sequence.shape[0], -1))
-        pdb.set_trace()
         predicted_class_scores = bias_sequence + F.log_softmax(tag_space, dim=1)
         return predicted_class_scores
 
