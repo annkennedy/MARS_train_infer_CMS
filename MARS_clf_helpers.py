@@ -10,7 +10,7 @@ import time
 from copy import deepcopy
 from collections import Counter
 from sklearn.ensemble import BaggingClassifier
-from hmmlearn import hmm
+# from hmmlearn import hmm
 from scipy import signal
 import copy
 from sklearn.preprocessing import StandardScaler

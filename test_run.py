@@ -252,6 +252,7 @@ def main():
 		for v in range(len(Xtrain)):
 			if FLAGS.learn_glm_bias and FLAGS.glm_available:
 				big_input_bias = Xtrain_raw[v][:,glm_inds]
+				pdb.set_trace()
 				big_input_bias = big_input_bias[:,reorder_glm_inds]
 			big_input = Xtrain[v]
 			big_target = ytrain[v]
