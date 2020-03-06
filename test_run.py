@@ -8,10 +8,10 @@ import torch.optim as optim
 import numpy as np
 from time import time
 
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-import seaborn as sns
+# import matplotlib
+# matplotlib.use('Agg')
+# import matplotlib.pyplot as plt
+# import seaborn as sns
 
 from utils import *
 from rnn_models import *
@@ -39,6 +39,7 @@ parser.add_argument('--balance_weights', type=str2bool, default=True, help='If t
 parser.add_argument('--use_gpu', type=str2bool, default=False, help='If true, use cuda')
 parser.add_argument('--feature_style', type=str, default="keypoints_only", help='If true, set dtype=torch.cuda.FloatTensor and use cuda')
 parser.add_argument('--use_glm_scores', type=str2bool, default=True, help='include outputs from GLM model as features.')
+parser.add_argument('--glm_available', type=str2bool, default=True, help='include outputs from GLM model as features.')
 parser.add_argument('--save_freq', type=int, default=1, help='interval of epochs for which we should save outputs')
 parser.add_argument('--bidirectional', type=str2bool, default=False, help='interval of epochs for which we should save outputs')
 parser.add_argument('--num_rnn_layers', type=int, default=1, help='number of layers of RNN cells')
@@ -131,9 +132,10 @@ def main():
 	num_classes = ytrain[0].shape[1]
 
 	# if not using them already, add the glm_scores
-	glm_inds = np.arange(len(names_train)-num_classes, len(names_train))
-	if FLAGS.use_glm_scores and FLAGS.feature_style != 'all':
-		feature_inds = np.hstack((feature_inds, glm_inds))
+	if FLAGS.glm_available:
+		glm_inds = np.arange(len(names_train)-num_classes, len(names_train))
+		if FLAGS.use_glm_scores and FLAGS.feature_style != 'all':
+			feature_inds = np.hstack((feature_inds, glm_inds))
 
 	Xtrain = [x[:,feature_inds] for x in Xtrain_raw]
 	Xtest = [x[:,feature_inds] for x in Xtest_raw]
@@ -172,52 +174,55 @@ def main():
 	loss_function = get_loss(name=FLAGS.loss, weight=weight) #e.g. nn.NLLLoss()
 
 	# report the GLM score qualities
-	glmTrainingScores = np.concatenate([np.array(x[:,glm_inds]) for x in Xtrain_raw])
-	glmTestingScores = np.concatenate([x[:,glm_inds] for x in Xtest_raw])
-	glmTrainingClassPredictions = np.argmax(glmTrainingScores, axis=1)
-	glmTestingClassPredictions = np.argmax(glmTestingScores, axis=1)
+	if FLAGS.glm_available:
+		glmTrainingScores = np.concatenate([np.array(x[:,glm_inds]) for x in Xtrain_raw])
+		glmTestingScores = np.concatenate([x[:,glm_inds] for x in Xtest_raw])
+		glmTrainingClassPredictions = np.argmax(glmTrainingScores, axis=1)
+		glmTestingClassPredictions = np.argmax(glmTestingScores, axis=1)
 
-	glm_names = [names_train[i] for i in glm_inds]
-	label_inds = [class_names.index(g[4:]) for g in glm_names]
+		glm_names = [names_train[i] for i in glm_inds]
+		label_inds = [class_names.index(g[4:]) for g in glm_names]
 
-	TrainLabels = np.concatenate([np.argmax(y[:,label_inds], axis=1) for y in ytrain])
-	TestLabels = np.concatenate([np.argmax(y[:,label_inds], axis=1) for y in ytest])
+		TrainLabels = np.concatenate([np.argmax(y[:,label_inds], axis=1) for y in ytrain])
+		TestLabels = np.concatenate([np.argmax(y[:,label_inds], axis=1) for y in ytest])
 
-	train_loss = loss_function(torch.FloatTensor(glmTrainingScores).type(dtype), torch.tensor(TrainLabels).type(inttype))
-	train_recall = recall(predicted=glmTrainingClassPredictions, actual=TrainLabels)
-	train_precision = precision(predicted=glmTrainingClassPredictions, actual=TrainLabels)
-	print('GLM Train Loss=', train_loss.cpu().data.numpy().item())
-	print('GLM Train Recall=', train_recall)
-	print('GLM Train Precision=', train_precision)
-	test_loss = loss_function(torch.FloatTensor(glmTestingScores).type(dtype), torch.tensor(TestLabels).type(inttype))
-	test_recall = recall(predicted=glmTestingClassPredictions, actual=TestLabels)
-	test_precision = precision(predicted=glmTestingClassPredictions, actual=TestLabels)
-	print('GLM Test Loss=', test_loss.cpu().data.numpy().item())
-	print('GLM Test Recall=', test_recall)
-	print('GLM Test Precision=', test_precision)
+		train_loss = loss_function(torch.FloatTensor(glmTrainingScores).type(dtype), torch.tensor(TrainLabels).type(inttype))
+		train_recall = recall(predicted=glmTrainingClassPredictions, actual=TrainLabels)
+		train_precision = precision(predicted=glmTrainingClassPredictions, actual=TrainLabels)
+		print('GLM Train Loss=', train_loss.cpu().data.numpy().item())
+		print('GLM Train Recall=', train_recall)
+		print('GLM Train Precision=', train_precision)
+		test_loss = loss_function(torch.FloatTensor(glmTestingScores).type(dtype), torch.tensor(TestLabels).type(inttype))
+		test_recall = recall(predicted=glmTestingClassPredictions, actual=TestLabels)
+		test_precision = precision(predicted=glmTestingClassPredictions, actual=TestLabels)
+		print('GLM Test Loss=', test_loss.cpu().data.numpy().item())
+		print('GLM Test Recall=', test_recall)
+		print('GLM Test Precision=', test_precision)
 
-	best_model_dict = {'glm':
-						{'Train':{
-							FLAGS.loss: train_loss.cpu().data.numpy().item(),
-							},
-						'Test':{
-							FLAGS.loss: test_loss.cpu().data.numpy().item(),
+		best_model_dict = {'glm':
+							{'Train':{
+								FLAGS.loss: train_loss.cpu().data.numpy().item(),
+								},
+							'Test':{
+								FLAGS.loss: test_loss.cpu().data.numpy().item(),
+								}
 							}
 						}
-					}
-	for c in range(num_classes):
-		cnm = glm_names[c][4:]
-		if cnm not in best_model_dict['glm']['Train']:
-			best_model_dict['glm']['Train'][cnm] = {}
-			best_model_dict['glm']['Test'][cnm] = {}
-		best_model_dict['glm']['Train'][cnm]['Precision'] = train_precision[c]
-		best_model_dict['glm']['Train'][cnm]['Recall'] = train_recall[c]
-		best_model_dict['glm']['Test'][cnm]['Precision'] = test_precision[c]
-		best_model_dict['glm']['Test'][cnm]['Recall'] = test_recall[c]
-		# best_model_dict[model_nm]['Train'][class_names[c]]['Precision'] = train_precision_vec[my_ind,c]
-	best_model_fname = os.path.join(output_path,'best_model_performances.txt')
-	with open(best_model_fname, 'w') as f:
-		json.dump(best_model_dict, f, indent=2)
+		for c in range(num_classes):
+			cnm = glm_names[c][4:]
+			if cnm not in best_model_dict['glm']['Train']:
+				best_model_dict['glm']['Train'][cnm] = {}
+				best_model_dict['glm']['Test'][cnm] = {}
+			best_model_dict['glm']['Train'][cnm]['Precision'] = train_precision[c]
+			best_model_dict['glm']['Train'][cnm]['Recall'] = train_recall[c]
+			best_model_dict['glm']['Test'][cnm]['Precision'] = test_precision[c]
+			best_model_dict['glm']['Test'][cnm]['Recall'] = test_recall[c]
+			# best_model_dict[model_nm]['Train'][class_names[c]]['Precision'] = train_precision_vec[my_ind,c]
+		best_model_fname = os.path.join(output_path,'best_model_performances.txt')
+		with open(best_model_fname, 'w') as f:
+			json.dump(best_model_dict, f, indent=2)
+	else:
+		best_model_dict = {}
 
 	# train the model
 	num_frames = FLAGS.num_frames
@@ -396,23 +401,24 @@ def main():
 				ax.yaxis.set_tick_params(labelleft=True)
 
 			# plot GLM-alone performance
-			cc = 0
-			ax = axlist[cc]
-			summary_list = []
-			model_nm = 'glm'
-			foo_test_loss = best_model_dict[model_nm]['Test'][FLAGS.loss]
-			for c in range(num_classes):
-				val_dict = best_model_dict[model_nm]['Test'][class_names[c]]
-				pred_dict = {'behavior': class_names[c], 'metric': 'Precision', 'value': val_dict['Precision']}
-				recall_dict = {'behavior': class_names[c], 'metric': 'Recall', 'value': val_dict['Recall']}
-				summary_list.append(pred_dict)
-				summary_list.append(recall_dict)
-			df = pd.DataFrame(summary_list)
-			sns.barplot(ax=ax, x='behavior', y='value', hue='metric', data=df)
-			ax.xaxis.set_label_text("")
-			ax.yaxis.set_label_text("")
-			ax.set_xticklabels(ax.get_xticklabels(), rotation=0, horizontalalignment='center', fontweight='light', fontsize='x-large')
-			ax.set_title('GLM performance (Test Loss = {0:.2f})'.format(foo_test_loss))
+			if FLAGS.glm_available:
+				cc = 0
+				ax = axlist[cc]
+				summary_list = []
+				model_nm = 'glm'
+				foo_test_loss = best_model_dict[model_nm]['Test'][FLAGS.loss]
+				for c in range(num_classes):
+					val_dict = best_model_dict[model_nm]['Test'][class_names[c]]
+					pred_dict = {'behavior': class_names[c], 'metric': 'Precision', 'value': val_dict['Precision']}
+					recall_dict = {'behavior': class_names[c], 'metric': 'Recall', 'value': val_dict['Recall']}
+					summary_list.append(pred_dict)
+					summary_list.append(recall_dict)
+				df = pd.DataFrame(summary_list)
+				sns.barplot(ax=ax, x='behavior', y='value', hue='metric', data=df)
+				ax.xaxis.set_label_text("")
+				ax.yaxis.set_label_text("")
+				ax.set_xticklabels(ax.get_xticklabels(), rotation=0, horizontalalignment='center', fontweight='light', fontsize='x-large')
+				ax.set_title('GLM performance (Test Loss = {0:.2f})'.format(foo_test_loss))
 
 
 			cc = 1
