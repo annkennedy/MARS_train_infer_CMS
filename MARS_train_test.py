@@ -87,7 +87,7 @@ def y_dict_to_array(y, key_order):
     x = 1 - np.sum(z,axis=1)
     return np.hstack((z, x[:,None]))
 
-def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', verbose=0, do_wnd=False, do_cwt=False, require_glm_scores=False):
+def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', verbose=0, do_wnd=False, do_cwt=False, require_glm_scores=True):
     data = []
     labels = []
     Ybig = []
