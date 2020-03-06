@@ -327,7 +327,7 @@ def main():
 			target_sequence = big_target
 			target_inds = torch.tensor(np.argmax(target_sequence, axis=1)).type(inttype)
 			if FLAGS.learn_glm_bias and FLAGS.glm_available:
-				bias_sequence = torch.FloatTensor(big_input_bias[start_ind:end_ind,:]).type(dtype)
+				bias_sequence = torch.FloatTensor(big_input_bias).type(dtype)
 			else:
 				bias_sequence = 0
 
