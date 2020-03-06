@@ -134,6 +134,7 @@ def main():
 
 	# if not using them already, add the glm_scores
 	if FLAGS.glm_available:
+		pdb.set_trace()
 		glm_inds = np.arange(len(names_train)-num_classes, len(names_train))
 		if FLAGS.use_glm_scores and FLAGS.feature_style != 'all':
 			feature_inds = np.hstack((feature_inds, glm_inds))
@@ -181,6 +182,7 @@ def main():
 		glmTrainingClassPredictions = np.argmax(glmTrainingScores, axis=1)
 		glmTestingClassPredictions = np.argmax(glmTestingScores, axis=1)
 
+		pdb.set_trace()
 		glm_names = [names_train[i] for i in glm_inds]
 		label_inds = [class_names.index(g[4:]) for g in glm_names]
 		reorder_glm_inds = [glm_names.index('glm_'+c) for c in class_names]
