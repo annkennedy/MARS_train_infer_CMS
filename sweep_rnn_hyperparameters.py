@@ -77,7 +77,7 @@ def main(output_dir=OUTPUT_DIR, settings=SETTINGS):
             sbatch_str += ' --{0} {1}'.format(key, exp_dict[key])
         sbatch_str += '\n'
 
-        with open(job_file) as fh:
+        with open(job_file, 'w') as fh:
             fh.writelines(sbatch_str)
 
         # run the sbatch job script
