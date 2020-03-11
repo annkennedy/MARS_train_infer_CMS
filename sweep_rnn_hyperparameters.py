@@ -65,8 +65,8 @@ def main(output_dir=OUTPUT_DIR, settings=SETTINGS):
         sbatch_str += "#!/bin/bash\n"
         sbatch_str += "#SBATCH --account=andersonlab\n" # account name
         sbatch_str += "#SBATCH --job-name=%s.job\n" % nametag
-        sbatch_str += "#SBATCH --output=.out/%s.out\n" % nametag
-        sbatch_str += "#SBATCH --error=.out/%s.err\n" % nametag
+        sbatch_str += "#SBATCH --output=%s.out\n" % os.path.join(out_directory,nametag)
+        sbatch_str += "#SBATCH --error=%s.err\n" % os.path.join(out_directory,nametag)
         sbatch_str += "#SBATCH --time=48:00:00\n" # 48hr
         # sbatch_str += "#SBATCH --mem=12000\n"
         sbatch_str += "#SBATCH --gres=gpu:1\n"
