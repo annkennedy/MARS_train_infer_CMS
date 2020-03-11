@@ -35,7 +35,7 @@ def main(output_dir=OUTPUT_DIR, settings=SETTINGS):
 
     # Make top level directories
     mkdir_p(output_dir)
-    job_directory = os.path.join(output_dir,'jobs')
+    job_directory = os.path.join(output_dir,'/.job')
     mkdir_p(job_directory)
 
     var_names = [key for key in settings.keys() if len(settings[key]) > 1]# list of keys that are the experimental variables here
