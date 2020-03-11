@@ -3,7 +3,7 @@ import itertools
 
 # Adapted from https://vsoch.github.io/lessons/sherlock-jobs/
 
-OUTPUT_DIR = '/groups/AndersonLab/CMS273/rnn_outputs'
+OUTPUT_DIR = '/groups/AndersonLab/CMS273/rnn_outputs/hyperparameter_sweep_v0'
 
 SETTINGS = {'num_epochs': [100],
                 'hidden_dim': [5,10,25],
@@ -33,11 +33,10 @@ def mkdir_p(dir):
 
 def main(output_dir=OUTPUT_DIR, settings=SETTINGS):
 
-    job_directory = os.path.join(output_dir,'jobs')
-
     # Make top level directories
-    mkdir_p(job_directory)
     mkdir_p(output_dir)
+    job_directory = os.path.join(output_dir,'jobs')
+    mkdir_p(job_directory)
 
     var_names = [key for key in settings.keys() if len(settings[key]) > 1]# list of keys that are the experimental variables here
     keys, values = zip(*settings.items())
