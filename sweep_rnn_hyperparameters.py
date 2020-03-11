@@ -76,7 +76,7 @@ def main(output_dir=OUTPUT_DIR, settings=SETTINGS):
         sbatch_str += "python $HOME/MARS_train_infer_CMS/test_run.py"
         for key in exp_dict:
             sbatch_str += ' --{0} {1}'.format(key, exp_dict[key])
-        sbatch_str += '\n'
+        sbatch_str += '--output_path %s\n' % run_dir
 
         with open(job_file, 'w') as fh:
             fh.writelines(sbatch_str)
