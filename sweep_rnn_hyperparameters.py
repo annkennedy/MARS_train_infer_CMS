@@ -3,7 +3,7 @@ import itertools
 
 # Adapted from https://vsoch.github.io/lessons/sherlock-jobs/
 
-OUTPUT_DIR = '/groups/AndersonLab/CMS273/rnn_outputs/hyperparameter_sweep_v0'
+OUTPUT_DIR = '/groups/Andersonlab/CMS273/rnn_outputs/hyperparameter_sweep_v0'
 
 SETTINGS = {'num_epochs': [100],
                 'hidden_dim': [5,10,25],
