@@ -61,7 +61,7 @@ def main(output_dir=OUTPUT_DIR, settings=SETTINGS):
         # build sbatch job script and write to file
         sbatch_str = ""
         sbatch_str += "#!/bin/bash\n"
-        sbatch_str += "#SBATCH --A=andersonlab\n" # account name
+        sbatch_str += "#SBATCH --account=andersonlab\n" # account name
         sbatch_str += "#SBATCH --job-name=%s.job\n" % nametag
         sbatch_str += "#SBATCH --output=.out/%s.out\n" % nametag
         sbatch_str += "#SBATCH --error=.out/%s.err\n" % nametag
