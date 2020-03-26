@@ -70,8 +70,6 @@ def main(output_dir=OUTPUT_DIR, settings=SETTINGS):
         sbatch_str += "#SBATCH --time=48:00:00\n" # 48hr
         # sbatch_str += "#SBATCH --mem=12000\n"
         sbatch_str += "#SBATCH --gres=gpu:1\n"
-        sbatch_str += "#SBATCH --mail-type=ALL\n"
-        sbatch_str += "#SBATCH --mail-user=$USER@caltech.edu\n"
         # sbatch_str += "conda activate mars_tf\n"
         sbatch_str += "python $HOME/MARS_train_infer_CMS/test_run.py"
         for key in exp_dict:
