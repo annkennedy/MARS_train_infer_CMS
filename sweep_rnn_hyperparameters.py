@@ -7,7 +7,7 @@ OUTPUT_DIR = '/groups/Andersonlab/CMS273/rnn_outputs/hyperparameter_sweep_v0'
 
 SETTINGS = {'num_epochs': [100],
                 'hidden_dim': [5,10,25,50],
-                'num_rnn_layers': [1,2,3,4],
+                'num_rnn_layers': [1,2,3,4,5],
                 'feature_style': ['keypoints_only','selective','all'],
                 'use_glm_scores': [True, False],
                 'learn_glm_bias': [True, False],
