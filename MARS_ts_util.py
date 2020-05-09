@@ -135,9 +135,13 @@ def apply_windowing(starter_features):
     windows = [3, 11, 21]
     total_feat_num = np.shape(starter_features)[1]
 
+    bar = progressbar.ProgressBar(widgets=['WinFeats ', progressbar.Percentage(), ' -- ',
+                                           progressbar.FormatLabel('Feature %(value)d'), '/',
+                                           progressbar.FormatLabel('%(max)d'), ' [', progressbar.Timer(), '] ',
+                                           progressbar.Bar(), ' (', progressbar.ETA(), ') '], maxval=total_feat_num)
     pool = mp.Pool()
     window_features = np.concatenate(
-        list(pool.imap(compute_win_feat_wrapper, column_iterator(starter_features, windows))), axis=1)
+        list(bar(pool.imap(compute_win_feat_wrapper, column_iterator(starter_features, windows)))), axis=1)
     pool.close()
     pool.join()
     return window_features
