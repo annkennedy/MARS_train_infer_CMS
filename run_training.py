@@ -27,24 +27,24 @@ elif sys.argv[1]=='sniff':
                       'socialgrooming','sniff-body', 'closeinvestigate', 'closeinvestigation', 'investigation']}
 
 elif sys.argv[1]=='mount':
-    behs = {'mount':         ['mount','aggressivemount','intromission','dom_mount']}
+    behs = {'mount':         ['mount','aggressivemount','intromission','dom_mount','attempted_mount']}
 
 elif sys.argv[1]=='attack':
-    behs = {'attack':        ['attack']}
+    behs = {'attack':        ['attack','attempted_attack']}
 else:
     print('I didn''t recognize that behavior, aborting')
 
 
 # this tells the script where our training and test sets are located- you shouldn't need to change anything here.
 video_path = '/groups/Andersonlab/CMS273/'
-train_videos = [os.path.join('TRAIN_lite',v) for v in os.listdir(video_path+'TRAIN_lite')]
-test_videos = [os.path.join('TEST_lite',v) for v in os.listdir(video_path+'TEST_lite')]
+train_videos = [os.path.join('TRAIN',v) for v in os.listdir(video_path+'TRAIN')]
+test_videos = [os.path.join('TEST',v) for v in os.listdir(video_path+'TEST')]
 
 # if you use run_classifier to run a trained classifier on some files, predictions will be dumped here
 save_path = '~/test_output/'
 
 # these are the parameters that define our classifier.
-clf_params = dict(clf_type='xgb', n_trees=1500, feat_type='top', do_cwt=False, do_wnd=False)
+clf_params = dict(clf_type='xgb', n_trees=2000, feat_type='top', do_cwt=False, do_wnd=True)
 
 if (sys.argv[2]=='train') or (sys.argv[2]=='both'):
     mars.train_classifier(behs, video_path, train_videos, clf_params=clf_params, verbose=1)

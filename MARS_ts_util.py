@@ -148,20 +148,21 @@ def apply_windowing(starter_features):
 
 
 def normalize_pixel_data(data,view):
-    if view=='top':fd = [range(40, 49)]
-    elif view=='front': fd=[range(47,67)]
-    elif view =='top_pcf':fd=[range(40,57)]
+    if view == 'top':fd = [range(40, 49)]
+    elif view == 'front': fd = [range(47,67)]
+    elif view == 'top_pcf': fd = [range(40,57)]
     fd = list(flatten(fd))
     md = np.nanmedian(data[:, :, fd], 1, keepdims=True)
     data[:, :, fd] /= md
     return data
+
 
 def remove_pixel_data(data, view):
     if view == 'top': fd = [range(40, 49)]
     elif view == 'front': fd = [range(47,67)]
     elif view == 'top_pcf': fd = [range(40,57)]
     fd = list(flatten(fd))
-    if type(data)==np.ndarray:
+    if type(data) == np.ndarray:
         data = np.delete(data, fd, 1)
     else:
         data = [i for j, i in enumerate(data) if j not in fd]
