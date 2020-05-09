@@ -94,7 +94,7 @@ def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', v
             if (fnmatch.fnmatch(file, '*.txt') and not fnmatch.fnmatch(file,'*OutputLikelihood.txt')) or fnmatch.fnmatch(file, '*.annot'):
                 ann = file
             elif fnmatch.fnmatch(file, '*.seq'):
-                seq = file
+                seq = os.path.join(video_path, v, file)
 
         # we load exact frame timestamps for *.annot files to make sure we get the time->frame conversion correct
         if fnmatch.fnmatch(ann, '*.annot') and seq:
