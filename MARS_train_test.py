@@ -97,11 +97,11 @@ def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', v
                 seq = os.path.join(video_path, v, file)
 
         # we load exact frame timestamps for *.annot files to make sure we get the time->frame conversion correct
-        if fnmatch.fnmatch(ann, '*.annot') and seq:
-            sr = seqIo_reader(seq)
-            timestamps = sr.getTs()
-        else:
-            timestamps = []
+        #if fnmatch.fnmatch(ann, '*.annot') and seq:
+        #    sr = seqIo_reader(seq)
+        #    timestamps = sr.getTs()
+        #else:
+        timestamps = []
 
         for version in ver:
             fstr = os.path.join(video_path, v, vbase + '_raw_feat_%s_v1_%d.npz' % (feat_type, version))
@@ -127,7 +127,7 @@ def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', v
                 # we remove some features that have the same value for both mice (hardcoded for now, shaaame)
                 featToKeep = list(flatten([range(39), range(49, 58), 59, 61, 62, 63, range(113, n_feat)]))
                 d = np.hstack((d[0, :, :], d[1, :, featToKeep].transpose()))
-                names = names + names[featToKeep]
+                names = names + [names[f] for f in featToKeep]
 
                 # for this project, we also remove raw pixel-based features to keep things simple
                 d = mts.remove_pixel_data(d, 'top')
