@@ -41,7 +41,7 @@ train_videos = [os.path.join('TRAIN',v) for v in os.listdir(video_path+'TRAIN')]
 test_videos = [os.path.join('TEST',v) for v in os.listdir(video_path+'TEST')]
 
 # if you use run_classifier to run a trained classifier on some files, predictions will be dumped here
-save_path = '~/test_output/'
+save_path = '/home/kennedya/test_output/'
 
 # these are the parameters that define our classifier.
 clf_params = dict(clf_type='xgb', n_trees=2000, feat_type='top', do_cwt=False, do_wnd=True)
@@ -51,7 +51,7 @@ if (sys.argv[2]=='train') or (sys.argv[2]=='both'):
 
 if (sys.argv[2]=='test') or (sys.argv[2]=='both'):
     mars.test_classifier(behs, video_path, test_videos, clf_params=clf_params, verbose=1)
-    mars.run_classifier(behs, video_path, test_videos, save_path=save_path, clf_params=clf_params, verbose=1)
+    # mars.run_classifier(behs, video_path, test_videos, save_path=save_path, clf_params=clf_params, verbose=1)
 
 if (sys.argv[2]=='runontest'):
     mars.run_classifier(behs, video_path, test_videos, save_path=save_path, clf_params=clf_params, verbose=1)

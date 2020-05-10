@@ -94,14 +94,14 @@ def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', v
             if (fnmatch.fnmatch(file, '*.txt') and not fnmatch.fnmatch(file,'*OutputLikelihood.txt')) or fnmatch.fnmatch(file, '*.annot'):
                 ann = file
             elif fnmatch.fnmatch(file, '*.seq'):
-                seq = file
+                seq = os.path.join(video_path, v, file)
 
         # we load exact frame timestamps for *.annot files to make sure we get the time->frame conversion correct
-        if fnmatch.fnmatch(ann, '*.annot') and seq:
-            sr = seqIo_reader(seq)
-            timestamps = sr.getTs()
-        else:
-            timestamps = []
+        #if fnmatch.fnmatch(ann, '*.annot') and seq:
+        #    sr = seqIo_reader(seq)
+        #    timestamps = sr.getTs()
+        #else:
+        timestamps = []
 
         for version in ver:
             fstr = os.path.join(video_path, v, vbase + '_raw_feat_%s_v1_%d.npz' % (feat_type, version))
@@ -127,7 +127,7 @@ def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', v
                 # we remove some features that have the same value for both mice (hardcoded for now, shaaame)
                 featToKeep = list(flatten([range(39), range(49, 58), 59, 61, 62, 63, range(113, n_feat)]))
                 d = np.hstack((d[0, :, :], d[1, :, featToKeep].transpose()))
-                names = names + names[featToKeep]
+                names = names + [names[f] for f in featToKeep]
 
                 # for this project, we also remove raw pixel-based features to keep things simple
                 d = mts.remove_pixel_data(d, 'top')
@@ -150,7 +150,7 @@ def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', v
                 print('Length mismatch: %s %d %d' % (v, len(beh['behs_frame']), d.shape[0]))
     if not data:
         print('No feature files found')
-        return [], [], [], []
+        return [], [], []
     if (verbose):
         print('all files loaded')
 
@@ -163,15 +163,9 @@ def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', v
     data = np.concatenate(data, axis=0)
     data = mts.clean_data(data)
 
-    # we only really need this for training the classifier, oh well
-    if(verbose):
-        print('fitting preprocessing parameters...')
-    scaler = StandardScaler()
-    scaler.fit(data)
-    data = scaler.transform(data)
     print('done!\n')
 
-    return data, y, scaler, names
+    return data, y, names
 
 
 def assign_labels(all_predicted_probabilities, behaviors_used):
@@ -226,6 +220,13 @@ def do_train(beh_classifier, X_tr, y_tr, savedir, verbose=0):
     # get the labels for the current behavior
     t = time.time()
     y_tr_beh = y_tr[beh_name]
+    
+    # scale the data
+    if(verbose):
+        print('fitting preprocessing parameters...')
+    scaler = StandardScaler()
+    scaler.fit(X_tr)
+    X_tr = scaler.transform(X_tr)
 
     # shuffle data
     X_tr, idx_tr = shuffle_fwd(X_tr)
@@ -260,7 +261,7 @@ def do_train(beh_classifier, X_tr, y_tr, savedir, verbose=0):
         print('fitting HMM smoother...')
     hmm_bin = hmm.MultinomialHMM(n_components=2, algorithm="viterbi", random_state=42, params="", init_params="")
     hmm_bin.startprob_ = np.array([np.sum(y_tr_beh == i) / float(len(y_tr_beh)) for i in range(2)])
-    hmm_bin.transmat_ = mts.ansmat(y_tr_beh, 2)
+    hmm_bin.transmat_ = mts.get_transmat(y_tr_beh, 2)
     hmm_bin.emissionprob_ = mts.get_emissionmat(y_tr_beh, y_pred_class, 2)
     y_proba_hmm = hmm_bin.predict_proba(y_pred_class.reshape((-1, 1)))
     y_pred_hmm = np.argmax(y_proba_hmm, axis=1)
@@ -290,6 +291,7 @@ def do_train(beh_classifier, X_tr, y_tr, savedir, verbose=0):
     precision, recall, f_measure = prf_metrics(y_tr_beh, y_pred_fbs_hmm, beh_name)
 
     beh_classifier.update({'clf': clf,
+                           'scaler': scaler,
                            'precision': precision,
                            'recall': recall,
                            'f_measure': f_measure,
@@ -319,6 +321,7 @@ def do_test(name_classifier, X_te, y_te, verbose=0):
     blur_steps = clf_params['blur'] ** 2
     shift = clf_params['shift']
 
+    # scale the data
     X_te = scaler.transform(X_te)
 
     t = time.time()
@@ -405,18 +408,16 @@ def train_classifier(behs, video_path, train_videos, clf_params={}, ver=[7, 8], 
     sys.stdout = Tee(sys.stdout, f)
 
     print('loading training data')
-    X_tr, y_tr, scaler, features = load_data(video_path, train_videos, behs,
+    X_tr, y_tr, features = load_data(video_path, train_videos, behs,
                                              ver=ver, feat_type=feat_type, verbose=verbose, do_wnd=do_wnd, do_cwt=do_cwt)
-    dill.dump(scaler, open(savedir + 'scaler.dill', 'wb'))
     print('loaded training data: %d X %d - %s ' % (X_tr.shape[0], X_tr.shape[1], list(y_tr.keys())))
 
     # train each classifier in a loop:
     for b,beh_name in enumerate(behs.keys()):
         print('######################### %s #########################' % beh_name)
         beh_classifier = {'beh_name': beh_name,
-                          'beh_id': b +1,
+                          'beh_id': b + 1,
                           'clf': classifier,
-                          'scaler': scaler,
                           'params': clf_params}
         do_train(beh_classifier, X_tr, y_tr, savedir, verbose)
 
@@ -434,15 +435,16 @@ def test_classifier(behs, video_path, test_videos, clf_params={}, ver=[7,8], ver
     feat_type = clf_params['feat_type']
     do_wnd = clf_params['do_wnd']
     do_cwt = clf_params['do_cwt']
+    print clf_params
 
     suff = str(clf_params['n_trees']) if 'n_trees' in clf_params.keys() else ''
     suff = suff + '_wnd/' if do_wnd else suff + '_cwt/' if do_cwt else suff + '/'
 
     classifier_name = feat_type + '_' + clf_type + suff
-    savedir = os.path.join('trained_classifiers',classifier_name)
+    savedir = os.path.join('trained_classifiers','mars_v1_8',classifier_name)
 
     print('loading test data...')
-    X_te_0, y_te, _, _ = load_data(video_path, test_videos, behs,
+    X_te_0, y_te, _ = load_data(video_path, test_videos, behs,
                                   ver=ver, feat_type=feat_type, verbose=verbose, do_wnd=do_wnd, do_cwt=do_cwt)
     print('loaded test data: %d X %d - %s ' % (X_te_0.shape[0], X_te_0.shape[1], list(set(y_te))))
 
@@ -461,6 +463,7 @@ def test_classifier(behs, video_path, test_videos, clf_params={}, ver=[7,8], ver
         print('predicting behavior %s...' % beh_name)
         beh_list.append(beh_name)
         name_classifier = savedir + 'classifier_' + beh_name
+        print('loading classifier %s' % name_classifier)
 
         gt[:,b], proba[:, b, :], preds[:, b], preds_hmm[:, b], \
         proba_hmm[:, b, :], preds_fbs_hmm[:, b], proba_fbs_hmm[:, b, :] = \
@@ -516,7 +519,7 @@ def run_classifier(behs, video_path, test_videos, test_annot, save_path=[], ver=
 
     for vid in test_videos:
         print('processing %s...' % vid)
-        X_te_0, y_te, _, _ = load_data(video_path, [vid], behs,
+        X_te_0, y_te, _ = load_data(video_path, [vid], behs,
                                        ver=ver, feat_type=feat_type, verbose=verbose, do_wnd=do_wnd, do_cwt=do_cwt)
 
         if not y_te:

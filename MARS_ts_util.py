@@ -119,31 +119,15 @@ def get_JAABA_feats(starter_feature, window_size=3):
     return window_feats
 
 
-def column_iterator(array, windows):
-    num_columns = np.shape(array)[1]
-    for i in xrange(num_columns):
-        yield [array[:, i], windows]
-
-
-def compute_win_feat_wrapper(starter_featurePLUSwindows):
-    starter_feature, windows = starter_featurePLUSwindows
-    window_feature = compute_win_feat(starter_feature, windows)
-    return window_feature
-
-
 def apply_windowing(starter_features):
     windows = [3, 11, 21]
     total_feat_num = np.shape(starter_features)[1]
 
-    bar = progressbar.ProgressBar(widgets=['WinFeats ', progressbar.Percentage(), ' -- ',
-                                           progressbar.FormatLabel('Feature %(value)d'), '/',
-                                           progressbar.FormatLabel('%(max)d'), ' [', progressbar.Timer(), '] ',
-                                           progressbar.Bar(), ' (', progressbar.ETA(), ') '], maxval=total_feat_num)
-    pool = mp.Pool()
-    window_features = np.concatenate(
-        list(bar(pool.imap(compute_win_feat_wrapper, column_iterator(starter_features, windows)))), axis=1)
-    pool.close()
-    pool.join()
+    window_features = np.array([])
+    for feat in starter_features.T:
+        temp = compute_win_feat(feat,windows)
+        window_features = np.concatenate((window_features,temp),axis=1) if window_features.size else temp
+    
     return window_features
 
 
