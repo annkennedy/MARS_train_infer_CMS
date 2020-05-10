@@ -260,7 +260,7 @@ def do_train(beh_classifier, X_tr, y_tr, savedir, verbose=0):
         print('fitting HMM smoother...')
     hmm_bin = hmm.MultinomialHMM(n_components=2, algorithm="viterbi", random_state=42, params="", init_params="")
     hmm_bin.startprob_ = np.array([np.sum(y_tr_beh == i) / float(len(y_tr_beh)) for i in range(2)])
-    hmm_bin.transmat_ = mts.ansmat(y_tr_beh, 2)
+    hmm_bin.transmat_ = mts.get_transmat(y_tr_beh, 2)
     hmm_bin.emissionprob_ = mts.get_emissionmat(y_tr_beh, y_pred_class, 2)
     y_proba_hmm = hmm_bin.predict_proba(y_pred_class.reshape((-1, 1)))
     y_pred_hmm = np.argmax(y_proba_hmm, axis=1)
@@ -439,7 +439,7 @@ def test_classifier(behs, video_path, test_videos, clf_params={}, ver=[7,8], ver
     suff = suff + '_wnd/' if do_wnd else suff + '_cwt/' if do_cwt else suff + '/'
 
     classifier_name = feat_type + '_' + clf_type + suff
-    savedir = os.path.join('trained_classifiers',classifier_name)
+    savedir = os.path.join('trained_classifiers','mars_v1_8',classifier_name)
 
     print('loading test data...')
     X_te_0, y_te, _, _ = load_data(video_path, test_videos, behs,
