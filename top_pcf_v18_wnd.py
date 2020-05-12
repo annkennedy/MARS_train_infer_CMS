@@ -1,5 +1,5 @@
 from __future__ import division
-import os,sys
+import os,sys,glob
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.neural_network import MLPClassifier,MLPRegressor
@@ -38,10 +38,12 @@ import json
 from sklearn.utils import shuffle
 from xgboost import XGBClassifier
 from MARS_clf_helpers_orig import *
+import MARS_ts_util as mts
 import pdb
 
 warnings.filterwarnings("ignore")
 plt.ioff()
+behs = ['sniff','mount','attack']
 label2id = {'other': 0,
             'cable_fix': 0,
             'intruder_introduction': 0,
@@ -168,9 +170,29 @@ def load_data_train(video_list, video_path, train_annot, ver):
 
     for v,ann in zip(video_list,train_annot):
         vbase = os.path.basename(v)
-        fstr = os.path.join(video_path,v,'output_v1_%d' % ver, vbase, vbase + '_raw_feat_top_pcf_v1_%d_wnd.npz'% ver)
-        vid = dict(np.load(open(fstr, 'rb')))
-        d=vid['data']
+        vbase2 = '_'.join(vbase.split('_')[:-1])
+        for version in ver:
+            fstr = os.path.join(video_path, v, vbase + '_raw_feat_top_v1_%d.npz' % version)
+            fstr2 = os.path.join(video_path, v, vbase2 + '_raw_feat_top_v1_%d.npz' % version)
+            if os.path.isfile(fstr):
+                vid = dict(np.load(open(fstr, 'rb')))
+            elif os.path.isfile(fstr2):
+                vid = dict(np.load(open(fstr2, 'rb')))
+                
+        names=vid['features']
+        if 'data_smooth' in vid.keys():
+            d = vid['data_smooth']
+            d = mts.clean_data(d)
+            n_feat = d.shape[2]
+
+            # we remove some features that have the same value for both mice (hardcoded for now, shaaame)
+            featToKeep = list(flatten([range(39), range(49, 58), 59, 61, 62, 63, range(113, n_feat)]))
+            d = np.hstack((d[0, :, :], d[1, :, featToKeep].transpose()))
+
+        else: # this is for features created with MARS_feature_extractor (which currently doesn't build data_smooth)
+            d = vid['data']
+        
+        d = mts.apply_windowing(d)
         data.append(d)
         timestamps = []
         if('time' in vid.keys()):
@@ -181,7 +203,7 @@ def load_data_train(video_list, video_path, train_annot, ver):
 
         if len(beh['behs_frame'])!=d.shape[0]:
             print('%s %d %d' % (v, len(beh['behs_frame']), d.shape[0]))
-    names=vid['features']
+    
     y = np.array([]).astype(int)
     for i in labels: y=np.append(y,label2id[i]) if i in label2id else np.append(y,0)
 
@@ -200,7 +222,7 @@ def load_data_train(video_list, video_path, train_annot, ver):
     scaler.fit(data)
     data = scaler.transform(data)
 
-    return data, y, scaler,names
+    return data, y, scaler, names
 
 
 def load_data_test(video_list, video_path, test_annot, scaler,ver):
@@ -210,9 +232,28 @@ def load_data_test(video_list, video_path, test_annot, scaler,ver):
 
     for v, ann in zip(video_list, test_annot):
         vbase = os.path.basename(v)
-        fstr = os.path.join(video_path,v,'output_v1_%d' % ver , vbase ,vbase + '_raw_feat_top_pcf_v1_%d_wnd.npz'% ver)
-        vid = np.load(open(fstr, 'rb'))
-        d=vid['data']
+        vbase2 = '_'.join(vbase.split('_')[:-1])
+        for version in ver:
+            fstr = os.path.join(video_path, v, vbase + '_raw_feat_top_v1_%d.npz' % version)
+            fstr2 = os.path.join(video_path, v, vbase2 + '_raw_feat_top_v1_%d.npz' % version)
+            if os.path.isfile(fstr):
+                vid = dict(np.load(open(fstr, 'rb')))
+            elif os.path.isfile(fstr2):
+                vid = dict(np.load(open(fstr2, 'rb')))
+        
+        if 'data_smooth' in vid.keys():
+            d = vid['data_smooth']
+            d = mts.clean_data(d)
+            n_feat = d.shape[2]
+
+            # we remove some features that have the same value for both mice (hardcoded for now, shaaame)
+            featToKeep = list(flatten([range(39), range(49, 58), 59, 61, 62, 63, range(113, n_feat)]))
+            d = np.hstack((d[0, :, :], d[1, :, featToKeep].transpose()))
+
+        else: # this is for features created with MARS_feature_extractor (which currently doesn't build data_smooth)
+            d = vid['data']
+        
+        d = mts.apply_windowing(d)
         data.append(d)
 
         beh = parse_annotations(os.path.join(video_path, v, ann))
@@ -379,191 +420,189 @@ def assign_labels(all_predicted_probabilities, behaviors_used):
 
     return labels_num
 
-flatten = lambda l: [item for sublist in l for item in sublist]
 
-behs = ['sniffface']
 
 for clf_n in [1]:
 
-	video_path = '/groups/Andersonlab/CMS273/'
-	train_videos = [os.path.join('TRAIN',v) for v in os.listdir(video_path+'TRAIN')]
-	test_videos = [os.path.join('TEST',v) for v in os.listdir(video_path+'TEST')]
-	train_annot = [os.path.join(r,v) for r in train_videos for v in flatten([glob.glob(video_path + r + e) for e in ['/*.annot', '/*.txt']])]
-	test_annot = [os.path.join(r,v) for r in test_videos for v in flatten([glob.glob(video_path + r + e) for e in ['/*.annot', '/*.txt']])]	
-	dataset = 'tm'
-	
-	n_trees=2000
-	suff = str(n_trees) if clf_n==1 else ''
-	classifier, clf_name = choose_classfier(clf_n)
-	annotator='top_pcf_' + dataset + '_' + clf_name + suff  + '_wnd/'
-	folder = 'mars_v1_8'
-	savedir = os.path.join(folder, annotator)
-	if not os.path.exists(savedir):os.makedirs(savedir)
-	print(annotator.upper())
-
-	n_classes = len(behs)
-	kn = np.array([.5, .25, .5])
-	blur = 4;shift = 4;blur_steps = blur ** 2
-	ver=8
-	f = open(savedir + '/log_selection.txt', 'w')
-	original = sys.stdout
-	sys.stdout = Tee(sys.stdout, f)
-
-	print('loading data')
-	X_tr, y_tr, scaler, features = load_data_train(train_videos, video_path, train_annot, ver)
-	y_tr_bin = label_binarize(y_tr, range(n_classes+1))
-	dill.dump(scaler, open(savedir + 'scaler.dill', 'wb'))
-
-	X_te, y_te = load_data_test(test_videos, video_path, test_annot, scaler, ver)
-	y_te_bin = label_binarize(y_te, range(n_classes + 1))
-	print('data loaded')
-	print ('train data %d X %d - %s ' % (X_tr.shape[0], X_tr.shape[1], list(set(y_tr))))
-	print ('test data %d X %d - %s ' % (X_te.shape[0], X_te.shape[1], list(set(y_te))))
-	counter_train = Counter(y_tr)
-	print(counter_train)
-	counter_test = Counter(y_te)
-	print(counter_test)
-
-	gt = np.zeros((len(y_te), n_classes)).astype(int)
-	proba = np.zeros((len(y_te), n_classes, 2))
-	preds = np.zeros((len(y_te), n_classes)).astype(int)
-	preds_hmm = np.zeros((len(y_te), n_classes)).astype(int)
-	proba_hmm = np.zeros((len(y_te), n_classes, 2))
-	preds_fbs_hmm = np.zeros((len(y_te), n_classes)).astype(int)
-	proba_fbs_hmm = np.zeros((len(y_te), n_classes, 2))
-
-
-	for b in range(n_classes):
-		print('######################### %s ###############' % behs[b])
-		#1. train
-		clf=deepcopy(classifier)
-		t = time.time()
-		y_tr_beh = y_tr_bin[:, b + 1]
-		X_tr, idx_tr = shuffle_fwd(X_tr)
-		y_tr_beh = y_tr_beh[idx_tr]
-		clf.fit(X_tr, y_tr_beh)
-		X_tr = shuffle_back(X_tr, idx_tr)
-		y_tr_beh = shuffle_back(y_tr_beh, idx_tr).astype(int)
-
-		# 2. test on all of the data
-		y_pred_proba = np.zeros((len(y_tr_beh), 2))
-		gen = Batch(range(len(y_tr_beh)), lambda x: x % 1e5 == 0, 1e5)
-		for i in gen:
-			inds = list(i)
-			pd_proba_tmp = (clf.predict_proba(X_tr[inds]))
-			y_pred_proba[inds] = pd_proba_tmp
-		y_pred_class = np.argmax(y_pred_proba, axis=1)
-
-		# do hmm
-		hmm_bin = hmm.MultinomialHMM(n_components=2, algorithm="viterbi", random_state=42, params="", init_params="")
-		hmm_bin.startprob_ = np.array([np.sum(y_tr_beh == i) / float(len(y_tr_beh)) for i in range(2)])
-		hmm_bin.transmat_ = get_transmat(y_tr_beh, 2)
-		hmm_bin.emissionprob_ = get_emissionmat(y_tr_beh,y_pred_class, 2)
-		y_proba_hmm = hmm_bin.predict_proba(y_pred_class.reshape((-1, 1)))
-		y_pred_hmm = np.argmax(y_proba_hmm, axis=1)
-
-		# fbs with classes
-		len_y = len(y_tr_bin)
-		z = np.zeros((3, len_y))
-
-		#pdb.set_trace()
-
-		y_fbs = np.r_[y_pred_hmm[range(shift, -1, -1)], y_pred_hmm, y_pred_hmm[range(len_y - 1, len_y - 1 - shift, -1)]]
-		for s in range(blur_steps): y_fbs = signal.convolve(np.r_[y_fbs[0], y_fbs, y_fbs[-1]], kn / kn.sum(), 'valid')
-		z[0, :] = y_fbs[2 * shift + 1:]
-		z[1, :] = y_fbs[:-2 * shift - 1]
-		z[2, :] = y_fbs[shift + 1:-shift]
-		z_mean = np.mean(z, axis=0)
-		y_pred_fbs = binarize(z_mean.reshape((-1, 1)), .5).astype(int).reshape((1, -1))[0]
-		hmm_fbs = copy.deepcopy(hmm_bin)
-		hmm_fbs.emissionprob_ = get_emissionmat(y_tr_beh, y_pred_fbs, 2)
-		y_proba_fbs_hmm = hmm_fbs.predict_proba(y_pred_fbs.reshape((-1, 1)))
-		y_pred_fbs_hmm = np.argmax(y_proba_fbs_hmm, axis=1)
-
-		dt = (time.time() - t)/60.
-		print('training took %.2f mins' % dt)
-		_,_,_ = prf_metrics(y_tr_beh, y_pred_class, behs[b])
-		_,_,_ = prf_metrics(y_tr_beh, y_pred_hmm, behs[b])
-		precision, recall, f_measure = prf_metrics(y_tr_beh, y_pred_fbs_hmm, behs[b])
-
-		beh_classifier = {'beh_name': behs[b],
-						  'beh_id': b + 1,
-						  'scaler': scaler,
-						  'features': features,
-						  'clf': clf,
-						  'precision': precision,
-						  'recall': recall,
-						  'f_measure': f_measure,
-						  'k': kn,
-						  'blur': blur,
-						  'blur_steps': blur_steps,
-						  'shift': shift,
-						  'hmm':hmm_bin,
-						  'hmm_fbs':hmm_fbs
-						  }
-		dill.dump(beh_classifier, open(savedir + 'classifier_' + behs[b], 'wb'))
-
-		t=time.time()
-		len_y = len(y_te_bin)
-		y_te_beh = y_te_bin[:, b + 1]
-		gt[:, b] = y_te_beh
-
-		y_pred_proba = clf.predict_proba(X_te)
-		proba[:, b, :] = y_pred_proba
-		y_pred_class = np.argmax(y_pred_proba, axis=1)
-		preds[:, b] = y_pred_class
-
-		y_proba_hmm = hmm_bin.predict_proba(y_pred_class.reshape((-1, 1)))
-		y_pred_hmm = np.argmax(y_proba_hmm, axis=1)
-		proba_hmm[:, b, :] = y_proba_hmm
-		preds_hmm[:, b] = y_pred_hmm
-
-		z = np.zeros((3, len_y))
-		y_fbs = np.r_[y_pred_class[range(shift, -1, -1)], y_pred_class, y_pred_class[range(len_y - 1, len_y - 1 - shift, -1)]]
-		for s in range(blur_steps): y_fbs = signal.convolve(np.r_[y_fbs[0], y_fbs, y_fbs[-1]], kn / kn.sum(), 'valid')
-		z[0, :] = y_fbs[2 * shift + 1:]
-		z[1, :] = y_fbs[:-2 * shift - 1]
-		z[2, :] = y_fbs[shift + 1:-shift]
-		z_mean = np.mean(z, axis=0)
-		y_pred_fbs = binarize(z_mean.reshape((-1, 1)), .5).astype(int).reshape((1, -1))[0]
-
-		y_proba_fbs_hmm = hmm_fbs.predict_proba(y_pred_fbs.reshape((-1, 1)))
-		y_pred_fbs_hmm = np.argmax(y_proba_fbs_hmm, axis=1)
-		preds_fbs_hmm[:, b] = y_pred_fbs_hmm
-		proba_fbs_hmm[:, b, :] = y_proba_fbs_hmm
-		dt=time.time()-t
-		print('inference took %.2f sec' % dt)
-
-		print('########## pd #########')
-		prf_metrics(y_te_bin[:,b+1], preds[:,b], behs[b])
-		print('########## hmm #########')
-		prf_metrics(y_te_bin[:,b+1], preds_hmm[:,b], behs[b])
-		print('########## fbs hmm #########')
-		prf_metrics(y_te_bin[:,b+1], preds_fbs_hmm[:,b], behs[b])
-
-
-	all_pred = assign_labels(proba,behs)
-	all_pred_hmm = assign_labels(proba_hmm,behs)
-	all_pred_fbs_hmm = assign_labels(proba_fbs_hmm,behs)
-
-	print('all pred')
-	score_info(y_te, all_pred)
-	print('all pred hmm')
-	score_info(y_te, all_pred_hmm)
-	print('all pred fbs hmm')
-	score_info(y_te, all_pred_fbs_hmm)
-
-
-	P = {'0_G':gt,
-		 '0_Gc':y_te,
-		 '1_pd':preds,
-		 '2_pd_hmm':preds_hmm,
-		 '3_pd_fbs_hmm':preds_fbs_hmm,
-		 '4_proba_pd':proba,
-		 '5_proba_pd_hmm':proba_hmm,
-		 '6_proba_pd_hmm_fbs':proba_fbs_hmm,
-		 '7_pred_ass':all_pred,
-		 '8_pred_hmm_ass':all_pred_hmm,
-		 '9_pred_fbs_hmm_ass':all_pred_fbs_hmm
-		 }
-	dill.dump(P, open(savedir + 'results.dill', 'wb'))
+    video_path = '/groups/Andersonlab/CMS273/'
+    train_videos = [os.path.join('TRAIN',v) for v in os.listdir(video_path+'TRAIN')]
+    test_videos = [os.path.join('TEST',v) for v in os.listdir(video_path+'TEST')]
+    train_annot = [os.path.join(r,v) for r in train_videos for v in [item for sublist in [glob.glob(video_path + r + e) for e in ['/*.annot', '/*.txt']] for item in sublist]]
+    test_annot = [os.path.join(r,v) for r in test_videos for v in [item for sublist in [glob.glob(video_path + r + e) for e in ['/*.annot', '/*.txt']] for item in sublist]]	
+    dataset = 'tm'
+    ver=[7,8]
+    
+    n_trees=2000
+    suff = str(n_trees) if clf_n==1 else ''
+    classifier, clf_name = choose_classfier(clf_n)
+    annotator='top_pcf_' + dataset + '_' + clf_name + suff  + '_wnd/'
+    folder = 'mars_v1_8'
+    savedir = os.path.join(folder, annotator)
+    if not os.path.exists(savedir):os.makedirs(savedir)
+    print(annotator.upper())
+    
+    n_classes = len(behs)
+    kn = np.array([.5, .25, .5])
+    blur = 4;shift = 4;blur_steps = blur ** 2
+    f = open(savedir + '/log_selection.txt', 'w')
+    original = sys.stdout
+    sys.stdout = Tee(sys.stdout, f)
+    
+    print('loading data')
+    X_tr, y_tr, scaler, features = load_data_train(train_videos, video_path, train_annot, ver)
+    y_tr_bin = label_binarize(y_tr, range(n_classes+1))
+    dill.dump(scaler, open(savedir + 'scaler.dill', 'wb'))
+    
+    X_te, y_te = load_data_test(test_videos, video_path, test_annot, scaler, ver)
+    y_te_bin = label_binarize(y_te, range(n_classes + 1))
+    print('data loaded')
+    print ('train data %d X %d - %s ' % (X_tr.shape[0], X_tr.shape[1], list(set(y_tr))))
+    print ('test data %d X %d - %s ' % (X_te.shape[0], X_te.shape[1], list(set(y_te))))
+    counter_train = Counter(y_tr)
+    print(counter_train)
+    counter_test = Counter(y_te)
+    print(counter_test)
+    
+    gt = np.zeros((len(y_te), n_classes)).astype(int)
+    proba = np.zeros((len(y_te), n_classes, 2))
+    preds = np.zeros((len(y_te), n_classes)).astype(int)
+    preds_hmm = np.zeros((len(y_te), n_classes)).astype(int)
+    proba_hmm = np.zeros((len(y_te), n_classes, 2))
+    preds_fbs_hmm = np.zeros((len(y_te), n_classes)).astype(int)
+    proba_fbs_hmm = np.zeros((len(y_te), n_classes, 2))
+    
+    
+    for b in range(n_classes):
+    	print('######################### %s ###############' % behs[b])
+    	#1. train
+    	clf=deepcopy(classifier)
+    	t = time.time()
+    	y_tr_beh = y_tr_bin[:, b + 1]
+    	X_tr, idx_tr = shuffle_fwd(X_tr)
+    	y_tr_beh = y_tr_beh[idx_tr]
+    	clf.fit(X_tr, y_tr_beh)
+    	X_tr = shuffle_back(X_tr, idx_tr)
+    	y_tr_beh = shuffle_back(y_tr_beh, idx_tr).astype(int)
+    
+    	# 2. test on all of the data
+    	y_pred_proba = np.zeros((len(y_tr_beh), 2))
+    	gen = Batch(range(len(y_tr_beh)), lambda x: x % 1e5 == 0, 1e5)
+    	for i in gen:
+    		inds = list(i)
+    		pd_proba_tmp = (clf.predict_proba(X_tr[inds]))
+    		y_pred_proba[inds] = pd_proba_tmp
+    	y_pred_class = np.argmax(y_pred_proba, axis=1)
+    
+    	# do hmm
+    	hmm_bin = hmm.MultinomialHMM(n_components=2, algorithm="viterbi", random_state=42, params="", init_params="")
+    	hmm_bin.startprob_ = np.array([np.sum(y_tr_beh == i) / float(len(y_tr_beh)) for i in range(2)])
+    	hmm_bin.transmat_ = get_transmat(y_tr_beh, 2)
+    	hmm_bin.emissionprob_ = get_emissionmat(y_tr_beh,y_pred_class, 2)
+    	y_proba_hmm = hmm_bin.predict_proba(y_pred_class.reshape((-1, 1)))
+    	y_pred_hmm = np.argmax(y_proba_hmm, axis=1)
+    
+    	# fbs with classes
+    	len_y = len(y_tr_bin)
+    	z = np.zeros((3, len_y))
+    
+    	#pdb.set_trace()
+    
+    	y_fbs = np.r_[y_pred_hmm[range(shift, -1, -1)], y_pred_hmm, y_pred_hmm[range(len_y - 1, len_y - 1 - shift, -1)]]
+    	for s in range(blur_steps): y_fbs = signal.convolve(np.r_[y_fbs[0], y_fbs, y_fbs[-1]], kn / kn.sum(), 'valid')
+    	z[0, :] = y_fbs[2 * shift + 1:]
+    	z[1, :] = y_fbs[:-2 * shift - 1]
+    	z[2, :] = y_fbs[shift + 1:-shift]
+    	z_mean = np.mean(z, axis=0)
+    	y_pred_fbs = binarize(z_mean.reshape((-1, 1)), .5).astype(int).reshape((1, -1))[0]
+    	hmm_fbs = copy.deepcopy(hmm_bin)
+    	hmm_fbs.emissionprob_ = get_emissionmat(y_tr_beh, y_pred_fbs, 2)
+    	y_proba_fbs_hmm = hmm_fbs.predict_proba(y_pred_fbs.reshape((-1, 1)))
+    	y_pred_fbs_hmm = np.argmax(y_proba_fbs_hmm, axis=1)
+    
+    	dt = (time.time() - t)/60.
+    	print('training took %.2f mins' % dt)
+    	_,_,_ = prf_metrics(y_tr_beh, y_pred_class, behs[b])
+    	_,_,_ = prf_metrics(y_tr_beh, y_pred_hmm, behs[b])
+    	precision, recall, f_measure = prf_metrics(y_tr_beh, y_pred_fbs_hmm, behs[b])
+    
+    	beh_classifier = {'beh_name': behs[b],
+    					  'beh_id': b + 1,
+    					  'scaler': scaler,
+    					  'features': features,
+    					  'clf': clf,
+    					  'precision': precision,
+    					  'recall': recall,
+    					  'f_measure': f_measure,
+    					  'k': kn,
+    					  'blur': blur,
+    					  'blur_steps': blur_steps,
+    					  'shift': shift,
+    					  'hmm':hmm_bin,
+    					  'hmm_fbs':hmm_fbs
+    					  }
+    	dill.dump(beh_classifier, open(savedir + 'classifier_' + behs[b], 'wb'))
+    
+    	t=time.time()
+    	len_y = len(y_te_bin)
+    	y_te_beh = y_te_bin[:, b + 1]
+    	gt[:, b] = y_te_beh
+    
+    	y_pred_proba = clf.predict_proba(X_te)
+    	proba[:, b, :] = y_pred_proba
+    	y_pred_class = np.argmax(y_pred_proba, axis=1)
+    	preds[:, b] = y_pred_class
+    
+    	y_proba_hmm = hmm_bin.predict_proba(y_pred_class.reshape((-1, 1)))
+    	y_pred_hmm = np.argmax(y_proba_hmm, axis=1)
+    	proba_hmm[:, b, :] = y_proba_hmm
+    	preds_hmm[:, b] = y_pred_hmm
+    
+    	z = np.zeros((3, len_y))
+    	y_fbs = np.r_[y_pred_class[range(shift, -1, -1)], y_pred_class, y_pred_class[range(len_y - 1, len_y - 1 - shift, -1)]]
+    	for s in range(blur_steps): y_fbs = signal.convolve(np.r_[y_fbs[0], y_fbs, y_fbs[-1]], kn / kn.sum(), 'valid')
+    	z[0, :] = y_fbs[2 * shift + 1:]
+    	z[1, :] = y_fbs[:-2 * shift - 1]
+    	z[2, :] = y_fbs[shift + 1:-shift]
+    	z_mean = np.mean(z, axis=0)
+    	y_pred_fbs = binarize(z_mean.reshape((-1, 1)), .5).astype(int).reshape((1, -1))[0]
+    
+    	y_proba_fbs_hmm = hmm_fbs.predict_proba(y_pred_fbs.reshape((-1, 1)))
+    	y_pred_fbs_hmm = np.argmax(y_proba_fbs_hmm, axis=1)
+    	preds_fbs_hmm[:, b] = y_pred_fbs_hmm
+    	proba_fbs_hmm[:, b, :] = y_proba_fbs_hmm
+    	dt=time.time()-t
+    	print('inference took %.2f sec' % dt)
+    
+    	print('########## pd #########')
+    	prf_metrics(y_te_bin[:,b+1], preds[:,b], behs[b])
+    	print('########## hmm #########')
+    	prf_metrics(y_te_bin[:,b+1], preds_hmm[:,b], behs[b])
+    	print('########## fbs hmm #########')
+    	prf_metrics(y_te_bin[:,b+1], preds_fbs_hmm[:,b], behs[b])
+    
+    
+    all_pred = assign_labels(proba,behs)
+    all_pred_hmm = assign_labels(proba_hmm,behs)
+    all_pred_fbs_hmm = assign_labels(proba_fbs_hmm,behs)
+    
+    print('all pred')
+    score_info(y_te, all_pred)
+    print('all pred hmm')
+    score_info(y_te, all_pred_hmm)
+    print('all pred fbs hmm')
+    score_info(y_te, all_pred_fbs_hmm)
+    
+    
+    P = {'0_G':gt,
+    	 '0_Gc':y_te,
+    	 '1_pd':preds,
+    	 '2_pd_hmm':preds_hmm,
+    	 '3_pd_fbs_hmm':preds_fbs_hmm,
+    	 '4_proba_pd':proba,
+    	 '5_proba_pd_hmm':proba_hmm,
+    	 '6_proba_pd_hmm_fbs':proba_fbs_hmm,
+    	 '7_pred_ass':all_pred,
+    	 '8_pred_hmm_ass':all_pred_hmm,
+    	 '9_pred_fbs_hmm_ass':all_pred_fbs_hmm
+    	 }
+    dill.dump(P, open(savedir + 'results.dill', 'wb'))
