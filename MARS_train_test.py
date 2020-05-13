@@ -20,6 +20,9 @@ from seqIo import *
 # plt.ioff()
 
 
+lcat = lambda L: [i for j in L for i in j]
+
+
 def load_default_parameters():
     default_params = {'clf_type': 'xgb',
                       'feat_type': 'top',  # keep this to just top for now
@@ -28,7 +31,8 @@ def load_default_parameters():
                       'blur': 4,
                       'shift': 4,
                       'do_wnd': False,
-                      'do_cwt': False
+                      'do_cwt': False,
+                      'early_stopping': 20 # set to zero to turn off early stopping
                       }
 
     # in addition to these parameters, you can also store classifier-specific parameters in clf_params.
@@ -45,7 +49,19 @@ def choose_classifier(clf_type='xgb', clf_params=dict()):
                    'max_iter': 100000,
                    'alpha': 0.0001}
 
-    XGBdefaults = {'n_estimators': 2000}
+    XGBdefaults = {'n_estimators': 2000,
+                   'eta': 0.1,
+                   'max_depth': 9,
+                   'gamma': 1,
+                   'min_child_weight': 4,
+                   'subsample': 0.8,
+                   'scale_pos_weight': 1,
+                    'colsample_bytree': 0.8,
+                   'max_bin': 256,
+                   'objective': 'binary:logistic',
+                   'tree_method': 'hist',
+                   'silent': 1,
+                   'seed': 33}
 
     # insert defaults for other classifier types here!
 
@@ -54,15 +70,14 @@ def choose_classifier(clf_type='xgb', clf_params=dict()):
             if not k in clf_params.keys():
                 clf_params[k] = MLPdefaults[k]
 
-        hidden_layer_sizes = clf_params['hidden_layer_sizes']
-        learning_rate_init = clf_params['learning_rate_init']
-        learning_rate = clf_params['learning_rate']
-        max_iter = clf_params['max_iter']
-        alpha = clf_params['alpha']
-
-        mlp = MLPClassifier(solver='adam', alpha=alpha, hidden_layer_sizes=hidden_layer_sizes, random_state=1,
-                            learning_rate=learning_rate, max_iter=max_iter,
-                            learning_rate_init=learning_rate_init, verbose=0)
+        mlp = MLPClassifier(solver='adam',
+                            alpha=clf_params['alpha'],
+                            hidden_layer_sizes=clf_params['hidden_layer_sizes'],
+                            learning_rate=clf_params['learning_rate'],
+                            max_iter=clf_params['max_iter'],
+                            learning_rate_init=clf_params['learning_rate_init'],
+                            verbose=0,
+                            random_state=1)
         clf = BaggingClassifier(mlp, max_samples=.1, n_jobs=3, random_state=7, verbose=0)
 
     else:
@@ -73,95 +88,131 @@ def choose_classifier(clf_type='xgb', clf_params=dict()):
             if not k in clf_params.keys():
                 clf_params[k] = XGBdefaults[k]
 
-        n_estimators = clf_params['n_estimators']
-        # there are other XGB parameters but we haven't explored them yet.
-        clf = XGBClassifier(n_estimators = n_estimators, random_state = 1, n_jobs = -1)
+        clf = XGBClassifier(n_estimators=clf_params['n_estimators'],
+                            eta=clf_params['eta'],
+                            max_depth=clf_params['max_depth'],
+                            gamma=clf_params['gamma'],
+                            min_child_weight=clf_params['min_child_weight'],
+                            subsample=clf_params['subsample'],
+                            scale_pos_weight=clf_params['scale_pos_weight'],
+                            colsample_bytree=clf_params['colsample_bytree'],
+                            max_bin=clf_params['max_bin'],
+                            objective=clf_params['objective'],
+                            tree_method=clf_params['tree_method'],
+                            silent=clf_params['silent'],
+                            seed=clf_params['seed'])
 
     return clf
 
 
-def load_data(video_path, video_list, keepLabels, ver=[7, 8], feat_type='top', verbose=0, do_wnd=False, do_cwt=False):
+def quick_loader(filename):
+    temp = np.load(filename)
+    data = temp['data']
+    names = temp['names']
+    labels = temp['labels']
+    return data, names, labels
+
+
+def load_data(video_path, video_list, keep_labels, ver=[7, 8], feat_type='top', verbose=0, do_wnd=False, do_cwt=False, save_after=True):
     data = []
     labels = []
+    feature_savefile = '_'.join(list(set([os.path.dirname(i) for i in video_list]))) + '_' + feat_type
+    feature_savefile = feature_savefile + '_wnd' if do_wnd else feature_savefile + '_cwt' if do_cwt else feature_savefile
+    feature_savefile = feature_savefile + '_v1_' + str(ver[-1])
 
-    for v in video_list:
-        vbase = os.path.basename(v)
-        vbase2 = '_'.join(vbase.split('_')[:-1])
-        vid = []
-        seq = []
+    if os.path.exists(os.path.join(video_path, feature_savefile + '.npz')):
+        if verbose:
+            print('    quick-loading from file')
+        data, names, labels = quick_loader(os.path.join(video_path, feature_savefile + '.npz'))
 
-        for file in os.listdir(os.path.join(video_path, v)):
-            if (fnmatch.fnmatch(file, '*.txt') and not fnmatch.fnmatch(file,'*OutputLikelihood.txt')) or fnmatch.fnmatch(file, '*.annot'):
-                ann = file
-            elif fnmatch.fnmatch(file, '*.seq'):
-                seq = os.path.join(video_path, v, file)
+    else:
+        for v in video_list:
+            vbase = os.path.basename(v)
+            vbase2 = '_'.join(vbase.split('_')[:-1])
+            vid = []
+            seq = []
 
-        # we load exact frame timestamps for *.annot files to make sure we get the time->frame conversion correct
-        #if fnmatch.fnmatch(ann, '*.annot') and seq:
-        #    sr = seqIo_reader(seq)
-        #    timestamps = sr.getTs()
-        #else:
-        timestamps = []
+            for file in os.listdir(os.path.join(video_path, v)):
+                if (fnmatch.fnmatch(file, '*.txt') and not fnmatch.fnmatch(file,'*OutputLikelihood.txt')) or fnmatch.fnmatch(file, '*.annot'):
+                    ann = file
+                elif fnmatch.fnmatch(file, '*.seq'):
+                    seq = os.path.join(video_path, v, file)
 
-        for version in ver:
-            fstr = os.path.join(video_path, v, vbase + '_raw_feat_%s_v1_%d.npz' % (feat_type, version))
-            fstr2 = os.path.join(video_path, v, vbase2 + '_raw_feat_%s_v1_%d.npz' % (feat_type, version))
-            if os.path.isfile(fstr):
-                if verbose:
-                    print('loaded file: ' + os.path.basename(fstr))
-                vid = np.load(open(fstr, 'rb'))
-            elif os.path.isfile(fstr2):
-                if verbose:
-                    print('loaded file: ' + os.path.basename(fstr2))
-                vid = np.load(open(fstr2, 'rb'))
+            # we load exact frame timestamps for *.annot files to make sure we get the time->frame conversion correct
+            #if fnmatch.fnmatch(ann, '*.annot') and seq:
+            #    sr = seqIo_reader(seq)
+            #    timestamps = sr.getTs()
+            #else:
+            timestamps = []
 
-        if not vid:
-            print('Feature file not found for %s' % vbase)
-        else:
-            names = vid['features'].tolist()
-            if 'data_smooth' in vid.keys():
-                d = vid['data_smooth']
+            for version in ver:
+                fstr = os.path.join(video_path, v, vbase + '_raw_feat_%s_v1_%d.npz' % (feat_type, version))
+                fstr2 = os.path.join(video_path, v, vbase2 + '_raw_feat_%s_v1_%d.npz' % (feat_type, version))
+                if os.path.isfile(fstr):
+                    if verbose:
+                        print('loaded file: ' + os.path.basename(fstr))
+                    vid = np.load(open(fstr, 'rb'))
+                elif os.path.isfile(fstr2):
+                    if verbose:
+                        print('loaded file: ' + os.path.basename(fstr2))
+                    vid = np.load(open(fstr2, 'rb'))
+
+            if not vid:
+                print('Feature file not found for %s' % vbase)
+            else:
+                names = vid['features'].tolist()
+                if 'data_smooth' in vid.keys():
+                    d = vid['data_smooth']
+                    d = mts.clean_data(d)
+                    n_feat = d.shape[2]
+
+                    # we remove some features that have the same value for both mice (hardcoded for now, shaaame)
+                    featToKeep = lcat([range(39), range(49, 58), [59, 61, 62, 63], range(113, n_feat)])
+
+                    d = np.hstack((d[0, :, :], d[1, :,featToKeep].transpose()))
+                    names = names + [names[f] for f in featToKeep]
+
+                    # for this project, we also remove raw pixel-based features to keep things simple
+                    d = mts.remove_pixel_data(d, 'top')
+                    names = mts.remove_pixel_data(names, 'top')
+
+                else: # this is for features created with MARS_feature_extractor (which currently doesn't build data_smooth)
+                    d = vid['data']
                 d = mts.clean_data(d)
-                n_feat = d.shape[2]
 
-                # we remove some features that have the same value for both mice (hardcoded for now, shaaame)
-                featToKeep = list(flatten([range(39), range(49, 58), 59, 61, 62, 63, range(113, n_feat)]))
-                d = np.hstack((d[0, :, :], d[1, :, featToKeep].transpose()))
-                names = names + [names[f] for f in featToKeep]
+                if do_wnd:
+                    d = mts.apply_windowing(d)
+                elif do_cwt:
+                    d = mts.apply_wavelet_transform(d)
+                data.append(d)
 
-                # for this project, we also remove raw pixel-based features to keep things simple
-                d = mts.remove_pixel_data(d, 'top')
-                names = mts.remove_pixel_data(names, 'top')
+                beh = map.parse_annotations(os.path.join(video_path, v, ann), timestamps=timestamps)
+                labels += beh['behs_frame']
 
-            else: # this is for features created with MARS_feature_extractor (which currently doesn't build data_smooth)
-                d = vid['data']
-            d = mts.clean_data(d)
+                if len(beh['behs_frame']) != d.shape[0]:
+                    print('Length mismatch: %s %d %d' % (v, len(beh['behs_frame']), d.shape[0]))
+        if not data:
+            print('No feature files found')
+            return [], [], []
+        if (verbose):
+            print('all files loaded')
 
-            if do_wnd:
-                d = mts.apply_windowing(d)
-            elif do_cwt:
-                d = mts.apply_wavelet_transform(d)
-            data.append(d)
+        data = np.concatenate(data, axis=0)
+        data = mts.clean_data(data)
 
-            beh = map.parse_annotations(os.path.join(video_path, v, ann), timestamps=timestamps)
-            labels += beh['behs_frame']
-
-            if len(beh['behs_frame']) != d.shape[0]:
-                print('Length mismatch: %s %d %d' % (v, len(beh['behs_frame']), d.shape[0]))
-    if not data:
-        print('No feature files found')
-        return [], [], []
-    if (verbose):
-        print('all files loaded')
-
+    if verbose:
+            print('    processing annotation files')
     y = {}
-    for label_name in keepLabels.keys():
+    for label_name in keep_labels.keys():
         y_temp = np.array([]).astype(int)
-        for i in labels: y_temp = np.append(y_temp,1) if i in keepLabels[label_name] else np.append(y_temp,0)
+        for i in labels: y_temp = np.append(y_temp,1) if i in keep_labels[label_name] else np.append(y_temp,0)
         y[label_name] = y_temp
 
-    data = np.concatenate(data, axis=0)
-    data = mts.clean_data(data)
+    if save_after and not os.path.exists(os.path.join(video_path, feature_savefile + '.npz')):
+        if verbose:
+            print('    saving processed data for future use')
+        saveData = {'data': data, 'names': names, 'labels': labels}
+        np.savez(os.path.join(video_path, feature_savefile), **saveData)
 
     print('done!\n')
 
@@ -206,7 +257,7 @@ def assign_labels(all_predicted_probabilities, behaviors_used):
     return labels_num
 
 
-def do_train(beh_classifier, X_tr, y_tr, savedir, verbose=0):
+def do_train(beh_classifier, X_tr, y_tr, X_ev, y_ev, savedir, verbose=0):
 
     beh_name = beh_classifier['beh_name']
     clf = beh_classifier['clf']
@@ -227,19 +278,33 @@ def do_train(beh_classifier, X_tr, y_tr, savedir, verbose=0):
     scaler = StandardScaler()
     scaler.fit(X_tr)
     X_tr = scaler.transform(X_tr)
+    if not X_ev==[]:
+        X_ev = scaler.transform(X_ev)
 
     # shuffle data
     X_tr, idx_tr = shuffle_fwd(X_tr)
     y_tr_beh = y_tr_beh[idx_tr]
 
-    #downsample for classifier fitting
-    X_tr_ds = X_tr[::clf_params['downsample_rate'], :]
-    y_tr_ds = y_tr_beh[::clf_params['downsample_rate']]
-
     # fit the classifier!
     if (verbose):
         print('fitting the classifier...')
-    clf.fit(X_tr_ds, y_tr_ds)
+    if not X_ev==[]:
+        eval_set = [(X_ev, y_ev[beh_name])]
+        if clf_params['early_stopping']:
+            if verbose:
+                print('  + early stopping')
+            clf.fit(X_tr[::clf_params['downsample_rate'], :], y_tr_beh[::clf_params['downsample_rate']],
+                    eval_set=eval_set, early_stopping_rounds=clf_params['early_stopping'], verbose=True)
+        else:
+            clf.fit(X_tr[::clf_params['downsample_rate'], :], y_tr_beh[::clf_params['downsample_rate']],
+                    eval_set=eval_set, verbose=True)
+        results = clf.evals_result()
+    else:
+        if verbose:
+            print('  no validation set included')
+        clf.fit(X_tr[::clf_params['downsample_rate'], :], y_tr_beh[::clf_params['downsample_rate']],
+                eval_metric='aucpr', verbose=True)
+        results = []
 
     # shuffle back
     X_tr = shuffle_back(X_tr, idx_tr)
@@ -299,6 +364,7 @@ def do_train(beh_classifier, X_tr, y_tr, savedir, verbose=0):
                            'hmm_fbs': hmm_fbs})
 
     dill.dump(beh_classifier, open(savedir + 'classifier_' + beh_name, 'wb'))
+    return results
 
 
 def do_test(name_classifier, X_te, y_te, verbose=0):
@@ -375,7 +441,7 @@ def do_test(name_classifier, X_te, y_te, verbose=0):
     return gt, proba, preds, preds_hmm, proba_hmm, preds_fbs_hmm, proba_fbs_hmm
 
 
-def train_classifier(behs, video_path, train_videos, clf_params={}, ver=[7, 8], verbose=0):
+def train_classifier(behs, video_path, train_videos, eval_videos=[], clf_params={}, ver=[7, 8], verbose=0):
 
     # unpack user-provided classification parameters, and use default values for those not provided.
     default_params = load_default_parameters()
@@ -408,8 +474,15 @@ def train_classifier(behs, video_path, train_videos, clf_params={}, ver=[7, 8], 
     sys.stdout = Tee(sys.stdout, f)
 
     print('loading training data')
-    X_tr, y_tr, features = load_data(video_path, train_videos, behs,
-                                             ver=ver, feat_type=feat_type, verbose=verbose, do_wnd=do_wnd, do_cwt=do_cwt)
+    X_tr, y_tr, features = load_data(video_path, train_videos, behs, ver=ver, feat_type=feat_type,
+                                     verbose=verbose,do_wnd=do_wnd, do_cwt=do_cwt)
+
+    if eval_videos:
+        X_ev, y_ev, features = load_data(video_path, eval_videos, behs, ver=ver, feat_type=feat_type,
+                                         verbose=verbose,do_wnd=do_wnd, do_cwt=do_cwt)
+    else:
+        X_ev = []
+        y_ev = []
     print('loaded training data: %d X %d - %s ' % (X_tr.shape[0], X_tr.shape[1], list(y_tr.keys())))
 
     # train each classifier in a loop:
@@ -419,9 +492,10 @@ def train_classifier(behs, video_path, train_videos, clf_params={}, ver=[7, 8], 
                           'beh_id': b + 1,
                           'clf': classifier,
                           'params': clf_params}
-        do_train(beh_classifier, X_tr, y_tr, savedir, verbose)
+        results = do_train(beh_classifier, X_tr, y_tr, X_ev, y_ev, savedir, verbose)
 
     print('done training!')
+    return results
 
 
 def test_classifier(behs, video_path, test_videos, clf_params={}, ver=[7,8], verbose=0):
@@ -435,7 +509,7 @@ def test_classifier(behs, video_path, test_videos, clf_params={}, ver=[7,8], ver
     feat_type = clf_params['feat_type']
     do_wnd = clf_params['do_wnd']
     do_cwt = clf_params['do_cwt']
-    print clf_params
+    print(clf_params)
 
     suff = str(clf_params['n_trees']) if 'n_trees' in clf_params.keys() else ''
     suff = suff + '_wnd/' if do_wnd else suff + '_cwt/' if do_cwt else suff + '/'

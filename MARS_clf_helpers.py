@@ -48,7 +48,7 @@ def prf_metrics(y_tr_beh, pd_class, beh):
 
 
 def shuffle_fwd(L):
-    idx = range(L.shape[0])
+    idx = list(range(L.shape[0]))
     random.shuffle(idx)
     return L[idx], idx
 
