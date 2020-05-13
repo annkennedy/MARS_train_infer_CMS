@@ -481,6 +481,7 @@ def train_classifier(behs, video_path, train_videos, eval_videos=[], clf_params=
                                      verbose=verbose,do_wnd=do_wnd, do_cwt=do_cwt)
 
     if eval_videos:
+        print('loading validation data')
         X_ev, y_ev, features = load_data(video_path, eval_videos, behs, ver=ver, feat_type=feat_type,
                                          verbose=verbose,do_wnd=do_wnd, do_cwt=do_cwt)
     else:
