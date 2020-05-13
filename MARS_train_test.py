@@ -12,6 +12,7 @@ import copy
 from sklearn.preprocessing import StandardScaler
 from xgboost import XGBClassifier
 import MARS_annotation_parsers as map
+import gc
 import MARS_ts_util as mts
 from MARS_clf_helpers import *
 from seqIo import *
@@ -286,6 +287,7 @@ def do_train(beh_classifier, X_tr, y_tr, X_ev, y_ev, savedir, verbose=0):
     y_tr_beh = y_tr_beh[idx_tr]
 
     # fit the classifier!
+    gc.collect()
     if (verbose):
         print('fitting the classifier...')
     if not X_ev==[]:
@@ -294,10 +296,11 @@ def do_train(beh_classifier, X_tr, y_tr, X_ev, y_ev, savedir, verbose=0):
             if verbose:
                 print('  + early stopping')
             clf.fit(X_tr[::clf_params['downsample_rate'], :], y_tr_beh[::clf_params['downsample_rate']],
-                    eval_set=eval_set, early_stopping_rounds=clf_params['early_stopping'], verbose=True)
+                    eval_set=eval_set, eval_metric='auprc',
+                    early_stopping_rounds=clf_params['early_stopping'], verbose=True)
         else:
             clf.fit(X_tr[::clf_params['downsample_rate'], :], y_tr_beh[::clf_params['downsample_rate']],
-                    eval_set=eval_set, verbose=True)
+                    eval_set=eval_set, eval_metric='auprc', verbose=True)
         results = clf.evals_result()
     else:
         if verbose:
