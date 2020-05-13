@@ -296,11 +296,11 @@ def do_train(beh_classifier, X_tr, y_tr, X_ev, y_ev, savedir, verbose=0):
             if verbose:
                 print('  + early stopping')
             clf.fit(X_tr[::clf_params['downsample_rate'], :], y_tr_beh[::clf_params['downsample_rate']],
-                    eval_set=eval_set, eval_metric='auprc',
+                    eval_set=eval_set, eval_metric='aucpr',
                     early_stopping_rounds=clf_params['early_stopping'], verbose=True)
         else:
             clf.fit(X_tr[::clf_params['downsample_rate'], :], y_tr_beh[::clf_params['downsample_rate']],
-                    eval_set=eval_set, eval_metric='auprc', verbose=True)
+                    eval_set=eval_set, eval_metric='aucpr', verbose=True)
         results = clf.evals_result()
     else:
         if verbose:
