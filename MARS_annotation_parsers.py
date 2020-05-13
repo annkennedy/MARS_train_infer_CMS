@@ -264,7 +264,8 @@ def parse_annot(filename, use_channels = [], timestamps = []):
                                              chosen_behavior_list]
                     behFlag = 1
                 else:
-                    changed_behavior_list = [anno[0] if anno[1] == '' else anno[1] for anno in zip(changed_behavior_list,chosen_behavior_list)]
+                    droplist = ['','BALBC_male','BALBC_female']
+                    changed_behavior_list = [anno[0] if anno[1] in droplist else anno[1] for anno in zip(changed_behavior_list,chosen_behavior_list)]
             else:
                 print('Did not find a channel' + ch + 'in file ' + filename)
                 exit()
