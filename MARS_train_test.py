@@ -289,9 +289,13 @@ def do_train(beh_classifier, X_tr, y_tr, X_ev, y_ev, savedir, verbose=0):
     # fit the classifier!
     gc.collect()
     if (verbose):
-        print('fitting the classifier...')
+        print('fitting clf for %s' % beh_name)
+        print('    training set: %d positive / %d total (%d %%)' % (
+            sum(y_tr_beh), len(y_tr_beh), 100*sum(y_tr_beh)/len(y_tr_beh)))
     if not X_ev==[]:
         eval_set = [(X_ev, y_ev[beh_name])]
+        print('    eval set: %d positive / %d total (%d %%)' % (
+            sum(y_ev[beh_name]), len(y_ev[beh_name]), 100 * sum(y_ev[beh_name]) / len(y_ev[beh_name])))
         if clf_params['early_stopping']:
             if verbose:
                 print('  + early stopping')
