@@ -38,6 +38,7 @@ else:
 # this tells the script where our training and test sets are located- you shouldn't need to change anything here.
 video_path = '/groups/Andersonlab/CMS273/'
 train_videos = [os.path.join('TRAIN',v) for v in os.listdir(video_path+'TRAIN')]
+eval_videos = [os.path.join('EVAL',v) for v in os.listdir(video_path+'EVAL')]
 test_videos = [os.path.join('TEST',v) for v in os.listdir(video_path+'TEST')]
 
 # if you use run_classifier to run a trained classifier on some files, predictions will be dumped here
@@ -47,7 +48,7 @@ save_path = '/home/kennedya/test_output/'
 clf_params = dict(clf_type='xgb', n_trees=2000, feat_type='top', do_cwt=False, do_wnd=True)
 
 if (sys.argv[2]=='train') or (sys.argv[2]=='both'):
-    mars.train_classifier(behs, video_path, train_videos, clf_params=clf_params, verbose=1)
+    mars.train_classifier(behs, video_path, train_videos, eval_videos, clf_params=clf_params, verbose=1)
 
 if (sys.argv[2]=='test') or (sys.argv[2]=='both'):
     mars.test_classifier(behs, video_path, test_videos, clf_params=clf_params, verbose=1)
