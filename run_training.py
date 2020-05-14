@@ -12,7 +12,11 @@ parser.add_argument('--earlystopping', dest='earlystopping', default=10,
                     
 parser.add_argument('--dowavelet', dest='do_cwt', action='store_true',
                     default=False,
-                    help='use wavelet transform on features')
+                    help='use wavelet transform on features (default: false)')
+                    
+parser.add_argument('--testonly', dest='testonly', action='store_true',
+                    default=False,
+                    help='skip classifier training (default: false)')
 
 parser.add_argument('--behavior', dest='behavior', default='attack',
                     help = 'behavior to train (default: attack)')
