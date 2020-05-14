@@ -24,6 +24,26 @@ from seqIo import *
 lcat = lambda L: [i for j in L for i in j]
 
 
+def get_beh_dict(behavior):
+    behs = {'sniff_face':       ['sniffface', 'snifface', 'sniff-face', 'sniff_face', 'head-investigation','facesniffing'],
+            'sniff_genital':    ['sniffurogenital','sniffgenitals','sniff_genitals','sniff-genital','sniff_genital',
+                                    'anogen-investigation'],
+            'sniff_body':       ['sniff_body','sniffbody','bodysniffing','body-investigation','socialgrooming',
+                                    'sniff-body','closeinvestigate','closeinvestigation','investigation'],
+            'sniff':            ['sniffface', 'snifface', 'sniff-face', 'sniff_face', 'head-investigation','facesniffing',
+                                    'sniffurogenital','sniffgenitals','sniff_genitals','sniff-genital','sniff_genital',
+                                    'anogen-investigation','sniff_body', 'sniffbody', 'bodysniffing', 'body-investigation',
+                                    'socialgrooming','sniff-body', 'closeinvestigate', 'closeinvestigation', 'investigation'],
+            'mount':            ['mount','aggressivemount','intromission','dom_mount','attempted_mount'],
+            'attack':           ['attack','attempted_attack']}
+    
+    if behavior in behs.keys():
+        return {behavior: behs[behavior]}
+    else:
+        print('I didn''t recognize that behavior, aborting')
+        return {}
+
+
 def load_default_parameters():
     default_params = {'clf_type': 'xgb',
                       'feat_type': 'top',  # keep this to just top for now
@@ -520,6 +540,7 @@ def test_classifier(behs, video_path, test_videos, clf_params={}, ver=[7,8], ver
     print(clf_params)
 
     suff = str(clf_params['n_trees']) if 'n_trees' in clf_params.keys() else ''
+    suff = suff + '_es' + clf_params['early_stopping'] if 'early_stopping' in clf_params.keys() else suff
     suff = suff + '_wnd/' if do_wnd else suff + '_cwt/' if do_cwt else suff + '/'
 
     classifier_name = feat_type + '_' + clf_type + suff

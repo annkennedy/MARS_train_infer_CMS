@@ -1,39 +1,25 @@
-import os
+import os, sys
 import MARS_train_test as mars
-import sys
+import argparse
 
+parser = argparse.ArgumentParser()
 
-# The input to run_training is the name of the behavior we want to train a classifier for (right now I'm assuming
-# you're going to train one classifier at a time.) However, before we call the training code, we have to change this
-# string into a dictionary called "behs". This is because our annotators sometimes use different names or spellings
-# when labeling a behavior. The purpose of this dictionary is to define what labels we want to lump together as positive
-# examples for our classifier to learn from. (It could eventually be packaged into a function but oh well.)
+parser.add_argument('ntrees', type=int,
+                    help='number of XGBoost trees to use (default: 1000')
 
-if sys.argv[1]=='sniff_face':
-    behs = {'sniff_face':    ['sniffface', 'snifface', 'sniff-face', 'sniff_face', 'head-investigation','facesniffing']}
+parser.add_argument('--earlystopping', dest='earlystopping', default=10,
+                    help='number of early stopping steps (default: 10)')
+                    
+parser.add_argument('--dowavelet', dest='do_cwt', action='store_true',
+                    default=False,
+                    help='use wavelet transform on features')
 
-elif sys.argv[1]=='sniff_genital':
-    behs = {'sniff_genital': ['sniffurogenital','sniffgenitals','sniff_genitals','sniff-genital','sniff_genital',
-                              'anogen-investigation']}
+parser.add_argument('--behavior', dest='behavior', default='attack',
+                    help = 'behavior to train (default: attack)')
 
-elif sys.argv[1]=='sniff_body':
-    behs = {'sniff_body':    ['sniff_body','sniffbody','bodysniffing','body-investigation','socialgrooming',
-                          'sniff-body','closeinvestigate','closeinvestigation','investigation']}
+args = parser.parse_args()
 
-elif sys.argv[1]=='sniff':
-    behs = {'sniff': ['sniffface', 'snifface', 'sniff-face', 'sniff_face', 'head-investigation','facesniffing',
-                      'sniffurogenital','sniffgenitals','sniff_genitals','sniff-genital','sniff_genital',
-                      'anogen-investigation','sniff_body', 'sniffbody', 'bodysniffing', 'body-investigation',
-                      'socialgrooming','sniff-body', 'closeinvestigate', 'closeinvestigation', 'investigation']}
-
-elif sys.argv[1]=='mount':
-    behs = {'mount':         ['mount','aggressivemount','intromission','dom_mount','attempted_mount']}
-
-elif sys.argv[1]=='attack':
-    behs = {'attack':        ['attack','attempted_attack']}
-else:
-    print('I didn''t recognize that behavior, aborting')
-
+beh = mars.get_beh_dict(args.behavior)
 
 # this tells the script where our training and test sets are located- you shouldn't need to change anything here.
 video_path = '/groups/Andersonlab/CMS273/'
@@ -41,18 +27,12 @@ train_videos = [os.path.join('TRAIN',v) for v in os.listdir(video_path+'TRAIN')]
 eval_videos = [os.path.join('EVAL',v) for v in os.listdir(video_path+'EVAL')]
 test_videos = [os.path.join('TEST',v) for v in os.listdir(video_path+'TEST')]
 
-# if you use run_classifier to run a trained classifier on some files, predictions will be dumped here
-save_path = '/home/kennedya/test_output/'
 
 # these are the parameters that define our classifier.
-clf_params = dict(clf_type='xgb', n_trees=2000, feat_type='top', do_cwt=False, do_wnd=True)
+do_wnd = True if not args.do_cwt else False
+clf_params = dict(clf_type='xgb', n_trees=args.ntrees, feat_type='top', do_cwt=args.do_cwt, do_wnd=do_wnd, early_stopping=args.earlystopping)
 
-if (sys.argv[2]=='train') or (sys.argv[2]=='both'):
+if not args.testonly:
     mars.train_classifier(behs, video_path, train_videos, eval_videos, clf_params=clf_params, verbose=1)
 
-if (sys.argv[2]=='test') or (sys.argv[2]=='both'):
-    mars.test_classifier(behs, video_path, test_videos, clf_params=clf_params, verbose=1)
-    # mars.run_classifier(behs, video_path, test_videos, save_path=save_path, clf_params=clf_params, verbose=1)
-
-if (sys.argv[2]=='runontest'):
-    mars.run_classifier(behs, video_path, test_videos, save_path=save_path, clf_params=clf_params, verbose=1)
+mars.test_classifier(behs, video_path, test_videos, clf_params=clf_params, verbose=1)
