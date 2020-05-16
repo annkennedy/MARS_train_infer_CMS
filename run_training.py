@@ -4,11 +4,15 @@ import argparse
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('ntrees', type=int,
-                    help='number of XGBoost trees to use (default: 1000')
 
 parser.add_argument('--earlystopping', dest='earlystopping', default=10,
                     help='number of early stopping steps (default: 10)')
+
+parser.add_argument('--maxdepth', dest='max_depth', default=9,
+                    help='max tree depth (default: 9)')
+                    
+parser.add_argument('--minchild', dest='minchild', default=4,
+                    help='min_child_weight (default: 4)')
                     
 parser.add_argument('--dowavelet', dest='do_cwt', action='store_true',
                     default=False,
@@ -23,7 +27,7 @@ parser.add_argument('--behavior', dest='behavior', default='attack',
 
 args = parser.parse_args()
 
-beh = mars.get_beh_dict(args.behavior)
+behs = mars.get_beh_dict(args.behavior)
 
 # this tells the script where our training and test sets are located- you shouldn't need to change anything here.
 video_path = '/groups/Andersonlab/CMS273/'
@@ -34,7 +38,9 @@ test_videos = [os.path.join('TEST',v) for v in os.listdir(video_path+'TEST')]
 
 # these are the parameters that define our classifier.
 do_wnd = True if not args.do_cwt else False
-clf_params = dict(clf_type='xgb', n_trees=args.ntrees, feat_type='top', do_cwt=args.do_cwt, do_wnd=do_wnd, early_stopping=args.earlystopping)
+clf_params = dict(clf_type='xgb', feat_type='top', do_cwt=args.do_cwt, do_wnd=do_wnd, 
+                  early_stopping=args.earlystopping, max_depth=args.max_depth,
+                  min_child_weight=args.minchild)
 
 if not args.testonly:
     mars.train_classifier(behs, video_path, train_videos, eval_videos, clf_params=clf_params, verbose=1)

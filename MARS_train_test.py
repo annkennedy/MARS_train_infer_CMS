@@ -62,15 +62,34 @@ def load_default_parameters():
     return default_params
 
 
-def choose_classifier(clf_type='xgb', clf_params=dict()):
+def clf_suffix(clf_type='xgb', clf_params=dict()):
+    
+    if clf_type.lower() == 'mlp':
+        suff = '_layers' + '-'.join(clf_params['hidden_layer_sizes']) if 'hidden_layer_sizes' in clf_params.keys() else ''
+        suff = suff + '/'
+    else:
+        if not clf_type.lower() == 'xgb':
+            print('Unrecognized classifier type %s, defaulting to XGBoost!' % clf_type)
 
+        suff = '_es' + clf_params['early_stopping'] if 'early_stopping' in clf_params.keys() else ''
+        suff = suff + '_depth' + clf_params['max_depth'] if 'max_depth' in clf_params.keys() else suff
+        suff = suff + '_child' + clf_params['min_child_weight'] if 'min_child_weight' in clf_params.keys() else suff
+        suff = suff + '_wnd' if clf_params['do_wnd'] else suff
+        suff = suff + '_cwt' if clf_params['do_cwt'] else suff
+        suff = suff + '/'
+    
+    return suff
+
+
+def choose_classifier(clf_type='xgb', clf_params=dict()):
+    
     MLPdefaults = {'hidden_layer_sizes': (256, 512),
                    'learning_rate_init': 0.001,
                    'learning_rate': 'adaptive',
                    'max_iter': 100000,
                    'alpha': 0.0001}
 
-    XGBdefaults = {'n_estimators': 2000,
+    XGBdefaults = {'n_estimators': 3000,
                    'eta': 0.1,
                    'max_depth': 9,
                    'gamma': 1,
@@ -122,6 +141,7 @@ def choose_classifier(clf_type='xgb', clf_params=dict()):
                             tree_method=clf_params['tree_method'],
                             silent=clf_params['silent'],
                             seed=clf_params['seed'])
+                            
 
     return clf
 
@@ -488,8 +508,7 @@ def train_classifier(behs, video_path, train_videos, eval_videos=[], clf_params=
 
     # now create the classifier and give it an informative name:
     classifier = choose_classifier(clf_type, clf_params)
-    suff = str(clf_params['n_trees']) if 'n_trees' in clf_params.keys() else  ''
-    suff = suff + '_wnd/' if do_wnd else suff + '_cwt/' if do_cwt else suff + '/'
+    suff = clf_suffix(clf_type, clf_params)
     classifier_name = feat_type + '_' + clf_type + suff
     folder = 'mars_v1_' + str(ver[-1])
     savedir = os.path.join('trained_classifiers',folder, classifier_name)
@@ -539,10 +558,7 @@ def test_classifier(behs, video_path, test_videos, clf_params={}, ver=[7,8], ver
     do_cwt = clf_params['do_cwt']
     print(clf_params)
 
-    suff = str(clf_params['n_trees']) if 'n_trees' in clf_params.keys() else ''
-    suff = suff + '_es' + clf_params['early_stopping'] if 'early_stopping' in clf_params.keys() else suff
-    suff = suff + '_wnd/' if do_wnd else suff + '_cwt/' if do_cwt else suff + '/'
-
+    suff = clf_suffix(clf_type, clf_params)
     classifier_name = feat_type + '_' + clf_type + suff
     savedir = os.path.join('trained_classifiers','mars_v1_8',classifier_name)
 
@@ -614,9 +630,7 @@ def run_classifier(behs, video_path, test_videos, test_annot, save_path=[], ver=
     do_wnd = clf_params['do_wnd']
     do_cwt = clf_params['do_cwt']
 
-    suff = str(clf_params['n_trees']) if 'n_trees' in clf_params.keys() else ''
-    suff = suff + '_wnd/' if do_wnd else suff + '_cwt/' if do_cwt else suff + '/'
-
+    suff = clf_suffix(clf_type, clf_params)
     classifier_name = feat_type + '_' + clf_type + suff
     savedir = os.path.join('trained_classifiers', classifier_name)
 
