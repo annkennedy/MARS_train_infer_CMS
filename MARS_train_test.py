@@ -89,19 +89,19 @@ def choose_classifier(clf_type='xgb', clf_params=dict()):
                    'max_iter': 100000,
                    'alpha': 0.0001}
 
-    XGBdefaults = {'n_estimators': 3000,
-                   'eta': 0.1,
-                   'max_depth': 9,
-                   'gamma': 1,
-                   'min_child_weight': 4,
-                   'subsample': 0.8,
-                   'scale_pos_weight': 1,
+    XGBdefaults = {'n_estimators': 2000,
+                  'eta': 0.1,
+                  'max_depth': 9,
+                  'gamma': 1,
+                  'min_child_weight': 4,
+                  'subsample': 0.8,
+                  'scale_pos_weight': 1,
                     'colsample_bytree': 0.8,
-                   'max_bin': 256,
-                   'objective': 'binary:logistic',
-                   'tree_method': 'hist',
-                   'silent': 1,
-                   'seed': 33}
+                  'max_bin': 256,
+                  'objective': 'binary:logistic',
+                  'tree_method': 'hist',
+                  'silent': 1,
+                  'seed': 33}
 
     # insert defaults for other classifier types here!
 
@@ -129,19 +129,19 @@ def choose_classifier(clf_type='xgb', clf_params=dict()):
                 clf_params[k] = XGBdefaults[k]
 
         clf = XGBClassifier(n_estimators=clf_params['n_estimators'],
-                            eta=clf_params['eta'],
-                            max_depth=clf_params['max_depth'],
-                            gamma=clf_params['gamma'],
-                            min_child_weight=clf_params['min_child_weight'],
-                            subsample=clf_params['subsample'],
-                            scale_pos_weight=clf_params['scale_pos_weight'],
-                            colsample_bytree=clf_params['colsample_bytree'],
-                            max_bin=clf_params['max_bin'],
-                            objective=clf_params['objective'],
-                            tree_method=clf_params['tree_method'],
-                            silent=clf_params['silent'],
-                            seed=clf_params['seed'])
-                            
+                            # eta=clf_params['eta'],
+                            # max_depth=clf_params['max_depth'],
+                            # gamma=clf_params['gamma'],
+                            # min_child_weight=clf_params['min_child_weight'],
+                            # subsample=clf_params['subsample'],
+                            # scale_pos_weight=clf_params['scale_pos_weight'],
+                            # colsample_bytree=clf_params['colsample_bytree'],
+                            # max_bin=clf_params['max_bin'],
+                            # objective=clf_params['objective'],
+                            # tree_method=clf_params['tree_method'],
+                            # silent=clf_params['silent'],
+                            # seed=clf_params['seed']
+                            )
 
     return clf
 
@@ -340,7 +340,7 @@ def do_train(beh_classifier, X_tr, y_tr, X_ev, y_ev, savedir, verbose=0):
             if verbose:
                 print('  + early stopping')
             clf.fit(X_tr[::clf_params['downsample_rate'], :], y_tr_beh[::clf_params['downsample_rate']],
-                    eval_set=eval_set, eval_metric='aucpr',
+                    eval_set=eval_set, #eval_metric='aucpr',
                     early_stopping_rounds=clf_params['early_stopping'], verbose=True)
         else:
             clf.fit(X_tr[::clf_params['downsample_rate'], :], y_tr_beh[::clf_params['downsample_rate']],

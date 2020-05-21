@@ -33,16 +33,16 @@ def clean_data(data):
 
 def apply_wavelet_transform(starter_features):
     wave1 = pywt.ContinuousWavelet('gaus8')
-    wave2 = pywt.ContinuousWavelet('gaus7')
-    scales = [1, 3, 10, 30, 90, 270, 600]
+    # wave2 = pywt.ContinuousWavelet('gaus7')
+    scales = [1, 3, 5, 10, 30, 90, 270]
     dims = np.shape(starter_features)
     nfeat = dims[1]
 
-    transformed_features = np.zeros((dims[0], nfeat + nfeat * len(scales)*2))
+    transformed_features = np.zeros((dims[0], nfeat + nfeat * len(scales)))#*2))
     transformed_features[:, range(0, nfeat)] = starter_features
 
     for f, feat in enumerate(starter_features.swapaxes(0, 1)):
-        for w, wavelet in enumerate([wave1, wave2]):
+        for w, wavelet in enumerate([wave1]): #, wave2]):
             for i, s in enumerate(scales):
                 a, _ = pywt.cwt(medfilt(feat), s, wavelet)
                 a[0][:s] = 0
