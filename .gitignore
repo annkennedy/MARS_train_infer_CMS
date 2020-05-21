@@ -133,3 +133,6 @@ md files for documentation/
 
 # directory for trained classifiers
 trained_classifiers/
+
+# pycharm
+.idea/
