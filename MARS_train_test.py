@@ -14,6 +14,7 @@ from xgboost import XGBClassifier
 import MARS_annotation_parsers as map
 import gc
 import MARS_ts_util as mts
+import joblib
 from MARS_clf_helpers import *
 from seqIo import *
 
@@ -22,6 +23,7 @@ from seqIo import *
 
 
 lcat = lambda L: [i for j in L for i in j]
+flatten = lambda *n: (e for a in n for e in (flatten(*a) if isinstance(a, (tuple, list)) else (a,)))
 
 
 def get_beh_dict(behavior):
@@ -71,9 +73,9 @@ def clf_suffix(clf_type='xgb', clf_params=dict()):
         if not clf_type.lower() == 'xgb':
             print('Unrecognized classifier type %s, defaulting to XGBoost!' % clf_type)
 
-        suff = '_es' + clf_params['early_stopping'] if 'early_stopping' in clf_params.keys() else ''
-        suff = suff + '_depth' + clf_params['max_depth'] if 'max_depth' in clf_params.keys() else suff
-        suff = suff + '_child' + clf_params['min_child_weight'] if 'min_child_weight' in clf_params.keys() else suff
+        suff = '_es' + str(clf_params['early_stopping']) if 'early_stopping' in clf_params.keys() else ''
+        suff = suff + '_depth' + str(clf_params['max_depth']) if 'max_depth' in clf_params.keys() else suff
+        suff = suff + '_child' + str(clf_params['min_child_weight']) if 'min_child_weight' in clf_params.keys() else suff
         suff = suff + '_wnd' if clf_params['do_wnd'] else suff
         suff = suff + '_cwt' if clf_params['do_cwt'] else suff
         suff = suff + '/'
@@ -190,13 +192,13 @@ def load_data(video_path, video_list, keep_labels, ver=[7, 8], feat_type='top', 
                 fstr = os.path.join(video_path, v, vbase + '_raw_feat_%s_v1_%d.npz' % (feat_type, version))
                 fstr2 = os.path.join(video_path, v, vbase2 + '_raw_feat_%s_v1_%d.npz' % (feat_type, version))
                 if os.path.isfile(fstr):
+                    vid = np.load(open(fstr, 'rb'))
                     if verbose:
                         print('loaded file: ' + os.path.basename(fstr))
-                    vid = np.load(open(fstr, 'rb'))
                 elif os.path.isfile(fstr2):
+                    vid = np.load(open(fstr2, 'rb'))
                     if verbose:
                         print('loaded file: ' + os.path.basename(fstr2))
-                    vid = np.load(open(fstr2, 'rb'))
 
             if not vid:
                 print('Feature file not found for %s' % vbase)
@@ -210,10 +212,13 @@ def load_data(video_path, video_list, keep_labels, ver=[7, 8], feat_type='top', 
                     n_feat = d.shape[2]
 
                     # we remove some features that have the same value for both mice (hardcoded for now, shaaame)
-                    featToKeep = lcat([range(39), range(49, 58), [59, 61, 62, 63], range(113, n_feat)])
+                    # featToKeep = lcat([range(39), range(49, 58), [59, 61, 62, 63], range(113, n_feat)])
+                    featToKeep = list(flatten([range(39), range(42, 58), 59, 61, 62, 63, range(113, n_feat)]))
 
                     d = np.hstack((d[0, :, :], d[1, :,featToKeep].transpose()))
-                    names = names + [names[f] for f in featToKeep]
+                    names_r = np.array(['1_'+ f for f in names])
+                    names_i = np.array(['2_'+ names[f] for f in featToKeep])
+                    names = np.concatenate((names_r,names_i)).tolist()
 
                     # for this project, we also remove raw pixel-based features to keep things simple
                     # d = mts.remove_pixel_data(d, 'top')
@@ -225,6 +230,15 @@ def load_data(video_path, video_list, keep_labels, ver=[7, 8], feat_type='top', 
 
                 if do_wnd:
                     d = mts.apply_windowing(d)
+                    feats_wnd_names=[]
+                    fn = ['min','max','mean','std']
+                    win=[3,11,21]
+                    for f in names:
+                        for w in win:
+                            for x in fn:
+                                feats_wnd_names.append('_'.join([f,str(w),x]))
+                    names = feats_wnd_names
+                    
                 elif do_cwt:
                     d = mts.apply_wavelet_transform(d)
                 data.append(d)
@@ -241,7 +255,6 @@ def load_data(video_path, video_list, keep_labels, ver=[7, 8], feat_type='top', 
             print('all files loaded')
 
         data = np.concatenate(data, axis=0)
-        data = mts.clean_data(data)
 
     if verbose:
             print('    processing annotation files')
@@ -418,25 +431,30 @@ def do_train(beh_classifier, X_tr, y_tr, X_ev, y_ev, savedir, verbose=0):
 
 def do_test(name_classifier, X_te, y_te, verbose=0):
 
-    with open(name_classifier, 'rb') as fp:
-        classifier = dill.load(fp)
+    name_classifier = '/home/kennedya/MARS_train_infer_CMS/trained_classifiers/mars_v1_8/top_xgb500_wnd/classifier_attack'
+    classifier = joblib.load(name_classifier)
+    # with open(name_classifier, 'rb') as fp:
+    #     classifier = dill.load(fp)
 
     # unpack the classifier
     beh_name = classifier['beh_name']
-    scaler = classifier['scaler']
-    clf = classifier['clf']
+    # scaler = classifier['scaler']
+    clf = classifier['bag_clf']  if 'bag_clf' in classifier.keys() else classifier['clf']
 
-    # unpack the smoothers
-    hmm_bin = classifier['hmm_bin']
+    # unpack the smoother
     hmm_fbs = classifier['hmm_fbs']
 
     # unpack the smoothing parameters
-    clf_params = classifier['params']
-    kn = clf_params['smk_kn']
-    blur_steps = clf_params['blur'] ** 2
-    shift = clf_params['shift']
+    kn = classifier['k']
+    blur_steps = classifier['blur_steps']
+    shift = classifier['shift']
+    # clf_params = classifier['params']
+    # kn = clf_params['smk_kn']
+    # blur_steps = clf_params['blur'] ** 2
+    # shift = clf_params['shift']
 
     # scale the data
+    scaler = joblib.load('/home/kennedya/MARS_train_infer_CMS/trained_classifiers/mars_v1_8/top_xgb500_wnd/scaler')
     X_te = scaler.transform(X_te)
 
     t = time.time()
@@ -452,26 +470,10 @@ def do_test(name_classifier, X_te, y_te, verbose=0):
     y_pred_class = np.argmax(y_pred_proba, axis=1)
     preds = y_pred_class
 
-    # HMM smoothing:
-    if (verbose):
-        print('HMM smoothing')
-    y_proba_hmm = hmm_bin.predict_proba(y_pred_class.reshape((-1, 1)))
-    y_pred_hmm = np.argmax(y_proba_hmm, axis=1)
-    proba_hmm = y_proba_hmm
-    preds_hmm = y_pred_hmm
-
     # forward-backward smoothing:
     if (verbose):
         print('forward-backward smoothing')
-    z = np.zeros((3, len_y))
-    y_fbs = np.r_[
-        y_pred_class[range(shift, -1, -1)], y_pred_class, y_pred_class[range(len_y - 1, len_y - 1 - shift, -1)]]
-    for s in range(blur_steps): y_fbs = signal.convolve(np.r_[y_fbs[0], y_fbs, y_fbs[-1]], kn / kn.sum(), 'valid')
-    z[0, :] = y_fbs[2 * shift + 1:]
-    z[1, :] = y_fbs[:-2 * shift - 1]
-    z[2, :] = y_fbs[shift + 1:-shift]
-    z_mean = np.mean(z, axis=0)
-    y_pred_fbs = binarize(z_mean.reshape((-1, 1)), .5).astype(int).reshape((1, -1))[0]
+    y_pred_fbs = mts.do_fbs(y_pred_class=y_pred_class, kn=kn, blur=4, blur_steps=blur_steps, shift=shift)
 
     y_proba_fbs_hmm = hmm_fbs.predict_proba(y_pred_fbs.reshape((-1, 1)))
     y_pred_fbs_hmm = np.argmax(y_proba_fbs_hmm, axis=1)
@@ -482,12 +484,10 @@ def do_test(name_classifier, X_te, y_te, verbose=0):
 
     print('########## pd ##########')
     prf_metrics(y_te[beh_name], preds, beh_name)
-    print('########## hmm ##########')
-    prf_metrics(y_te[beh_name], preds_hmm, beh_name)
-    print('########## fbs hmm ##########')
+    print('########## fbs ##########')
     prf_metrics(y_te[beh_name], preds_fbs_hmm, beh_name)
 
-    return gt, proba, preds, preds_hmm, proba_hmm, preds_fbs_hmm, proba_fbs_hmm
+    return gt, proba, preds, preds_fbs_hmm, proba_fbs_hmm
 
 
 def train_classifier(behs, video_path, train_videos, eval_videos=[], clf_params={}, ver=[7, 8], verbose=0):
@@ -565,17 +565,16 @@ def test_classifier(behs, video_path, test_videos, clf_params={}, ver=[7,8], ver
     savedir = os.path.join('trained_classifiers','mars_v1_8',classifier_name)
 
     print('loading test data...')
-    X_te_0, y_te, _ = load_data(video_path, test_videos, behs,
+    X_te_0, y_te, names = load_data(video_path, test_videos, behs,
                                   ver=ver, feat_type=feat_type, verbose=verbose, do_wnd=do_wnd, do_cwt=do_cwt)
     print('loaded test data: %d X %d - %s ' % (X_te_0.shape[0], X_te_0.shape[1], list(set(y_te))))
+    print(names)
 
     T = len(list(y_te.values())[0])
     n_classes = len(behs.keys())
     gt = np.zeros((T, n_classes)).astype(int)
     proba = np.zeros((T, n_classes, 2))
     preds = np.zeros((T, n_classes)).astype(int)
-    preds_hmm = np.zeros((T, n_classes)).astype(int)
-    proba_hmm = np.zeros((T, n_classes, 2))
     preds_fbs_hmm = np.zeros((T, n_classes)).astype(int)
     proba_fbs_hmm = np.zeros((T, n_classes, 2))
     beh_list = list()
@@ -586,31 +585,24 @@ def test_classifier(behs, video_path, test_videos, clf_params={}, ver=[7,8], ver
         name_classifier = savedir + 'classifier_' + beh_name
         print('loading classifier %s' % name_classifier)
 
-        gt[:,b], proba[:, b, :], preds[:, b], preds_hmm[:, b], \
-        proba_hmm[:, b, :], preds_fbs_hmm[:, b], proba_fbs_hmm[:, b, :] = \
+        gt[:,b], proba[:, b, :], preds[:, b], preds_fbs_hmm[:, b], proba_fbs_hmm[:, b, :] = \
             do_test(name_classifier, X_te_0, y_te, verbose)
 
     all_pred = assign_labels(proba, beh_list)
-    all_pred_hmm = assign_labels(proba_hmm, beh_list)
     all_pred_fbs_hmm = assign_labels(proba_fbs_hmm, beh_list)
 
     print('Raw predictions:')
     score_info(gt, all_pred)
-    print('Predictions after HMM smoothing:')
-    score_info(gt, all_pred_hmm)
     print('Predictions after HMM and forward-backward smoothing:')
     score_info(gt, all_pred_fbs_hmm)
     P = {'0_G': gt,
          '0_Gc': y_te,
          '1_pd': preds,
-         '2_pd_hmm': preds_hmm,
-         '3_pd_fbs_hmm': preds_fbs_hmm,
-         '4_proba_pd': proba,
-         '5_proba_pd_hmm': proba_hmm,
-         '6_proba_pd_hmm_fbs': proba_fbs_hmm,
-         '7_pred_ass': all_pred,
-         '8_pred_hmm_ass': all_pred_hmm,
-         '9_pred_fbs_hmm_ass': all_pred_fbs_hmm
+         '2_pd_fbs_hmm': preds_fbs_hmm,
+         '3_proba_pd': proba,
+         '4_proba_pd_hmm_fbs': proba_fbs_hmm,
+         '5_pred_ass': all_pred,
+         '6_pred_fbs_hmm_ass': all_pred_fbs_hmm
          }
     dill.dump(P, open(savedir + 'results.dill', 'wb'))
 

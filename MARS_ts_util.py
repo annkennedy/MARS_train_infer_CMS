@@ -22,12 +22,12 @@ flatten = lambda *n: (e for a in n for e in (flatten(*a) if isinstance(a, (tuple
 def clean_data(data):
     """Eliminate the NaN and Inf values by taking the last value that was neither."""
     idx = np.where(np.isnan(data) | np.isinf(data))
-    if idx:
+    if idx[0].size>0:
         for j in range(len(idx[0])):
             if idx[0][j] == 0:
-                data[idx[0][j], idx[1][j]] = 0.
+                data[idx[0][j], idx[1][j],idx[2][j]] = 0.
             else:
-                data[idx[0][j], idx[1][j]] = data[idx[0][j] - 1, idx[1][j]]
+                data[idx[0][j], idx[1][j],idx[2][j]] = data[idx[0][j] - 1, idx[1][j],idx[2][j]]
     return data
 
 
@@ -68,7 +68,7 @@ def compute_win_feat(starter_feature, windows=[3, 11, 21]):
     # Number of additional features should simply be (the number of windows)*(the number of fxns) --in our case, 12.
     num_feats = num_windows * num_fxns
 
-    # Create a placeholder for the features.
+    # Create a placeholder for the features.d
     features = np.zeros((number_of_frames, num_feats))
 
     # Loop over the window sizes
@@ -77,7 +77,7 @@ def compute_win_feat(starter_feature, windows=[3, 11, 21]):
         # Get the space where we should put the newly computed features.
         left_endpt = window_num * num_fxns
         right_endpt = window_num * num_fxns + num_fxns
-
+        
         # Compute the features and store them.
         features[:, left_endpt:right_endpt] = get_JAABA_feats(starter_feature=starter_feature, window_size=w)
 
@@ -93,20 +93,20 @@ def get_JAABA_feats(starter_feature, window_size=3):
     r = int(radius)
     row_placeholder = np.zeros(window_size)
     column_placeholder = np.zeros(number_of_frames)
-
+    
     row_placeholder[:r] = np.flip(starter_feature[1:(radius + 1)], 0)
     row_placeholder[r:] = starter_feature[:(radius + 1)]
-
+    
     column_placeholder[:-radius] = starter_feature[radius:]
     column_placeholder[-radius:] = np.flip(starter_feature[-(radius + 1):-1], 0)
-
+    
     # Create the matrix that we're going to compute on.
     window_matrix = scipy.linalg.toeplitz(column_placeholder, row_placeholder)
-
+    
     # Set the functions.
     fxns = [np.min, np.max, np.mean, np.std]
     num_fxns = len(fxns)
-
+    
     # Make a placeholder for the window features we're computing.
     window_feats = np.zeros((number_of_frames, num_fxns))
 
@@ -124,9 +124,12 @@ def apply_windowing(starter_features):
     total_feat_num = np.shape(starter_features)[1]
 
     window_features = np.array([])
-    for feat in starter_features.T:
-        temp = compute_win_feat(feat,windows)
-        window_features = np.concatenate((window_features,temp),axis=1) if window_features.size else temp
+    for i in range(total_feat_num):
+        feat_temp = compute_win_feat(starter_features[:, i], windows)
+        if i==0:
+            window_features = feat_temp
+        else:
+            window_features = np.concatenate((window_features,feat_temp), axis=1)
     
     return window_features
 
@@ -137,6 +140,7 @@ def normalize_pixel_data(data,view):
     elif view == 'top_pcf': fd = [range(40,57)]
     fd = list(flatten(fd))
     md = np.nanmedian(data[:, :, fd], 1, keepdims=True)
+    print(md)
     data[:, :, fd] /= md
     return data
 
@@ -196,17 +200,11 @@ def do_fbs(y_pred_class, kn, blur, blur_steps, shift):
     mirrored_end = range(len_y - 1, len_y - 1 - shift, -1)  # Creates indices that go (-1, -2, ..., -shift)
 
     # Now we extend the predictions to have a mirrored portion on the front and back.
-    extended_predictions = np.r_[
-        y_pred_class[mirrored_start],
-        y_pred_class,
-        y_pred_class[mirrored_end]
-    ]
+    extended_predictions = np.r_[ y_pred_class[mirrored_start], y_pred_class, y_pred_class[mirrored_end] ]
 
     # Do our blurring.
     for s in range(blur_steps):
-        extended_predictions = signal.convolve(np.r_[extended_predictions[0],
-                                                     extended_predictions,
-                                                     extended_predictions[-1]],
+        extended_predictions = signal.convolve(np.r_[extended_predictions[0], extended_predictions, extended_predictions[-1]],
                                                kn / kn.sum(),  # The kernel we are convolving.
                                                'valid')  # Only use valid conformations of the filter.
         # Note: this will leave us with 2 fewer items in our signal each iteration, so we append on both sides.
@@ -216,9 +214,7 @@ def do_fbs(y_pred_class, kn, blur, blur_steps, shift):
     z[2, :] = extended_predictions[shift + 1:-shift]
 
     z_mean = np.mean(z, axis=0)  # Average the blurred and shifted signals together.
-
     y_pred_fbs = binarize(z_mean.reshape((-1, 1)), .5).astype(int).reshape((1, -1))[0]  # Anything that has a signal strength over 0.5, is taken to be positive.
-
     return y_pred_fbs
 
 
