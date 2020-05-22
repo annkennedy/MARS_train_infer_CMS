@@ -140,7 +140,6 @@ def normalize_pixel_data(data,view):
     elif view == 'top_pcf': fd = [range(40,57)]
     fd = list(flatten(fd))
     md = np.nanmedian(data[:, :, fd], 1, keepdims=True)
-    print(md)
     data[:, :, fd] /= md
     return data
 
