@@ -55,7 +55,8 @@ def load_default_parameters():
                       'shift': 4,
                       'do_wnd': False,
                       'do_cwt': False,
-                      'early_stopping': 20 # set to zero to turn off early stopping
+                      'early_stopping': 20, # set to zero to turn off early stopping
+                      'clf_path_hardcoded': ''
                       }
 
     # in addition to these parameters, you can also store classifier-specific parameters in clf_params.
@@ -226,7 +227,7 @@ def load_data(video_path, video_list, keep_labels, ver=[7, 8], feat_type='top', 
 
                 else: # this is for features created with MARS_feature_extractor (which currently doesn't build data_smooth)
                     d = vid['data']
-                d = mts.clean_data(d)
+                    d = mts.clean_data(d)
 
                 if do_wnd:
                     d = mts.apply_windowing(d)
@@ -431,10 +432,7 @@ def do_train(beh_classifier, X_tr, y_tr, X_ev, y_ev, savedir, verbose=0):
 
 def do_test(name_classifier, X_te, y_te, verbose=0):
 
-    name_classifier = '/home/kennedya/MARS_train_infer_CMS/trained_classifiers/mars_v1_8/top_xgb500_wnd/classifier_attack'
     classifier = joblib.load(name_classifier)
-    # with open(name_classifier, 'rb') as fp:
-    #     classifier = dill.load(fp)
 
     # unpack the classifier
     beh_name = classifier['beh_name']
@@ -454,7 +452,7 @@ def do_test(name_classifier, X_te, y_te, verbose=0):
     # shift = clf_params['shift']
 
     # scale the data
-    scaler = joblib.load('/home/kennedya/MARS_train_infer_CMS/trained_classifiers/mars_v1_8/top_xgb500_wnd/scaler')
+    scaler = joblib.load(os.path.join(os.path.dirname(name_classifier),'scaler'))
     X_te = scaler.transform(X_te)
 
     t = time.time()
@@ -560,15 +558,18 @@ def test_classifier(behs, video_path, test_videos, clf_params={}, ver=[7,8], ver
     do_cwt = clf_params['do_cwt']
     print(clf_params)
 
-    suff = clf_suffix(clf_type, clf_params)
-    classifier_name = feat_type + '_' + clf_type + suff
-    savedir = os.path.join('trained_classifiers','mars_v1_8',classifier_name)
+    if clf_params['clf_path_hardcoded'] is not '':
+        savedir = clf_params['clf_path_hardcoded']
+    else:
+        suff = clf_suffix(clf_type, clf_params)
+        classifier_name = feat_type + '_' + clf_type + suff
+        savedir = os.path.join('trained_classifiers','mars_v1_8',classifier_name)
 
     print('loading test data...')
     X_te_0, y_te, names = load_data(video_path, test_videos, behs,
                                   ver=ver, feat_type=feat_type, verbose=verbose, do_wnd=do_wnd, do_cwt=do_cwt)
     print('loaded test data: %d X %d - %s ' % (X_te_0.shape[0], X_te_0.shape[1], list(set(y_te))))
-    print(names)
+    
 
     T = len(list(y_te.values())[0])
     n_classes = len(behs.keys())
@@ -583,6 +584,8 @@ def test_classifier(behs, video_path, test_videos, clf_params={}, ver=[7,8], ver
         print('predicting behavior %s...' % beh_name)
         beh_list.append(beh_name)
         name_classifier = savedir + 'classifier_' + beh_name
+            
+            
         print('loading classifier %s' % name_classifier)
 
         gt[:,b], proba[:, b, :], preds[:, b], preds_fbs_hmm[:, b], proba_fbs_hmm[:, b, :] = \

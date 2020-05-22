@@ -25,12 +25,18 @@ parser.add_argument('--testonly', dest='testonly', action='store_true',
 parser.add_argument('--behavior', dest='behavior', default='attack',
                     help = 'behavior to train (default: attack)')
 
+parser.add_argument('--clf', dest='clf_pth', default='',
+                    help = 'path to a specific classifier to test (otherwise will determine from other arguments)')
+
+parser.add_argument('--videos', dest='vid_pth', default='.',
+                    help = 'path to directory containing folders TRAIN_ORIG and TEST_ORIG with training/test data (default: current directory)')
+
 args = parser.parse_args()
 
 behs = mars.get_beh_dict(args.behavior)
 
 # this tells the script where our training and test sets are located- you shouldn't need to change anything here.
-video_path = '/groups/Andersonlab/CMS273/'
+video_path = args.vid_pth
 train_videos = [os.path.join('TRAIN_ORIG',v) for v in os.listdir(video_path+'TRAIN_ORIG')]
 eval_videos = [os.path.join('TEST_ORIG',v) for v in os.listdir(video_path+'TEST_ORIG')]
 test_videos = [os.path.join('TEST_ORIG',v) for v in os.listdir(video_path+'TEST_ORIG')]
@@ -40,7 +46,7 @@ test_videos = [os.path.join('TEST_ORIG',v) for v in os.listdir(video_path+'TEST_
 do_wnd = True if not args.do_cwt else False
 clf_params = dict(clf_type='xgb', feat_type='top', do_cwt=args.do_cwt, do_wnd=do_wnd, 
                   early_stopping=args.earlystopping, max_depth=args.max_depth,
-                  min_child_weight=args.minchild)
+                  min_child_weight=args.minchild, clf_path_hardcoded=args.clf_pth)
 
 if not args.testonly:
     mars.train_classifier(behs, video_path, train_videos, eval_videos, clf_params=clf_params, verbose=1)
