@@ -8,11 +8,11 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--earlystopping', dest='earlystopping', default=10,
                     help='number of early stopping steps (default: 10)')
 
-parser.add_argument('--maxdepth', dest='max_depth', default=9,
-                    help='max tree depth (default: 9)')
+parser.add_argument('--maxdepth', dest='max_depth', default=3,
+                    help='max tree depth (default: 3)')
                     
-parser.add_argument('--minchild', dest='minchild', default=4,
-                    help='min_child_weight (default: 4)')
+parser.add_argument('--minchild', dest='minchild', default=1,
+                    help='min_child_weight (default: 1)')
                     
 parser.add_argument('--dowavelet', dest='do_cwt', action='store_true',
                     default=False,
