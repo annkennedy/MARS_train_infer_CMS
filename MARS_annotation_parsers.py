@@ -1,5 +1,6 @@
 from __future__ import division
 import numpy as np
+import pdb
 
 
 def parse_annotations(fid, use_channels=[], timestamps=[]):
@@ -102,22 +103,27 @@ def parse_txt(f_ann):
         idx = 1
     type_frame = []
     action_frame = []
+    action_bouts = {'Ch1':{}}
     len_bnd = []
 
     for i in range(len(bnds[idx])):
         numf = bnds[idx][i,1] - bnds[idx][i,0]+1
         len_bnd.append(numf)
         action_frame.extend([actions[idx][i]] * numf)
+        if actions[idx][i] not in action_bouts['Ch1'].keys():
+            action_bouts['Ch1'][actions[idx][i]] = [bnds[idx][i,:]]
+        else:
+            action_bouts['Ch1'][actions[idx][i]] = np.vstack((action_bouts['Ch1'][actions[idx][i]],bnds[idx][i,:]))
         type_frame.extend([types[idx][i]] * numf)
 
     ann_dict = {
-        'keys': keys,
+        'keys': ['Ch1'],
         'behs': names,
         'nstrm': nStrm1,
         'nFrames': nFrames,
         'behs_se': bnds,
         'behs_dur': len_bnd,
-        'behs_bout': actions,
+        'behs_bout': action_bouts,
         'behs_frame': action_frame
     }
 
@@ -138,6 +144,7 @@ def parse_annot(filename, use_channels = [], timestamps = []):
     keys = []
 
     channel_dict = {}
+    bouts_dict = {}
     with open(filename, 'r') as annot_file:
         line = annot_file.readline().rstrip()
         # Parse the movie files
@@ -176,6 +183,7 @@ def parse_annot(filename, use_channels = [], timestamps = []):
         while line != '':
             key = line
             keys.append(key)
+            bouts_dict[key] = {}
             line = annot_file.readline().\
                 rstrip()
 
@@ -200,6 +208,7 @@ def parse_annot(filename, use_channels = [], timestamps = []):
             channel_names.append(channel_name)
 
             behaviors_framewise = [''] * end_frame
+            behaviors_boutwise = {}
             line = annot_file.readline().rstrip()
             while '---' not in line:
 
@@ -218,6 +227,7 @@ def parse_annot(filename, use_channels = [], timestamps = []):
                 # Now we're parsing the behaviors
                 if '>' in line:
                     curr_behavior = line[1:]
+                    behaviors_boutwise[curr_behavior] = np.empty((0,2),int)
                     # Skip table headers.
                     annot_file.readline()
                     line = annot_file.readline().rstrip()
@@ -230,7 +240,7 @@ def parse_annot(filename, use_channels = [], timestamps = []):
                 if all('.' not in s for s in start_stop_duration):
                     bout_start    = max((int(start_stop_duration[0]),start_frame-1))
                     bout_end      = min((int(start_stop_duration[1]),end_frame-start_frame+1))
-                    bout_duration = int(start_stop_duration[2])
+                    bout_duration = int(start_stop_duration[2])-1
                 elif len(timestamps) != 0:
                     bout_start    = max((np.where(np.append(timestamps,np.inf) >= float(start_stop_duration[0]))[0][0],start_frame-1))
                     bout_end      = min((np.where(np.append(timestamps,np.inf) >= float(start_stop_duration[1]))[0][0],end_frame-start_frame+1))
@@ -241,41 +251,26 @@ def parse_annot(filename, use_channels = [], timestamps = []):
                     bout_duration = bout_end-bout_start
 
                 # Store it in the appropriate place.
+                behaviors_boutwise[curr_behavior] = np.vstack((behaviors_boutwise[curr_behavior],np.array([bout_start, bout_end],int)))
                 if(bout_start <= end_frame):
                     behaviors_framewise[(bout_start-1):bout_end] = [curr_behavior] * (bout_duration+1)
 
                 line = annot_file.readline()
 
                 # end of channel
+            behaviors_boutwise['other'] = np.array([[1, end_frame]],int)
             channel_dict[channel_name] = behaviors_framewise
-
-        # for now, we'll just merge kept channels together, in order listed. this can cause behaviors happening in
-        # earlier channels to be masked by other behaviors in later channels, so down the line we should change this to
-        # do a smart-merge based on what behaviors we're looking for
-        behFlag = 0
-        changed_behavior_list = ['other'] * end_frame
-        if not use_channels:
-            use_channels = channel_names
-        for ch in use_channels:
-            if (ch in channel_dict):
-                chosen_behavior_list = channel_dict[ch]
-                if not(behFlag):
-                    changed_behavior_list = [annotated_behavior if annotated_behavior != '' else 'other' for annotated_behavior in
-                                             chosen_behavior_list]
-                    behFlag = 1
-                else:
-                    droplist = ['','BALBC_male','BALBC_female']
-                    changed_behavior_list = [anno[0] if anno[1] in droplist else anno[1] for anno in zip(changed_behavior_list,chosen_behavior_list)]
-            else:
-                print('Did not find a channel' + ch + 'in file ' + filename)
-                exit()
+            bouts_dict[channel_name] = behaviors_boutwise
+        
+        changed_behavior_list = merge_channels(bouts_dict, use_channels, end_frame)
 
         ann_dict = {
             'keys': keys,
             'behs': behaviors,
             'nstrm': len(channel_names),
             'nFrames': end_frame,
-            'behs_frame': changed_behavior_list
+            'behs_frame': changed_behavior_list,
+            'behs_bout': bouts_dict
         }
         return ann_dict
 
@@ -291,6 +286,41 @@ def rast_to_bouts(oneHot, names): # a helper for the bento save format
         bouts[name]['start'] = start
         bouts[name]['stop'] = stop
     return bouts
+
+
+def bouts_to_rast(channel, n_frames, names):
+    rast = ['other']*n_frames
+    for beh in names:
+        if beh in channel.keys():
+            for row in channel[beh]:
+                rowFix = [min(row[0],n_frames), min(row[1],n_frames-1)]
+                rast[rowFix[0]:rowFix[1]+1] = [beh]*(rowFix[1]-rowFix[0]+1)
+    return rast
+
+
+
+def merge_channels(channel_dict, use_channels, end_frame, target_behaviors = []):
+    # for now, we'll just merge kept channels together, in order listed. this can cause behaviors happening in
+    # earlier channels to be masked by other behaviors in later channels. Specify behaviors to keep in
+    # target_behaviors if desired, otherwise it merges everything.
+    behFlag = 0
+    changed_behavior_list = ['other'] * end_frame
+    if not use_channels:
+        use_channels = channel_dict.keys()
+    for ch in use_channels:
+        if (ch in channel_dict):
+            keep_behaviors = target_behaviors if not target_behaviors==[] else filter(lambda x: x != '', set(channel_dict[ch].keys()))
+            chosen_behavior_list = bouts_to_rast(channel_dict[ch], end_frame, keep_behaviors)
+            if not(behFlag):
+                changed_behavior_list = [annotated_behavior if annotated_behavior in keep_behaviors else 'other' for annotated_behavior in
+                                         chosen_behavior_list]
+                behFlag = 1
+            else:
+                changed_behavior_list = [anno[0] if anno[1] not in keep_behaviors else anno[1] for anno in zip(changed_behavior_list,chosen_behavior_list)]
+        else:
+            print('Did not find a channel' + ch)
+            exit()
+    return changed_behavior_list
 
 
 def dump_labels_bento(labels, filename, moviename='', framerate=30, beh_list = ['mount','attack','sniff'], gt=None):

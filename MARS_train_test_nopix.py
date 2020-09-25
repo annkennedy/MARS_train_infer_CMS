@@ -17,9 +17,6 @@ import MARS_ts_util as mts
 import joblib
 from MARS_clf_helpers import *
 from seqIo import *
-import scipy.io as sio
-import pdb
-
 
 # warnings.filterwarnings("ignore")
 # plt.ioff()
@@ -39,12 +36,12 @@ def get_beh_dict(behavior):
                                     'sniffurogenital','sniffgenitals','sniff_genitals','sniff-genital','sniff_genital',
                                     'anogen-investigation','sniff_body', 'sniffbody', 'bodysniffing', 'body-investigation',
                                     'socialgrooming','sniff-body', 'closeinvestigate', 'closeinvestigation', 'investigation',
-                                    'investigate','first_inv','aggressive_investigation','attack_attempt','mount_attempt','dom_mount_attempt'],
-            'mount':            ['mount','aggressivemount','intromission','dom_mount','ejaculate','ejuculation'],
-            'attack':           ['attack','attempted_attack','chase']}
+                                    'investigate','first_inv'],
+            'mount':            ['mount','aggressivemount','intromission','dom_mount','attempted_mount','mount_attempt'],
+            'attack':           ['attack','attempted_attack','attack_attempt']}
     
-    if behavior.lower() in behs.keys():
-        return {behavior: behs[behavior.lower()]}
+    if behavior in behs.keys():
+        return {behavior: behs[behavior]}
     else:
         print('I didn''t recognize that behavior, aborting')
         return {}
@@ -154,24 +151,17 @@ def choose_classifier(clf_type='xgb', clf_params=dict()):
     return clf
 
 
-def quick_loader(filename, keep_labels):
-    temp = np.load(filename,allow_pickle=True)
+def quick_loader(filename):
+    temp = np.load(filename)
     data = temp['data']
     names = temp['names']
-    behList = temp['behList']
-    all_keep = []
-    for i in keep_labels.keys():
-        all_keep += keep_labels[i] 
-    labels = []
-    for beh in behList:
-        labels += map.merge_channels(beh['behs_bout'], beh['keys'], len(beh['behs_frame']), target_behaviors = all_keep)
+    labels = temp['labels']
     return data, names, labels
 
 
 def load_data(video_path, video_list, keep_labels, ver=[7, 8], feat_type='top', verbose=0, do_wnd=False, do_cwt=False, save_after=True):
     data = []
     labels = []
-    behList = []
     feature_savefile = '_'.join(list(set([os.path.dirname(i) for i in video_list]))) + '_' + feat_type
     feature_savefile = feature_savefile + '_wnd' if do_wnd else feature_savefile + '_cwt' if do_cwt else feature_savefile
     feature_savefile = feature_savefile + '_v1_' + str(ver[-1])
@@ -179,7 +169,7 @@ def load_data(video_path, video_list, keep_labels, ver=[7, 8], feat_type='top', 
     if os.path.exists(os.path.join(video_path, feature_savefile + '.npz')):
         if verbose:
             print('    quick-loading from file')
-        data, names, labels = quick_loader(os.path.join(video_path, feature_savefile + '.npz'), keep_labels)
+        data, names, labels = quick_loader(os.path.join(video_path, feature_savefile + '.npz'))
 
     else:
         for v in video_list:
@@ -234,8 +224,8 @@ def load_data(video_path, video_list, keep_labels, ver=[7, 8], feat_type='top', 
                     names = np.concatenate((names_r,names_i)).tolist()
 
                     # for this project, we also remove raw pixel-based features to keep things simple
-                    # d = mts.remove_pixel_data(d, 'top')
-                    # names = mts.remove_pixel_data(names, 'top')
+                    d = mts.remove_pixel_data(d, 'top')
+                    names = mts.remove_pixel_data(names, 'top')
 
                 else: # this is for features created with MARS_feature_extractor (which currently doesn't build data_smooth)
                     d = vid['data']
@@ -255,15 +245,11 @@ def load_data(video_path, video_list, keep_labels, ver=[7, 8], feat_type='top', 
                 elif do_cwt:
                     d = mts.apply_wavelet_transform(d)
                 data.append(d)
-                
+
                 beh = map.parse_annotations(os.path.join(video_path, v, ann), timestamps=timestamps)
                 if len(beh['behs_frame']) == 1+d.shape[0]: # this happens sometimes?
                     beh['behs_frame'] = beh['behs_frame'][:-1]
-                all_keep = []
-                for i in keep_labels.keys():
-                    all_keep += keep_labels[i] 
-                labels += map.merge_channels(beh['behs_bout'], beh['keys'], len(beh['behs_frame']), target_behaviors = all_keep)
-                behList += [beh]
+                labels += beh['behs_frame']
 
                 if len(beh['behs_frame']) != d.shape[0]:
                     print('Length mismatch: %s %d %d' % (v, len(beh['behs_frame']), d.shape[0]))
@@ -274,8 +260,7 @@ def load_data(video_path, video_list, keep_labels, ver=[7, 8], feat_type='top', 
             print('all files loaded')
 
         data = np.concatenate(data, axis=0)
-    
-    
+
     if verbose:
             print('    processing annotation files')
     y = {}
@@ -287,7 +272,7 @@ def load_data(video_path, video_list, keep_labels, ver=[7, 8], feat_type='top', 
     if save_after and not os.path.exists(os.path.join(video_path, feature_savefile + '.npz')):
         if verbose:
             print('    saving processed data for future use')
-        saveData = {'data': data, 'names': names, 'behList': behList}
+        saveData = {'data': data, 'names': names, 'labels': labels}
         np.savez(os.path.join(video_path, feature_savefile), **saveData)
 
     print('done!\n')
@@ -449,7 +434,7 @@ def do_train(beh_classifier, X_tr, y_tr, X_ev, y_ev, savedir, verbose=0):
     return results
 
 
-def do_test(name_classifier, X_te, y_te, verbose=0, doPRC=0):
+def do_test(name_classifier, X_te, y_te, verbose=0):
 
     classifier = joblib.load(name_classifier)
 
@@ -486,31 +471,14 @@ def do_test(name_classifier, X_te, y_te, verbose=0, doPRC=0):
         print('predicting behavior probability')
     y_pred_proba = clf.predict_proba(X_te)
     proba = y_pred_proba
-    
-    if doPRC:
-        # compute predictions as a function of threshold to make P-R curves!
-        p_pos = np.squeeze(proba[:,1])
-        proba_thr = np.zeros((p_pos.size,100))
-        for thr in range(100):
-            proba_thr[:,thr] = np.array([1 if i>(thr/100.) else 0 for i in p_pos])
-    
     y_pred_class = np.argmax(y_pred_proba, axis=1)
     preds = y_pred_class
 
     # forward-backward smoothing:
     if (verbose):
         print('forward-backward smoothing')
-    
-    if doPRC:
-        y_pred_fbs_hmm_range = np.zeros(proba_thr.shape)
-        for thr in range(100):
-            y_pred_fbs = mts.do_fbs(y_pred_class=np.squeeze(proba_thr[:,thr]), kn=kn, blur=4, blur_steps=blur_steps, shift=shift)
-            y_proba_fbs_hmm = hmm_fbs.predict_proba(y_pred_fbs.reshape((-1, 1)))
-            y_pred_fbs_hmm_range[:,thr] = np.argmax(y_proba_fbs_hmm, axis=1)
-        
-        sio.savemat(name_classifier  + '_results.mat', {'preds':y_pred_fbs_hmm_range,'gt': gt})
-    
     y_pred_fbs = mts.do_fbs(y_pred_class=y_pred_class, kn=kn, blur=4, blur_steps=blur_steps, shift=shift)
+
     y_proba_fbs_hmm = hmm_fbs.predict_proba(y_pred_fbs.reshape((-1, 1)))
     y_pred_fbs_hmm = np.argmax(y_proba_fbs_hmm, axis=1)
     preds_fbs_hmm = y_pred_fbs_hmm
@@ -583,7 +551,7 @@ def train_classifier(behs, video_path, train_videos, eval_videos=[], clf_params=
     return results
 
 
-def test_classifier(behs, video_path, test_videos, clf_params={}, ver=[7,8], verbose=0, doPRC=0):
+def test_classifier(behs, video_path, test_videos, clf_params={}, ver=[7,8], verbose=0):
 
     default_params = load_default_parameters()
     for k in default_params.keys():
@@ -608,6 +576,7 @@ def test_classifier(behs, video_path, test_videos, clf_params={}, ver=[7,8], ver
                                   ver=ver, feat_type=feat_type, verbose=verbose, do_wnd=do_wnd, do_cwt=do_cwt)
     print('loaded test data: %d X %d - %s ' % (X_te_0.shape[0], X_te_0.shape[1], list(set(y_te))))
     
+
     T = len(list(y_te.values())[0])
     n_classes = len(behs.keys())
     gt = np.zeros((T, n_classes)).astype(int)
@@ -626,7 +595,7 @@ def test_classifier(behs, video_path, test_videos, clf_params={}, ver=[7,8], ver
         print('loading classifier %s' % name_classifier)
 
         gt[:,b], proba[:, b, :], preds[:, b], preds_fbs_hmm[:, b], proba_fbs_hmm[:, b, :] = \
-            do_test(name_classifier, X_te_0, y_te, verbose, doPRC)
+            do_test(name_classifier, X_te_0, y_te, verbose)
 
     all_pred = assign_labels(proba, beh_list)
     all_pred_fbs_hmm = assign_labels(proba_fbs_hmm, beh_list)
@@ -645,7 +614,6 @@ def test_classifier(behs, video_path, test_videos, clf_params={}, ver=[7,8], ver
          '6_pred_fbs_hmm_ass': all_pred_fbs_hmm
          }
     dill.dump(P, open(savedir + 'results.dill', 'wb'))
-    sio.savemat(savedir + 'results.mat', P)
 
 
 def run_classifier(behs, video_path, test_videos, test_annot, save_path=[], ver=[7,8], verbose=0):
@@ -664,7 +632,6 @@ def run_classifier(behs, video_path, test_videos, test_annot, save_path=[], ver=
     feat_type = clf_params['feat_type']
     do_wnd = clf_params['do_wnd']
     do_cwt = clf_params['do_cwt']
-    print(clf_params)
 
     suff = clf_suffix(clf_type, clf_params)
     classifier_name = feat_type + '_' + clf_type + suff

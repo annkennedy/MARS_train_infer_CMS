@@ -1,0 +1,27 @@
+{'clf_type': 'xgb', 'feat_type': 'top', 'do_cwt': False, 'early_stopping': 10, 'smk_kn': array([ 0.5 ,  0.25,  0.5 ]), 'shift': 4, 'min_child_weight': 4, 'do_wnd': True, 'downsample_rate': 1, 'blur': 4, 'max_depth': 9}
+loading test data...
+    quick-loading from file
+    processing annotation files
+done!
+
+loaded test data: 239395 X 3144 - ['attack'] 
+['1_nose_x_3_min' '1_nose_x_3_max' '1_nose_x_3_mean' ...,
+ '2_speed_tail_base_w10_21_max' '2_speed_tail_base_w10_21_mean'
+ '2_speed_tail_base_w10_21_std']
+predicting behavior attack...
+loading classifier trained_classifiers/mars_v1_8/top_xgb_es10_depth9_child4_wnd/classifier_attack
+predicting behavior probability
+forward-backward smoothing
+inference took 4.69 sec
+########## pd ##########
+P: 0.7597, R: 0.5648, F1: 0.6479    attack
+########## fbs ##########
+P: 0.7739, R: 0.5644, F1: 0.6527    attack
+Raw predictions:
+#Precision: [ 0.989  0.76 ]
+#Recall:    [ 0.996  0.565]
+#F1score:   [ 0.993  0.648]
+Predictions after HMM and forward-backward smoothing:
+#Precision: [ 0.989  0.774]
+#Recall:    [ 0.996  0.564]
+#F1score:   [ 0.993  0.653]
